@@ -178,7 +178,9 @@ def test_compaction_keeps_only_the_last_value_for_a_key(bootstrap: str) -> None:
         for_key = [value for k, value in records if k == key]
         assert for_key == [b'{"version": 2}'], f"compaction did not collapse the key: {records}"
     finally:
-        admin.delete_topics([name])
+        # Wait for the deletion, otherwise the test leaves a topic behind when
+        # the process exits before the broker has acted on the request.
+        admin.delete_topics([name])[name].result(timeout=60)
 
 
 def _read_from_beginning(bootstrap: str, topic: str) -> list[tuple[bytes, bytes]]:
