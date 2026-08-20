@@ -25,6 +25,7 @@ This is the product's competitive moat. Generic price comparison engines don't h
 | **produces** | `matcher`, `catalog` | Kafka `yadakchi.offers.fitted.v1` |
 | **produces** | `matcher`, `catalog`, `search`, `web` | Kafka `yadakchi.vehicles.changed.v1` *(compacted)* |
 | **produces** | `catalog`, `search` | Kafka `yadakchi.crossrefs.changed.v1` *(compacted)* |
+| **produces** | `ops` | Kafka `yadakchi.review.requested.v1` — `kind: fitment_conflict` |
 | owns | Postgres `yadakchi_fitment`, Redis db 3 | |
 
 ### Consumed — `offers.enriched.v1`
@@ -109,6 +110,8 @@ Return the **most specific** match. A title saying only "206" resolves to the mo
 
 **Rule 4 — human corrections win.** `review.decided` events with fitment subjects override computed results permanently. Store them and re-apply after any recomputation.
 
+**Rule 5 — conflicting consensus goes to a human.** Rule 1 counts agreeing sellers; it says nothing about sellers who disagree. When the evidence for one part number and one vehicle points both ways — some sellers claim `compatible`, others `incompatible` — no majority makes that safe to decide automatically. The verdict is `unknown`, and you emit `review.requested` with `kind: fitment_conflict` so a human can settle it. Include both sides in `evidence`: the offers on each side with their seller keys, titles and claims, the part number, and the `vehicle_slug` in dispute — `ops` renders the review screen from the event alone and must never query you for it. The resulting `review.decided` comes back under Rule 4 and sticks.
+
 ## Part four: Cross-references
 
 Build `code_a ↔ code_b` equivalences from three signals: co-occurrence in titles (sellers write "کد X معادل Y"), shared fitment plus shared part type plus similar price band across brands, and manual entry through the admin.
@@ -137,7 +140,7 @@ services/fitment/
 ├── manage.py
 ├── contracts/
 │   ├── consumed/{yadakchi.offers.enriched.v1,yadakchi.review.decided.v1}.json
-│   └── published/{yadakchi.offers.fitted.v1,yadakchi.vehicles.changed.v1,yadakchi.crossrefs.changed.v1}.json
+│   └── published/{yadakchi.offers.fitted.v1,yadakchi.vehicles.changed.v1,yadakchi.crossrefs.changed.v1,yadakchi.review.requested.v1}.json
 ├── src/fitment/
 │   ├── settings.py  models.py  admin.py
 │   ├── text.py            # local copy of Persian normalization

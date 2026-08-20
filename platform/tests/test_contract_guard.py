@@ -142,12 +142,12 @@ def test_malformed_schema_fails(fake_repo: Path) -> None:
 
 
 def test_multi_producer_topic_requires_copies(fake_repo: Path) -> None:
-    """review.requested has three producers; the two that do not own the
-    schema must still carry a byte-identical copy."""
+    """review.requested has five producers; the four that do not own the
+    schema must still carry a byte-identical copy, exactly like a consumer."""
     topic = _registry.load_topics().by_name("yadakchi.review.requested.v1")
     assert topic is not None
     assert topic.schema_owner == "matcher"
-    assert set(topic.copy_holders) == {"ops", "crawler", "fitment"}
+    assert set(topic.copy_holders) == {"ops", "crawler", "fitment", "enricher", "billing"}
 
     write_schema(fake_repo, topic.schema_owner, "published", topic.name, SCHEMA)
     assert check_contracts.main([]) == 1  # copies missing

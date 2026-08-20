@@ -22,7 +22,7 @@ Everything downstream depends on this. A field you fail to extract is a match ca
 |---|---|---|
 | **consumes** | `crawler` | Kafka `yadakchi.listings.observed.v1` |
 | **produces** | `fitment`, `matcher` | Kafka `yadakchi.offers.enriched.v1` |
-| **produces** | `ops` | Kafka `yadakchi.review.requested.v1` — `kind: price_ambiguous` |
+| **produces** | `ops` | Kafka `yadakchi.review.requested.v1` — `kind: price_ambiguous \| synonym_candidate` |
 | **calls** | `ai` | HTTP `POST /v1/extract` — cascade stage two only |
 | owns | Postgres `yadakchi_enricher`, Redis db 2 | |
 
@@ -105,6 +105,21 @@ Expose `normalize_text`, `normalize_part_number`, and `strip_promotional` separa
 **Stock status** — map source phrases to the enum. Absence is `unknown`, never `in_stock`.
 
 **Vehicle hints** — extract raw vehicle-looking strings into an array **without resolving them**; resolution is `fitment`'s job. Set `overbroad_claim: true` when patterns like `مناسب تمام پژوها` or `همه مدل‌ها` appear — `fitment` rejects these and needs to know they were present.
+
+## Part three: Synonym mining
+
+The part-type vocabulary is the backbone of extraction, and it will always be incomplete — Iranian sellers invent trade names faster than anyone maintains a YAML file. You are the only service that sees every title next to the type it resolved to, so candidate synonyms are mined here and nowhere else.
+
+Two signals, both cheap, both by-products of work you already do:
+
+- **Surface forms that matched.** Part-type matching records *which* surface form hit (`لنت جلو` → `brake_pad_front`). A form that keeps resolving through a long-match fallback, or an alias appearing far more often than the canonical form, is evidence the vocabulary should name it directly.
+- **Unmapped tokens that co-occur with a known type.** Track title tokens that appear repeatedly alongside an already-resolved `part_type` and belong to no vocabulary entry. A token that co-occurs with one part type well above a configured threshold, across **several distinct sellers**, is a candidate for that type.
+
+Emit each candidate as `review.requested` with `kind: synonym_candidate`. Require a minimum count and more than one seller before emitting; one seller's idiosyncratic spelling is noise, and a review queue full of noise stops being read. Deduplicate on the candidate token plus part type so a re-run does not enqueue the same pair twice.
+
+The `evidence` object must carry everything a reviewer needs **inline**: the candidate token or surface form, the part type it is proposed for, the co-occurrence count, the number of distinct sellers, and a handful of example titles. `ops` renders the review screen from the event alone and must never call back to you for context.
+
+You do not consume the decision. Approved synonyms flow from `ops` to `search`, which is the service that applies them; a candidate that is approved and also belongs in the extraction vocabulary is a human edit to your YAML, not an automatic one. **Never expand your own matching on an unapproved candidate** — automatic mining conflates synonyms with complements (brake pads and discs co-occur constantly and are not the same thing).
 
 ## Confidence and provenance
 

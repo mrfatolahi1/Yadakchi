@@ -35,11 +35,14 @@ EXPECTED: dict[str, tuple[int, str, int, set[str], set[str]]] = {
     "yadakchi.products.changed.v1": (6, "compact", -1, {"catalog"}, {"search", "ops", "web"}),
     "yadakchi.sellers.changed.v1": (1, "compact", -1, {"catalog"}, {"billing", "ops"}),
     "yadakchi.clicks.recorded.v1": (3, "delete", 30 * DAY_MS, {"billing"}, {"catalog", "matcher"}),
+    # Five producers: matcher (merge_pair), crawler (adapter_broken), fitment
+    # (fitment_conflict), enricher (price_ambiguous, synonym_candidate) and
+    # billing (click-velocity anomalies). 11-OPS.md consumes from all five.
     "yadakchi.review.requested.v1": (
         3,
         "delete",
         30 * DAY_MS,
-        {"matcher", "crawler", "fitment"},
+        {"matcher", "crawler", "fitment", "enricher", "billing"},
         {"ops"},
     ),
     "yadakchi.review.decided.v1": (1, "compact", -1, {"ops"}, {"matcher", "fitment"}),

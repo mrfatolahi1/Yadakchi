@@ -20,10 +20,11 @@
 #   dlq           true -> a "<topic>.dlq" companion topic is created
 #
 # NOTE ON "exactly one publisher": spec 01 requires every topic to have exactly
-# one publisher; spec 02 has three services producing to review.requested.v1.
-# We reconcile this the only way that keeps both true: exactly one service owns
-# the SCHEMA (schema_owner), and every other producer holds a byte-identical
-# consumed/ copy. The wire format still has a single owner.
+# one publisher; review.requested.v1 has five producers (02-EVENT-CONTRACTS.md
+# names three, 11-OPS.md consumes from five). We reconcile this the only way
+# that keeps both true: exactly one service owns the SCHEMA (schema_owner), and
+# every other producer holds a byte-identical consumed/ copy. The wire format
+# still has a single owner.
 # ---------------------------------------------------------------------------
 
 defaults:
@@ -131,7 +132,12 @@ topics:
     retention_ms: 2592000000 # 30 days
     key: request_uid
     schema_owner: matcher
-    producers: [matcher, crawler, fitment]
+    # Five producers, per each service's own spec: matcher (merge_pair),
+    # crawler (adapter_broken), fitment (fitment_conflict), enricher
+    # (price_ambiguous, synonym_candidate) and billing (seller click-velocity
+    # anomalies). 11-OPS.md consumes from all five. Every non-owner producer
+    # carries a consumed/ copy of the schema.
+    producers: [matcher, crawler, fitment, enricher, billing]
     consumers: [ops]
     dlq: true
 

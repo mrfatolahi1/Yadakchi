@@ -27,6 +27,7 @@ Sends the user to the seller's site, counts the click, charges the seller's wall
 |---|---|---|
 | **consumes** | `catalog` | Kafka `yadakchi.sellers.changed.v1` *(compacted)* — local seller read model |
 | **produces** | `catalog`, `matcher` | Kafka `yadakchi.clicks.recorded.v1` |
+| **produces** | `ops` | Kafka `yadakchi.review.requested.v1` — per-seller click-velocity anomalies |
 | **serves** | end users | `GET /go/{token}` — public, never cached |
 | **serves** | `ops` | internal API for the seller dashboard |
 | owns | Postgres `yadakchi_billing`, Redis db 7 | |
