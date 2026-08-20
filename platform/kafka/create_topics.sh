@@ -96,7 +96,9 @@ while IFS=$'\t' read -r topic partitions cleanup retention; do
   current_partitions="$(describe_field "$topic" "PartitionCount")"
 
   if [ -z "$current_partitions" ]; then
-    kcli kafka-topics.sh --bootstrap-server "$BOOTSTRAP" --create --topic "$topic" \
+    # --if-not-exists so that a human running `make topics` while the init
+    # container is still applying the same file is a no-op, not a failure.
+    kcli kafka-topics.sh --bootstrap-server "$BOOTSTRAP" --create --if-not-exists --topic "$topic" \
       --partitions "$partitions" --replication-factor 1 \
       --config "cleanup.policy=$cleanup" \
       --config "retention.ms=$retention" \

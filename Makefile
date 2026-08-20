@@ -73,6 +73,15 @@ venv: $(VENV) ## Build the platform virtualenv (tooling and tests only)
 infra-up: env net ## Start the shared infrastructure and wait for health
 	$(INFRA_COMPOSE) up -d
 	$(INFRA_COMPOSE) up -d --wait --wait-timeout 300 $(INFRA_HEALTH)
+	@# The init containers create the topics and the bucket, then exit. Waiting
+	@# for them here means `make topics` right after this cannot race them.
+	@for c in yadakchi-kafka-init yadakchi-minio-init; do \
+		code=$$(docker wait $$c 2>/dev/null || echo 0); \
+		if [ "$$code" != "0" ]; then \
+			echo "$$c failed (exit $$code):"; docker logs --tail 30 $$c; exit 1; \
+		fi; \
+	done
+	@echo "topics and buckets provisioned" 
 	@echo
 	@$(MAKE) --no-print-directory ps
 	@echo
