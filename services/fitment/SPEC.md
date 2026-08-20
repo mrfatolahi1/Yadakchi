@@ -28,6 +28,8 @@ This is the product's competitive moat. Generic price comparison engines don't h
 | **produces** | `ops` | Kafka `yadakchi.review.requested.v1` — `kind: fitment_conflict` |
 | owns | Postgres `yadakchi_fitment`, Redis db 3 | |
 
+**On `review.requested.v1`:** you produce to this topic but do not own its schema — `matcher` does. Hold a byte-identical `consumed/` copy; never place this file in `published/`. `make sync-contracts` puts it there for you, and `make check-contracts` fails the build if two services publish the same topic.
+
 ### Consumed — `offers.enriched.v1`
 You need: `offer_uid`, `part_number`, `part_type`, `brand`, `vehicle_hints[]`, `overbroad_claim`, `title_normalized`. Keep a **local read model of offers** built from this topic — you need it for consensus across sellers.
 
@@ -139,8 +141,8 @@ services/fitment/
 ├── Dockerfile  requirements.txt  docker-compose.yml  Makefile  README.md
 ├── manage.py
 ├── contracts/
-│   ├── consumed/{yadakchi.offers.enriched.v1,yadakchi.review.decided.v1}.json
-│   └── published/{yadakchi.offers.fitted.v1,yadakchi.vehicles.changed.v1,yadakchi.crossrefs.changed.v1,yadakchi.review.requested.v1}.json
+│   ├── consumed/{yadakchi.offers.enriched.v1,yadakchi.review.decided.v1,yadakchi.review.requested.v1}.json
+│   └── published/{yadakchi.offers.fitted.v1,yadakchi.vehicles.changed.v1,yadakchi.crossrefs.changed.v1}.json
 ├── src/fitment/
 │   ├── settings.py  models.py  admin.py
 │   ├── text.py            # local copy of Persian normalization

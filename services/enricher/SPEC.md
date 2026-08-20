@@ -26,6 +26,8 @@ Everything downstream depends on this. A field you fail to extract is a match ca
 | **calls** | `ai` | HTTP `POST /v1/extract` — cascade stage two only |
 | owns | Postgres `yadakchi_enricher`, Redis db 2 | |
 
+**On `review.requested.v1`:** you produce to this topic but do not own its schema — `matcher` does. Hold a byte-identical `consumed/` copy; never place this file in `published/`. `make sync-contracts` puts it there for you, and `make check-contracts` fails the build if two services publish the same topic.
+
 ### Event you consume — `yadakchi.listings.observed.v1`
 
 ```
@@ -148,8 +150,8 @@ services/enricher/
 ├── Dockerfile  requirements.txt  docker-compose.yml  Makefile  README.md
 ├── manage.py
 ├── contracts/
-│   ├── consumed/yadakchi.listings.observed.v1.json
-│   └── published/{yadakchi.offers.enriched.v1,yadakchi.review.requested.v1}.json
+│   ├── consumed/{yadakchi.listings.observed.v1,yadakchi.review.requested.v1}.json
+│   └── published/yadakchi.offers.enriched.v1.json
 ├── src/enricher/
 │   ├── settings.py  models.py  admin.py
 │   ├── text.py

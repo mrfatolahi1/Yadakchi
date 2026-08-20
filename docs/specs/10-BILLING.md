@@ -32,6 +32,8 @@ Sends the user to the seller's site, counts the click, charges the seller's wall
 | **serves** | `ops` | internal API for the seller dashboard |
 | owns | Postgres `yadakchi_billing`, Redis db 7 | |
 
+**On `review.requested.v1`:** you produce to this topic but do not own its schema — `matcher` does. Hold a byte-identical `consumed/` copy; never place this file in `published/`. `make sync-contracts` puts it there for you, and `make check-contracts` fails the build if two services publish the same topic.
+
 You **never** call `catalog` synchronously. Everything you need about a seller arrives on `sellers.changed`.
 
 ### Produced — `clicks.recorded.v1` (key: `product_uid`)
@@ -133,8 +135,8 @@ services/billing/
 ├── Dockerfile  requirements.txt  docker-compose.yml  Makefile  README.md
 ├── manage.py
 ├── contracts/
-│   ├── consumed/yadakchi.sellers.changed.v1.json
-│   └── published/{yadakchi.clicks.recorded.v1,yadakchi.review.requested.v1,openapi}.json
+│   ├── consumed/{yadakchi.sellers.changed.v1,yadakchi.review.requested.v1}.json
+│   └── published/{yadakchi.clicks.recorded.v1,openapi}.json
 ├── src/billing/
 │   ├── settings.py  models.py  admin.py  api.py
 │   ├── redirect_view.py     # stripped middleware, hot path

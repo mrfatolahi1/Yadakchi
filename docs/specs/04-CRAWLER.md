@@ -28,6 +28,8 @@ Fetches listings from Iranian online spare-parts sellers, archives the raw bytes
 | writes | MinIO bucket `raw-archive` | S3 API | **exclusive owner** |
 | writes | Postgres `yadakchi_crawler` | — | **exclusive owner** |
 
+**On `review.requested.v1`:** you produce to this topic but do not own its schema — `matcher` does. Hold a byte-identical `consumed/` copy; never place this file in `published/`. `make sync-contracts` puts it there for you, and `make check-contracts` fails the build if two services publish the same topic.
+
 ### Event you produce — `yadakchi.listings.observed.v1`
 
 Envelope per spec 02, `producer: "crawler"`. You **mint `trace_id`** here; it flows through the entire chain.
@@ -132,8 +134,7 @@ services/crawler/
 ├── manage.py
 ├── contracts/
 │   ├── published/yadakchi.listings.observed.v1.json
-│   ├── published/yadakchi.review.requested.v1.json
-│   └── consumed/yadakchi.clicks.recorded.v1.json
+│   └── consumed/{yadakchi.clicks.recorded.v1,yadakchi.review.requested.v1}.json
 ├── src/crawler/
 │   ├── settings.py  models.py  admin.py
 │   ├── fetcher.py  archive.py  robots.py  scheduler.py  health.py

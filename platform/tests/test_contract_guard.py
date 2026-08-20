@@ -7,6 +7,7 @@ paths without touching the working copy.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import _registry
@@ -110,6 +111,35 @@ def test_two_publishers_fail(fake_repo: Path, capsys: pytest.CaptureFixture[str]
     stderr = capsys.readouterr().err
     assert "publishers" in stderr
     assert "crawler" in stderr
+
+
+def test_two_publishers_are_both_named(fake_repo: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """A topic with several producers is where this goes wrong in practice.
+
+    review.requested.v1 is produced by five services and owned by one. If a
+    producer's own spec tells its agent to put the schema in published/, the
+    repository ends up with two owners of one wire format — so the failure has
+    to name every service holding a copy, not just the first one found.
+    """
+    topic = _registry.load_topics().by_name("yadakchi.review.requested.v1")
+    assert topic is not None
+    assert topic.schema_owner == "matcher"
+
+    write_schema(fake_repo, "matcher", "published", topic.name, SCHEMA)
+    write_schema(fake_repo, "fitment", "published", topic.name, SCHEMA)
+
+    assert check_contracts.main([]) == 1
+    stderr = capsys.readouterr().err
+    offending = [line for line in stderr.splitlines() if "publishers" in line]
+    assert len(offending) == 1, stderr
+    assert "2 publishers" in offending[0]
+    assert topic.name in offending[0]
+
+    # Both services must appear in the list of offenders, not just the first
+    # one found — otherwise the message sends someone to fix half the problem.
+    listed = re.search(r"\(([^)]*)\)", offending[0])
+    assert listed is not None, offending[0]
+    assert {name.strip() for name in listed.group(1).split(",")} == {"matcher", "fitment"}
 
 
 def test_publisher_that_registry_did_not_authorise_fails(fake_repo: Path) -> None:
