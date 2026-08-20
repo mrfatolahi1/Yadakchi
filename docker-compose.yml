@@ -1,0 +1,217 @@
+# ===========================================================================
+# yadakchi — the whole system, for a human.
+#
+#   make up      # infrastructure + every service that has been built yet
+#   make down
+#
+# Service agents do NOT use this file. Each service has its own compose file
+# inside its own folder, which `include`s platform/docker-compose.infra.yml
+# and starts that service alone. This file exists so one person can run the
+# entire pipeline on one machine.
+#
+# Note the environment blocks: every service receives its own database URL,
+# its own Redis database, and nothing else. There is no shared env_file —
+# crawler cannot see the matcher's password even if it wanted to, and the
+# only synchronous HTTP dependencies present are the ones the brief allows.
+#
+# Services are declared here with a build context; a service whose Dockerfile
+# does not exist yet is simply not started by `make up`.
+# ===========================================================================
+
+name: yadakchi
+
+include:
+  - path: platform/docker-compose.infra.yml
+
+x-service: &service
+  restart: unless-stopped
+  networks: [yadakchi]
+  logging:
+    driver: json-file
+    options: { max-size: "20m", max-file: "5" }
+
+x-common-env: &common-env
+  TZ: UTC
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  LOG_FORMAT: ${LOG_FORMAT:-json}
+  SENTRY_DSN: ${SENTRY_DSN:-}
+  SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-local}
+  KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+
+x-depends-on-data: &depends-on-data
+  postgres:
+    condition: service_healthy
+  kafka:
+    condition: service_healthy
+  redis:
+    condition: service_healthy
+
+services:
+  # -------------------------------------------------------------------- ai
+  # FastAPI, no database. The only service allowed to talk to an LLM provider.
+  ai:
+    <<: *service
+    build: ./services/ai
+    container_name: yadakchi-ai
+    mem_limit: 8g
+    environment:
+      <<: *common-env
+      REDIS_URL: ${AI_REDIS_URL}
+    depends_on:
+      redis:
+        condition: service_healthy
+    expose: ["8000"]
+
+  # --------------------------------------------------------------- crawler
+  # The only holder of MinIO credentials: raw archive is its property.
+  crawler:
+    <<: *service
+    build: ./services/crawler
+    container_name: yadakchi-crawler
+    mem_limit: 3g
+    environment:
+      <<: *common-env
+      DATABASE_URL: ${CRAWLER_DATABASE_URL}
+      REDIS_URL: ${CRAWLER_REDIS_URL}
+      S3_ENDPOINT: ${MINIO_ENDPOINT:-http://minio:9000}
+      S3_BUCKET: ${RAW_ARCHIVE_BUCKET:-raw-archive}
+      S3_ACCESS_KEY: ${CRAWLER_S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${CRAWLER_S3_SECRET_KEY}
+    depends_on:
+      <<: *depends-on-data
+      minio:
+        condition: service_healthy
+    expose: ["8000"]
+
+  # -------------------------------------------------------------- enricher
+  enricher:
+    <<: *service
+    build: ./services/enricher
+    container_name: yadakchi-enricher
+    mem_limit: 2g
+    environment:
+      <<: *common-env
+      DATABASE_URL: ${ENRICHER_DATABASE_URL}
+      REDIS_URL: ${ENRICHER_REDIS_URL}
+      AI_BASE_URL: ${AI_BASE_URL:-http://ai:8000}
+    depends_on: *depends-on-data
+    expose: ["8000"]
+
+  # --------------------------------------------------------------- fitment
+  fitment:
+    <<: *service
+    build: ./services/fitment
+    container_name: yadakchi-fitment
+    mem_limit: 2g
+    environment:
+      <<: *common-env
+      DATABASE_URL: ${FITMENT_DATABASE_URL}
+      REDIS_URL: ${FITMENT_REDIS_URL}
+    depends_on: *depends-on-data
+    expose: ["8000"]
+
+  # --------------------------------------------------------------- matcher
+  # numpy plus pgvector; the heaviest Django service.
+  matcher:
+    <<: *service
+    build: ./services/matcher
+    container_name: yadakchi-matcher
+    mem_limit: 6g
+    environment:
+      <<: *common-env
+      DATABASE_URL: ${MATCHER_DATABASE_URL}
+      REDIS_URL: ${MATCHER_REDIS_URL}
+      AI_BASE_URL: ${AI_BASE_URL:-http://ai:8000}
+    depends_on: *depends-on-data
+    expose: ["8000"]
+
+  # --------------------------------------------------------------- catalog
+  catalog:
+    <<: *service
+    build: ./services/catalog
+    container_name: yadakchi-catalog
+    mem_limit: 3g
+    environment:
+      <<: *common-env
+      DATABASE_URL: ${CATALOG_DATABASE_URL}
+      REDIS_URL: ${CATALOG_REDIS_URL}
+    depends_on: *depends-on-data
+    expose: ["8000"]
+
+  # ---------------------------------------------------------------- search
+  # The only holder of the Typesense admin key.
+  search:
+    <<: *service
+    build: ./services/search
+    container_name: yadakchi-search
+    mem_limit: 3g
+    environment:
+      <<: *common-env
+      DATABASE_URL: ${SEARCH_DATABASE_URL}
+      REDIS_URL: ${SEARCH_REDIS_URL}
+      AI_BASE_URL: ${AI_BASE_URL:-http://ai:8000}
+      TYPESENSE_HOST: typesense
+      TYPESENSE_PORT: "8108"
+      TYPESENSE_PROTOCOL: http
+      TYPESENSE_API_KEY: ${TYPESENSE_API_KEY}
+    depends_on:
+      <<: *depends-on-data
+      typesense:
+        condition: service_healthy
+    expose: ["8000"]
+
+  # --------------------------------------------------------------- billing
+  billing:
+    <<: *service
+    build: ./services/billing
+    container_name: yadakchi-billing
+    mem_limit: 2g
+    environment:
+      <<: *common-env
+      DATABASE_URL: ${BILLING_DATABASE_URL}
+      REDIS_URL: ${BILLING_REDIS_URL}
+    depends_on: *depends-on-data
+    expose: ["8000"]
+
+  # ------------------------------------------------------------------- ops
+  # Internal console. Bound to loopback: never expose this publicly.
+  ops:
+    <<: *service
+    build: ./services/ops
+    container_name: yadakchi-ops
+    mem_limit: 2g
+    environment:
+      <<: *common-env
+      DATABASE_URL: ${OPS_DATABASE_URL}
+      REDIS_URL: ${OPS_REDIS_URL}
+      CATALOG_BASE_URL: ${CATALOG_BASE_URL:-http://catalog:8000}
+      BILLING_BASE_URL: ${BILLING_BASE_URL:-http://billing:8000}
+    depends_on: *depends-on-data
+    ports:
+      - "127.0.0.1:${OPS_PORT:-8009}:8000"
+
+  # ------------------------------------------------------------------- web
+  # The public site. Reads only through catalog and search, never Postgres.
+  web:
+    <<: *service
+    build: ./services/web
+    container_name: yadakchi-web
+    mem_limit: 2g
+    environment:
+      <<: *common-env
+      NODE_ENV: production
+      CATALOG_BASE_URL: ${CATALOG_BASE_URL:-http://catalog:8000}
+      SEARCH_BASE_URL: ${SEARCH_BASE_URL:-http://search:8000}
+      REDIS_URL: ${WEB_REDIS_URL}
+    depends_on:
+      catalog:
+        condition: service_started
+      search:
+        condition: service_started
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+
+networks:
+  yadakchi:
+    name: yadakchi
+    external: true

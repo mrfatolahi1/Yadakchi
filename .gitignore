@@ -1,0 +1,40 @@
+# --- Python -------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# --- Node / Next.js -----------------------------------------------------
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+.eslintcache
+
+# --- Local environment --------------------------------------------------
+# Only real secrets are ignored. platform/.env.example IS committed.
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# --- Editors / OS -------------------------------------------------------
+.idea/
+.vscode/
+.DS_Store
+*.swp
+
+# --- Runtime scratch ----------------------------------------------------
+*.log
+tmp/
+.docker-data/
+
+# NOTE: services/*/BRIEF.md and services/*/SPEC.md are distributed spec
+# copies produced by `make sync-specs`. They are COMMITTED on purpose so a
+# fresh clone gives every agent its instructions with no setup step.

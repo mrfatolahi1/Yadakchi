@@ -1,0 +1,146 @@
+# ---------------------------------------------------------------------------
+# yadakchi — Kafka topic registry
+#
+# THIS FILE IS THE SINGLE SOURCE OF TRUTH for topics. It is applied by
+# `platform/kafka/create_topics.sh` (via `make topics`, idempotent) and read by
+# `platform/scripts/check_contracts.py` (via `make check-contracts`).
+#
+# Payload shapes are NOT defined here — they live in JSON Schema files owned by
+# spec 02 at services/<schema_owner>/contracts/published/<topic>.json.
+#
+# Per-topic fields:
+#   partitions    int
+#   cleanup       delete | compact
+#   retention_ms  int | -1 (infinite). Ignored by Kafka for compacted topics,
+#                 but declared explicitly so intent is reviewable.
+#   key           documentation of the required Kafka message key
+#   schema_owner  the ONE service that owns published/<topic>.json
+#   producers     every service that writes to the topic (includes schema_owner)
+#   consumers     every service that reads the topic
+#   dlq           true -> a "<topic>.dlq" companion topic is created
+#
+# NOTE ON "exactly one publisher": spec 01 requires every topic to have exactly
+# one publisher; spec 02 has three services producing to review.requested.v1.
+# We reconcile this the only way that keeps both true: exactly one service owns
+# the SCHEMA (schema_owner), and every other producer holds a byte-identical
+# consumed/ copy. The wire format still has a single owner.
+# ---------------------------------------------------------------------------
+
+defaults:
+  replication_factor: 1 # single broker, single host. Production = 3 brokers.
+  min_insync_replicas: 1
+  dlq:
+    partitions_follow_parent: true
+    cleanup: delete
+    retention_ms: 7776000000 # 90 days — failures must outlive a long weekend
+
+topics:
+  - name: yadakchi.listings.observed.v1
+    partitions: 6
+    cleanup: delete
+    retention_ms: 7776000000 # 90 days
+    key: "{source_key}:{external_key}"
+    schema_owner: crawler
+    producers: [crawler]
+    consumers: [enricher]
+    dlq: true
+
+  - name: yadakchi.offers.enriched.v1
+    partitions: 6
+    cleanup: delete
+    retention_ms: 7776000000 # 90 days
+    key: offer_uid
+    schema_owner: enricher
+    producers: [enricher]
+    consumers: [fitment, matcher]
+    dlq: true
+
+  - name: yadakchi.offers.fitted.v1
+    partitions: 6
+    cleanup: delete
+    retention_ms: 7776000000 # 90 days
+    key: offer_uid
+    schema_owner: fitment
+    producers: [fitment]
+    consumers: [matcher, catalog]
+    dlq: true
+
+  - name: yadakchi.vehicles.changed.v1
+    partitions: 1
+    cleanup: compact
+    retention_ms: -1
+    key: vehicle_slug
+    schema_owner: fitment
+    producers: [fitment]
+    consumers: [matcher, catalog, search, web]
+    dlq: false
+
+  - name: yadakchi.crossrefs.changed.v1
+    partitions: 3
+    cleanup: compact
+    retention_ms: -1
+    key: "{code_a}|{code_b}"
+    schema_owner: fitment
+    producers: [fitment]
+    consumers: [catalog, search]
+    dlq: false
+
+  - name: yadakchi.clusters.changed.v1
+    partitions: 6
+    cleanup: delete
+    retention_ms: 7776000000 # 90 days
+    key: cluster_uid
+    schema_owner: matcher
+    producers: [matcher]
+    consumers: [catalog]
+    dlq: true
+
+  - name: yadakchi.products.changed.v1
+    partitions: 6
+    cleanup: compact
+    retention_ms: -1
+    key: product_uid
+    schema_owner: catalog
+    producers: [catalog]
+    consumers: [search, ops, web]
+    dlq: false
+
+  - name: yadakchi.sellers.changed.v1
+    partitions: 1
+    cleanup: compact
+    retention_ms: -1
+    key: seller_key
+    schema_owner: catalog
+    producers: [catalog]
+    consumers: [billing, ops]
+    dlq: false
+
+  - name: yadakchi.clicks.recorded.v1
+    partitions: 3
+    cleanup: delete
+    retention_ms: 2592000000 # 30 days
+    key: product_uid
+    schema_owner: billing
+    producers: [billing]
+    consumers: [catalog, matcher]
+    dlq: true
+
+  - name: yadakchi.review.requested.v1
+    partitions: 3
+    cleanup: delete
+    retention_ms: 2592000000 # 30 days
+    key: request_uid
+    schema_owner: matcher
+    producers: [matcher, crawler, fitment]
+    consumers: [ops]
+    dlq: true
+
+  - name: yadakchi.review.decided.v1
+    partitions: 1
+    cleanup: compact
+    retention_ms: -1 # never deleted: human decisions are permanent
+    key: request_uid
+    schema_owner: ops
+    producers: [ops]
+    consumers: [matcher, fitment]
+    dlq: false

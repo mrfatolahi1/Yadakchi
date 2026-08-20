@@ -1,0 +1,20 @@
+# Platform tooling only — the contract guards, the spec distributor and the
+# acceptance tests. Service dependencies live in services/<name>/requirements.txt
+# and are never installed from here.
+#
+#   make venv     -> .venv/ with everything below
+PyYAML==6.0.2
+types-PyYAML==6.0.12.20250516
+
+# Lint / type / test, the same versions CI uses.
+ruff==0.11.10
+mypy==1.15.0
+pytest==8.3.5
+pytest-timeout==2.3.1
+
+# Acceptance tests against real infrastructure (pytest -m infra).
+psycopg[binary]==3.2.9
+confluent-kafka==2.10.0
+minio==7.2.15
+requests==2.32.3
+types-requests==2.32.0.20250515

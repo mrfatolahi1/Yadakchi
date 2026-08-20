@@ -1,0 +1,54 @@
+# ===========================================================================
+# Root Python tooling — PLATFORM ONLY.
+#
+# This configures the platform's own scripts and tests (platform/**). Every
+# service owns its own dependencies and its own tool configuration inside
+# services/<name>/. Nothing here is installed into a service.
+# ===========================================================================
+[project]
+name = "yadakchi-platform"
+version = "0.1.0"
+description = "Shared infrastructure, contract guards and CI for the yadakchi monorepo"
+requires-python = ">=3.12"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["services", "docs"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM", "PTH", "S", "RUF"]
+ignore = [
+    "E501",   # line length is enforced by the formatter
+    "RUF001", # ambiguous unicode: Persian and typographic characters are intentional
+    "RUF002",
+    "RUF003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"platform/tests/**" = ["S101"]  # assert is the point of a test
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unused_configs = true
+mypy_path = "platform/scripts"
+files = ["platform/scripts", "platform/tests"]
+exclude = "^services/"
+
+[[tool.mypy.overrides]]
+# Infra test dependencies without bundled stubs.
+module = ["confluent_kafka.*", "minio.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["platform/tests"]
+pythonpath = ["platform/scripts"]
+addopts = "-q --strict-markers"
+markers = [
+    "infra: needs the platform containers running (`make infra-up`); skipped otherwise",
+]

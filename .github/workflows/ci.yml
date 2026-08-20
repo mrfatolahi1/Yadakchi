@@ -1,0 +1,228 @@
+# ===========================================================================
+# yadakchi CI
+#
+# Path-filtered: a change under services/matcher/ runs the matcher job and
+# nothing else. A change to platform/, the root files or docs/specs/ runs
+# everything, because those change how every service is built.
+#
+# The guards that catch two services disagreeing — the contract drift check
+# and the spec drift check — always run. A path filter must never be able to
+# hide those.
+# ===========================================================================
+name: ci
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION: "22"
+
+jobs:
+  # ---------------------------------------------------------------- routing
+  changes:
+    name: decide what to run
+    runs-on: ubuntu-latest
+    outputs:
+      python_services: ${{ steps.plan.outputs.python_services }}
+      web: ${{ steps.plan.outputs.web }}
+      any_service: ${{ steps.plan.outputs.any_service }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Work out which services this change touches
+        id: plan
+        run: |
+          BASE="${{ github.event.pull_request.base.sha || github.event.before }}"
+          if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
+            CHANGED=$(git ls-files)
+          else
+            CHANGED=$(git diff --name-only "$BASE"...HEAD)
+          fi
+          echo "$CHANGED" | sed 's/^/  /'
+          echo "$CHANGED" | python platform/scripts/ci_matrix.py --github-output
+
+  # ------------------------------------------------------- always-on guards
+  # These two are why ten agents can work in ten folders without the wire
+  # format quietly forking. They are cheap; they are never skipped.
+  contracts:
+    name: contract drift
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: pip install -r platform/requirements.txt
+      - name: Every consumed/ schema matches its publisher
+        run: python platform/scripts/check_contracts.py --verbose
+
+  specs:
+    name: spec distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: pip install -r platform/requirements.txt
+      - name: Every services/*/BRIEF.md and SPEC.md matches docs/specs/
+        run: python platform/scripts/check_specs.py
+      - name: And `make sync-specs` would change nothing
+        run: |
+          python platform/scripts/sync_specs.py
+          git diff --exit-code -- services/ \
+            || { echo "::error::sync-specs produced changes — commit them"; exit 1; }
+
+  platform:
+    name: platform quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: pip install -r platform/requirements.txt
+      - run: ruff check platform
+      - run: ruff format --check platform
+      - run: mypy
+      - run: pytest -m "not infra"
+      - name: Shell scripts parse
+        run: |
+          bash -n platform/kafka/create_topics.sh
+          sh -n platform/minio/init.sh
+
+  compose:
+    name: compose builds
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Render both compose files
+        run: |
+          cp platform/.env.example platform/.env
+          docker compose --env-file platform/.env -f platform/docker-compose.infra.yml config -q
+          docker compose --env-file platform/.env -f docker-compose.yml config -q
+      - name: Build the images that exist
+        run: |
+          cp platform/.env.example platform/.env
+          BUILDABLE=""
+          for dir in services/*/; do
+            name=$(basename "$dir")
+            [ -f "$dir/Dockerfile" ] && BUILDABLE="$BUILDABLE $name"
+          done
+          if [ -z "$BUILDABLE" ]; then
+            echo "No service has a Dockerfile yet — nothing to build."
+            exit 0
+          fi
+          docker compose --env-file platform/.env -f docker-compose.yml build $BUILDABLE
+
+  # -------------------------------------------------------- per-service jobs
+  service:
+    name: ${{ matrix.service }}
+    needs: changes
+    if: needs.changes.outputs.python_services != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{ fromJSON(needs.changes.outputs.python_services) }}
+    defaults:
+      run:
+        working-directory: services/${{ matrix.service }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: services/${{ matrix.service }}/requirements*.txt
+      - name: Skeleton check
+        id: skeleton
+        run: |
+          if [ ! -f requirements.txt ]; then
+            echo "services/${{ matrix.service }} has no requirements.txt yet — skeleton only."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.skeleton.outputs.ready == 'true'
+        run: |
+          pip install -r requirements.txt
+          [ -f requirements-dev.txt ] && pip install -r requirements-dev.txt || true
+      - if: steps.skeleton.outputs.ready == 'true'
+        run: ruff check .
+      - if: steps.skeleton.outputs.ready == 'true'
+        run: ruff format --check .
+      - if: steps.skeleton.outputs.ready == 'true'
+        run: mypy .
+      - if: steps.skeleton.outputs.ready == 'true'
+        run: pytest
+
+  web:
+    name: web
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: services/web/package-lock.json
+      - name: Skeleton check
+        id: skeleton
+        run: |
+          if [ ! -f package.json ]; then
+            echo "services/web has no package.json yet — skeleton only."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.skeleton.outputs.ready == 'true'
+        run: npm ci
+      - if: steps.skeleton.outputs.ready == 'true'
+        run: npx tsc --noEmit
+      - if: steps.skeleton.outputs.ready == 'true'
+        run: npx eslint .
+      - if: steps.skeleton.outputs.ready == 'true'
+        run: npm run build
+      - if: steps.skeleton.outputs.ready == 'true'
+        run: npm test --if-present
+
+  # A single required status check, so branch protection needs one entry and
+  # a skipped service job does not read as a missing one.
+  ci:
+    name: ci
+    if: always()
+    needs: [contracts, specs, platform, compose, service, web]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if any needed job failed
+        run: |
+          RESULTS='${{ join(needs.*.result, ' ') }}'
+          echo "job results: $RESULTS"
+          for result in $RESULTS; do
+            case "$result" in
+              success|skipped) ;;
+              *) echo "::error::a required job reported '$result'"; exit 1 ;;
+            esac
+          done
+          echo "all required jobs passed"

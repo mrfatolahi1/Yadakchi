@@ -1,0 +1,378 @@
+# ===========================================================================
+# yadakchi — shared infrastructure
+#
+# This is the substrate every service depends on and nobody owns. A service's
+# own compose file `include`s this file; the root docker-compose.yml includes
+# it too. Run it on its own with `make infra-up`.
+#
+# Contains no application code and no service. Adding a service here is a bug.
+#
+#   docker compose --env-file platform/.env -f platform/docker-compose.infra.yml up -d
+# ===========================================================================
+
+name: yadakchi-infra
+
+x-restart: &restart
+  restart: unless-stopped
+
+x-logging: &logging
+  logging:
+    driver: json-file
+    options: { max-size: "20m", max-file: "5" }
+
+services:
+  # ------------------------------------------------------------------ postgres
+  # One server, eight databases, eight users; see platform/postgres/init.sql.
+  # Isolation is enforced by the engine, so a service agent cannot cross the
+  # boundary even by accident.
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: yadakchi-postgres
+    <<: [*restart, *logging]
+    mem_limit: 24g
+    shm_size: 2g
+    stop_grace_period: 60s
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in platform/.env}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+      # Read by init.sql via psql \getenv on first boot. Listed explicitly
+      # rather than through env_file so this container receives exactly the
+      # eight credentials it must create, and nothing else from the platform.
+      CRAWLER_DB_PASSWORD: ${CRAWLER_DB_PASSWORD:?set CRAWLER_DB_PASSWORD in platform/.env}
+      ENRICHER_DB_PASSWORD: ${ENRICHER_DB_PASSWORD:?set ENRICHER_DB_PASSWORD in platform/.env}
+      FITMENT_DB_PASSWORD: ${FITMENT_DB_PASSWORD:?set FITMENT_DB_PASSWORD in platform/.env}
+      MATCHER_DB_PASSWORD: ${MATCHER_DB_PASSWORD:?set MATCHER_DB_PASSWORD in platform/.env}
+      CATALOG_DB_PASSWORD: ${CATALOG_DB_PASSWORD:?set CATALOG_DB_PASSWORD in platform/.env}
+      SEARCH_DB_PASSWORD: ${SEARCH_DB_PASSWORD:?set SEARCH_DB_PASSWORD in platform/.env}
+      BILLING_DB_PASSWORD: ${BILLING_DB_PASSWORD:?set BILLING_DB_PASSWORD in platform/.env}
+      OPS_DB_PASSWORD: ${OPS_DB_PASSWORD:?set OPS_DB_PASSWORD in platform/.env}
+    command:
+      - postgres
+      - -c
+      - config_file=/etc/postgresql/postgresql.conf
+      - -c
+      - hba_file=/var/lib/postgresql/data/pg_hba.conf
+      - -c
+      - ident_file=/var/lib/postgresql/data/pg_ident.conf
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      # Runs once, on an empty data directory only.
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/10-init.sql:ro
+    ports:
+      - "${POSTGRES_HOST_PORT:-15432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    networks: [yadakchi]
+
+  # --------------------------------------------------------------------- kafka
+  # Single-broker KRaft (no ZooKeeper). Fine for one host.
+  # PRODUCTION HARDENING: three brokers, replication factor 3,
+  # min.insync.replicas 2, and acks=all in every producer. A single broker has
+  # no redundancy — the event log is the system's memory, so this is the first
+  # thing to fix when leaving one machine.
+  kafka:
+    image: apache/kafka:3.9.0
+    container_name: yadakchi-kafka
+    <<: [*restart, *logging]
+    mem_limit: 8g
+    stop_grace_period: 60s
+    depends_on:
+      kafka-data-perms:
+        condition: service_completed_successfully
+    environment:
+      CLUSTER_ID: ${KAFKA_CLUSTER_ID:-s_Mzx3_CRxOV7_zN3r2PMw}
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,HOST://0.0.0.0:19092
+      # INTERNAL is what services use; HOST is what your laptop uses. CONTROLLER
+      # is advertised too because Kafka 3.9 validates the controller's advertised
+      # address and refuses to derive it from a 0.0.0.0 bind.
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,HOST://localhost:${KAFKA_HOST_PORT:-19092},CONTROLLER://kafka:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      # Topics are declared in kafka/topics.yml and applied by create_topics.sh.
+      # Auto-creation is off so a typo in a consumer cannot invent a topic.
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_NUM_PARTITIONS: 6
+      KAFKA_LOG_RETENTION_HOURS: 2160        # 90 days default; per-topic overrides win
+      KAFKA_LOG_SEGMENT_BYTES: 268435456     # 256 MB
+      KAFKA_MESSAGE_MAX_BYTES: 10485760      # 10 MB: products.changed is a fat payload
+      KAFKA_REPLICA_FETCH_MAX_BYTES: 10485760
+      KAFKA_HEAP_OPTS: -Xms2g -Xmx4g
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    ports:
+      - "${KAFKA_HOST_PORT:-19092}:19092"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+      start_period: 30s
+    networks: [yadakchi]
+
+  # The Kafka image runs as uid 1000 and does not declare a VOLUME for its log
+  # dir, so a fresh named volume would arrive root-owned and unwritable.
+  kafka-data-perms:
+    image: busybox:1.36
+    container_name: yadakchi-kafka-data-perms
+    mem_limit: 256m
+    command: sh -c "mkdir -p /data && chown -R 1000:1000 /data"
+    volumes:
+      - kafka_data:/data
+    restart: "no"
+    networks: [yadakchi]
+
+  # Applies kafka/topics.yml on startup. Idempotent, so it runs every boot and
+  # converges the broker to whatever the registry declares.
+  kafka-init:
+    image: apache/kafka:3.9.0
+    container_name: yadakchi-kafka-init
+    mem_limit: 1g
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_BIN: /opt/kafka/bin
+      BOOTSTRAP: kafka:9092
+      TOPICS_FILE: /platform/kafka/topics.yml
+    entrypoint: ["/bin/bash", "/platform/kafka/create_topics.sh"]
+    volumes:
+      - ./kafka:/platform/kafka:ro
+    restart: "no"
+    networks: [yadakchi]
+
+  # Debugging UI: browse topics, inspect payloads, watch consumer lag.
+  # Internal network only — never expose this publicly.
+  kafka-ui:
+    image: provectuslabs/kafka-ui:v0.7.2
+    container_name: yadakchi-kafka-ui
+    <<: [*restart, *logging]
+    mem_limit: 1g
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_CLUSTERS_0_NAME: yadakchi
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      DYNAMIC_CONFIG_ENABLED: "true"
+      SERVER_SERVLET_CONTEXT_PATH: /
+    ports:
+      - "127.0.0.1:${KAFKA_UI_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health >/dev/null 2>&1 || curl -sf http://localhost:8080/actuator/health >/dev/null 2>&1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 40s
+    networks: [yadakchi]
+
+  # Consumer lag and topic offsets for Prometheus.
+  kafka-exporter:
+    image: danielqsj/kafka-exporter:v1.7.0
+    container_name: yadakchi-kafka-exporter
+    <<: [*restart, *logging]
+    mem_limit: 256m
+    depends_on:
+      kafka:
+        condition: service_healthy
+    command: ["--kafka.server=kafka:9092", "--web.listen-address=:9308"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9308/metrics >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks: [yadakchi]
+
+  # --------------------------------------------------------------------- redis
+  # Cache and locks only, one logical database per service (see .env.example).
+  # Never an event bus: cross-service messages go through Kafka, always.
+  redis:
+    image: redis:7.4-alpine
+    container_name: yadakchi-redis
+    <<: [*restart, *logging]
+    mem_limit: 4g
+    command:
+      - redis-server
+      - --requirepass
+      - ${REDIS_PASSWORD:?set REDIS_PASSWORD in platform/.env}
+      - --databases
+      - "16"
+      - --maxmemory
+      - 3gb
+      # volatile-lru: only keys with a TTL are evictable, so a cache flood can
+      # never evict a lock. Give every cache entry an explicit TTL.
+      - --maxmemory-policy
+      - volatile-lru
+      - --appendonly
+      - "yes"
+      - --appendfsync
+      - everysec
+    volumes:
+      - redis_data:/data
+    ports:
+      - "127.0.0.1:${REDIS_HOST_PORT:-16379}:6379"
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    networks: [yadakchi]
+
+  # --------------------------------------------------------------------- minio
+  # Raw archive object storage. Owned exclusively by crawler; no other service
+  # gets credentials. Raw data is never discarded — this is the one store we
+  # cannot rebuild.
+  minio:
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    container_name: yadakchi-minio
+    <<: [*restart, *logging]
+    mem_limit: 2g
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?set MINIO_ROOT_USER in platform/.env}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?set MINIO_ROOT_PASSWORD in platform/.env}
+      MINIO_PROMETHEUS_AUTH_TYPE: public
+    volumes:
+      - minio_data:/data
+    ports:
+      - "127.0.0.1:${MINIO_API_PORT:-9000}:9000"
+      - "127.0.0.1:${MINIO_CONSOLE_PORT:-9001}:9001"
+    healthcheck:
+      test: ["CMD-SHELL", "mc ready local >/dev/null 2>&1 || curl -sf http://localhost:9000/minio/health/live >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 20s
+    networks: [yadakchi]
+
+  minio-init:
+    image: minio/mc:RELEASE.2025-04-16T18-13-26Z
+    container_name: yadakchi-minio-init
+    mem_limit: 512m
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      RAW_ARCHIVE_BUCKET: ${RAW_ARCHIVE_BUCKET:-raw-archive}
+      CRAWLER_S3_ACCESS_KEY: ${CRAWLER_S3_ACCESS_KEY:-crawler}
+      CRAWLER_S3_SECRET_KEY: ${CRAWLER_S3_SECRET_KEY:?set CRAWLER_S3_SECRET_KEY in platform/.env}
+    entrypoint: ["/bin/sh", "/platform/minio/init.sh"]
+    volumes:
+      - ./minio:/platform/minio:ro
+    restart: "no"
+    networks: [yadakchi]
+
+  # ----------------------------------------------------------------- typesense
+  # Owned exclusively by search. No other service holds the admin key.
+  typesense:
+    image: typesense/typesense:27.1
+    container_name: yadakchi-typesense
+    <<: [*restart, *logging]
+    mem_limit: 6g
+    command:
+      - --data-dir=/data
+      - --api-key=${TYPESENSE_API_KEY:?set TYPESENSE_API_KEY in platform/.env}
+      - --enable-cors
+      - --api-port=8108
+    volumes:
+      - typesense_data:/data
+    ports:
+      - "127.0.0.1:${TYPESENSE_HOST_PORT:-8108}:8108"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8108/health >/dev/null 2>&1 || wget -qO- http://localhost:8108/health >/dev/null 2>&1 || bash -c 'exec 3<>/dev/tcp/127.0.0.1/8108'"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    networks: [yadakchi]
+
+  # ------------------------------------------------------------- observability
+  prometheus:
+    image: prom/prometheus:v3.2.1
+    container_name: yadakchi-prometheus
+    <<: [*restart, *logging]
+    mem_limit: 1g
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=30d
+      - --web.enable-lifecycle
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./observability/rules:/etc/prometheus/rules:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "127.0.0.1:${PROMETHEUS_PORT:-9090}:9090"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9090/-/healthy >/dev/null 2>&1 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    networks: [yadakchi]
+
+  grafana:
+    image: grafana/grafana:11.6.0
+    container_name: yadakchi-grafana
+    <<: [*restart, *logging]
+    mem_limit: 1g
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?set GRAFANA_ADMIN_PASSWORD in platform/.env}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_LOG_MODE: console
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "127.0.0.1:${GRAFANA_PORT:-3001}:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health >/dev/null 2>&1 || curl -sf http://localhost:3000/api/health >/dev/null 2>&1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks: [yadakchi]
+
+volumes:
+  postgres_data: { name: yadakchi_postgres_data }
+  kafka_data: { name: yadakchi_kafka_data }
+  redis_data: { name: yadakchi_redis_data }
+  minio_data: { name: yadakchi_minio_data }
+  typesense_data: { name: yadakchi_typesense_data }
+  prometheus_data: { name: yadakchi_prometheus_data }
+  grafana_data: { name: yadakchi_grafana_data }
+
+networks:
+  # Created once by `make net` (docker network create yadakchi). External so
+  # each service's own compose file can join the same network independently.
+  yadakchi:
+    name: yadakchi
+    external: true

@@ -1,0 +1,35 @@
+# ---------------------------------------------------------------------------
+# Starter alerting rules. Deliberately few and deliberately about the things
+# that silently break this architecture: a stalled Kafka consumer, a service
+# that stopped scraping, and a DLQ that started filling.
+#
+# Thresholds are placeholders until we have production baselines.
+# ---------------------------------------------------------------------------
+groups:
+  - name: yadakchi-availability
+    rules:
+      - alert: ServiceDown
+        expr: up{job=~"yadakchi-.*"} == 0
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: "{{ $labels.service }} is not being scraped"
+          description: "No /metrics response for 5 minutes."
+
+  - name: yadakchi-pipeline
+    rules:
+      # Consumer lag is the canonical symptom of a wedged consumer command.
+      - alert: KafkaConsumerLagHigh
+        expr: sum by (topic, consumergroup) (kafka_consumergroup_lag) > 50000
+        for: 15m
+        labels: { severity: warning }
+        annotations:
+          summary: "{{ $labels.consumergroup }} is behind on {{ $labels.topic }}"
+
+      # Anything reaching a DLQ means a message we could not process at all.
+      - alert: DeadLetterTraffic
+        expr: sum by (topic) (rate(kafka_topic_partition_current_offset{topic=~".*\\.dlq"}[15m])) > 0
+        for: 15m
+        labels: { severity: warning }
+        annotations:
+          summary: "Messages are arriving on {{ $labels.topic }}"
