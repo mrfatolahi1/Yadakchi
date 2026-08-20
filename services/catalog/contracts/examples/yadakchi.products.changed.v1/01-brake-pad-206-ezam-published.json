@@ -1,0 +1,96 @@
+{
+  "event_id": "bc41086e-6883-409b-8a6b-8ca0beb244f5",
+  "event_type": "products.changed",
+  "version": 1,
+  "occurred_at": "2026-08-19T07:25:02Z",
+  "producer": "catalog",
+  "trace_id": "9d4c1f7a2b8e6053",
+  "payload": {
+    "product_uid": "93c9da93-7ffb-498e-afc1-2798ea05112e",
+    "slug": "لنت-ترمز-جلو-پژو-206-تیپ-5-عظام-4f2c8a",
+    "title": "لنت ترمز جلو پژو 206 تیپ 5 عظام",
+    "brand": "ezam",
+    "part_type": "brake_pad_front",
+    "authenticity_dominant": "genuine",
+    "image_url": "https://cdn.yadakmarket.com/media/482913/lent-tormoz-206-ezam.jpg",
+    "part_numbers": [
+      "425438"
+    ],
+    "crossref_codes": [
+      "425235"
+    ],
+    "vehicles_compatible": [
+      "peugeot-206-type-5",
+      "peugeot-206-type-6"
+    ],
+    "vehicles_incompatible": [
+      "peugeot-405-glx"
+    ],
+    "vehicles_unknown": [
+      "peugeot-206-sd-v8"
+    ],
+    "risky_family_note_fa": null,
+    "offer_count": 3,
+    "min_price_toman": 2450000,
+    "max_price_toman": 2690000,
+    "median_price_toman": 2570000,
+    "offers": [
+      {
+        "offer_uid": "ad1e2af57f36691329247db654602a4e",
+        "seller_key": "yadakyar",
+        "seller_name": "یدک‌یار",
+        "price_toman": 2450000,
+        "stock_status": "in_stock",
+        "authenticity_claim": "genuine",
+        "trust_score": 0.82,
+        "rank_position": 1,
+        "url": "https://yadakmarket.com/p-482913",
+        "is_cheapest": true
+      },
+      {
+        "offer_uid": "f6254affc0a4ab65d4ac7fa35e556eef",
+        "seller_key": "yadaksara",
+        "seller_name": "یدک‌سرا",
+        "price_toman": 2380000,
+        "stock_status": "out_of_stock",
+        "authenticity_claim": "genuine",
+        "trust_score": 0.55,
+        "rank_position": 2,
+        "url": "https://yadaksara.com/product/SKU-11204",
+        "is_cheapest": false
+      },
+      {
+        "offer_uid": "77c1eef0f4f43683ec120aa9e5453143",
+        "seller_key": "otoyar",
+        "seller_name": "اتویار",
+        "price_toman": 2690000,
+        "stock_status": "in_stock",
+        "authenticity_claim": "genuine",
+        "trust_score": 0.41,
+        "rank_position": 3,
+        "url": "https://otoyar.ir/parts/lent-tormoz-jolo-206-ezam",
+        "is_cheapest": false
+      }
+    ],
+    "price_series": [
+      {
+        "date": "2026-08-17",
+        "min_toman": 2380000,
+        "median_toman": 2510000
+      },
+      {
+        "date": "2026-08-18",
+        "min_toman": 2420000,
+        "median_toman": 2545000
+      },
+      {
+        "date": "2026-08-19",
+        "min_toman": 2450000,
+        "median_toman": 2570000
+      }
+    ],
+    "is_published": true,
+    "successor_product_uid": null,
+    "updated_at": "2026-08-19T07:25:02Z"
+  }
+}

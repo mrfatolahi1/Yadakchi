@@ -1,0 +1,17 @@
+{
+  "event_id": "3a3b9287-5b7a-419f-83c7-51199de340bd",
+  "event_type": "clicks.recorded",
+  "version": 1,
+  "occurred_at": "2026-08-20T07:05:44Z",
+  "producer": "billing",
+  "trace_id": "d18b3f7c05ae9264",
+  "payload": {
+    "click_id": "abbd0041-6cd4-4242-ae91-0ccd718a7f39",
+    "product_uid": "93c9da93-7ffb-498e-afc1-2798ea05112e",
+    "offer_uid": "77c1eef0f4f43683ec120aa9e5453143",
+    "seller_key": "otoyar",
+    "cost_toman": 0,
+    "is_suspicious": true,
+    "occurred_at": "2026-08-20T07:05:44Z"
+  }
+}

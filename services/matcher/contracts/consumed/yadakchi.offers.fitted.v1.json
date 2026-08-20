@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yadakchi.ir/schemas/yadakchi.offers.fitted.v1.json",
+  "title": "yadakchi.offers.fitted.v1",
+  "description": "Which vehicles one offer fits, tri-state, with the evidence behind each verdict.\n\nProducers: fitment. Consumers: matcher, catalog.\nKafka message key: offer_uid — it must be set; compaction and partition ordering depend on it.\nCleanup: delete, retention 90 days.\n\nThis file validates a whole Kafka message body: the shared envelope from docs/specs/02-EVENT-CONTRACTS.md plus this topic's payload. Unknown fields are ignored, never rejected, at both levels — that is what lets a producer add an optional field without breaking a consumer.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "event_id",
+    "event_type",
+    "version",
+    "occurred_at",
+    "producer",
+    "trace_id",
+    "payload"
+  ],
+  "properties": {
+    "event_id": {
+      "description": "UUIDv4, unique per emission. Two emissions of the same fact carry different event_ids; consumers deduplicate on the payload's natural identity, not on this.",
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+    },
+    "event_type": {
+      "description": "The topic name without the 'yadakchi.' prefix and without the version suffix.",
+      "type": "string",
+      "const": "offers.fitted"
+    },
+    "version": {
+      "description": "Envelope and payload version. A removed field, a renamed field or a changed type is a breaking change: publish to .v2 and run both until consumers migrate.",
+      "type": "integer",
+      "const": 1
+    },
+    "occurred_at": {
+      "description": "When the fact happened, ISO-8601 UTC with Z. Consumers tolerate out-of-order delivery across partitions by comparing this, never by assuming global ordering.",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$"
+    },
+    "producer": {
+      "description": "The service that emitted this message. Constrained to the producers declared for this topic in platform/kafka/topics.yml.",
+      "type": "string",
+      "enum": [
+        "fitment"
+      ]
+    },
+    "trace_id": {
+      "description": "Propagated across the whole chain for debugging. Minted by crawler on yadakchi.listings.observed.v1 and carried through every derived event; a service starting a chain of its own (a human admin edit, a scheduled recomputation) mints a fresh one. Every service logs it.",
+      "type": "string",
+      "minLength": 1
+    },
+    "payload": {
+      "description": "Fitment is tri-state and is never collapsed to a boolean: downstream, unknown means 'show with a caveat', not 'incompatible'. This topic is not compacted, so payload is never null; there is no tombstone on a delete-retention topic.",
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "offer_uid",
+        "fitments",
+        "crossref_codes",
+        "computed_at"
+      ],
+      "properties": {
+        "offer_uid": {
+          "description": "The offer these verdicts belong to.",
+          "type": "string",
+          "pattern": "^[0-9a-f]{32}$"
+        },
+        "fitments": {
+          "description": "One entry per vehicle this offer was evaluated against. An empty array means nothing could be evaluated yet.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": [
+              "vehicle_slug",
+              "status",
+              "confidence",
+              "provenance",
+              "evidence"
+            ],
+            "properties": {
+              "vehicle_slug": {
+                "description": "The vehicle this verdict is about.",
+                "type": "string",
+                "pattern": "^[a-z0-9]+(?:[-_][a-z0-9]+)*$"
+              },
+              "status": {
+                "description": "Tri-state verdict. Never a boolean.",
+                "type": "string",
+                "enum": [
+                  "compatible",
+                  "incompatible",
+                  "unknown"
+                ]
+              },
+              "confidence": {
+                "description": "Confidence in this verdict, 0..1.",
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "provenance": {
+                "description": "How the verdict was reached.",
+                "type": "string",
+                "enum": [
+                  "rule",
+                  "model",
+                  "human",
+                  "catalog",
+                  "consensus"
+                ]
+              },
+              "evidence": {
+                "description": "What the verdict rests on: agreeing seller count, the offers and hints behind it, the rule that fired.",
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        "crossref_codes": {
+          "description": "Equivalent part numbers found for this offer. A display hint, never an identity claim — matcher must not merge across brands because of one.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "risky_family": {
+          "description": "Set when the offer's part type needs finer granularity than model plus trim (headlights need a year, head gaskets need an engine code) and that granularity is absent. null otherwise.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": true,
+          "required": [
+            "part_type",
+            "required_granularity",
+            "note_fa"
+          ],
+          "properties": {
+            "part_type": {
+              "description": "The controlled-vocabulary key of the risky family.",
+              "type": "string",
+              "minLength": 1
+            },
+            "required_granularity": {
+              "description": "What is missing, e.g. \"year\" or \"engine\". Drives the warning downstream.",
+              "type": "string",
+              "minLength": 1
+            },
+            "note_fa": {
+              "description": "The Persian warning shown to the user on the product page.",
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "computed_at": {
+          "description": "When these verdicts were computed.",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$"
+        }
+      }
+    }
+  }
+}

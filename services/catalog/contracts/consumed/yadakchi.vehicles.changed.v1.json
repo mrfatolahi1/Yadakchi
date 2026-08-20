@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yadakchi.ir/schemas/yadakchi.vehicles.changed.v1.json",
+  "title": "yadakchi.vehicles.changed.v1",
+  "description": "One row of the hand-built vehicle tree. Compacted, so the topic is the tree.\n\nProducers: fitment. Consumers: matcher, catalog, search, web.\nKafka message key: vehicle_slug — it must be set; compaction and partition ordering depend on it.\nCleanup: compact, retention infinite.\n\nThis file validates a whole Kafka message body: the shared envelope from docs/specs/02-EVENT-CONTRACTS.md plus this topic's payload. Unknown fields are ignored, never rejected, at both levels — that is what lets a producer add an optional field without breaking a consumer.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "event_id",
+    "event_type",
+    "version",
+    "occurred_at",
+    "producer",
+    "trace_id",
+    "payload"
+  ],
+  "properties": {
+    "event_id": {
+      "description": "UUIDv4, unique per emission. Two emissions of the same fact carry different event_ids; consumers deduplicate on the payload's natural identity, not on this.",
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+    },
+    "event_type": {
+      "description": "The topic name without the 'yadakchi.' prefix and without the version suffix.",
+      "type": "string",
+      "const": "vehicles.changed"
+    },
+    "version": {
+      "description": "Envelope and payload version. A removed field, a renamed field or a changed type is a breaking change: publish to .v2 and run both until consumers migrate.",
+      "type": "integer",
+      "const": 1
+    },
+    "occurred_at": {
+      "description": "When the fact happened, ISO-8601 UTC with Z. Consumers tolerate out-of-order delivery across partitions by comparing this, never by assuming global ordering.",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$"
+    },
+    "producer": {
+      "description": "The service that emitted this message. Constrained to the producers declared for this topic in platform/kafka/topics.yml.",
+      "type": "string",
+      "enum": [
+        "fitment"
+      ]
+    },
+    "trace_id": {
+      "description": "Propagated across the whole chain for debugging. Minted by crawler on yadakchi.listings.observed.v1 and carried through every derived event; a service starting a chain of its own (a human admin edit, a scheduled recomputation) mints a fresh one. Every service logs it.",
+      "type": "string",
+      "minLength": 1
+    },
+    "payload": {
+      "description": "fitment emits the whole tree on first boot so a new consumer can bootstrap from the beginning, then one message per edit. A tombstone — payload: null with the envelope intact — means this entity is deleted; compaction keeps it as the last word on the key.",
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true,
+      "required": [
+        "vehicle_slug",
+        "brand",
+        "model",
+        "display_name_fa",
+        "aliases",
+        "is_published",
+        "updated_at"
+      ],
+      "properties": {
+        "vehicle_slug": {
+          "description": "Kebab-case identity, e.g. peugeot-206-type-5. Minted by fitment.",
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:[-_][a-z0-9]+)*$"
+        },
+        "brand": {
+          "description": "Manufacturer, e.g. \"Peugeot\".",
+          "type": "string",
+          "minLength": 1
+        },
+        "model": {
+          "description": "Model, e.g. \"206\".",
+          "type": "string",
+          "minLength": 1
+        },
+        "trim": {
+          "description": "Trim (تیپ), e.g. \"Type 5\". null at model level — a trim is never guessed.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "year_from": {
+          "description": "First model year covered, or null when unbounded.",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "year_to": {
+          "description": "Last model year covered, or null when still current.",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "engine_code": {
+          "description": "Engine code, e.g. \"TU5JP4\". null when the row is not engine-specific.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "display_name_fa": {
+          "description": "The Persian name shown to users, e.g. \"پژو ۲۰۶ تیپ ۵\".",
+          "type": "string",
+          "minLength": 1
+        },
+        "aliases": {
+          "description": "Every spelling a seller might use: with and without ZWNJ, Persian and Latin digits, common misspellings. This array is what makes resolution work.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "is_published": {
+          "description": "false until fitment coverage clears the 70% gate. An under-covered vehicle produces empty search results.",
+          "type": "boolean"
+        },
+        "updated_at": {
+          "description": "When this row last changed.",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$"
+        }
+      }
+    }
+  }
+}

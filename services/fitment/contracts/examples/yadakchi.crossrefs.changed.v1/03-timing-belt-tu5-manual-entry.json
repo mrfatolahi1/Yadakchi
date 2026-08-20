@@ -1,0 +1,17 @@
+{
+  "event_id": "9d9c06d6-b0f0-48c2-87c8-82fc25747fb2",
+  "event_type": "crossrefs.changed",
+  "version": 1,
+  "occurred_at": "2026-08-06T14:09:33Z",
+  "producer": "fitment",
+  "trace_id": "24c7f0b93ae15d8c",
+  "payload": {
+    "code_a": "0816F9",
+    "code_b": "CT1055",
+    "brand_a": "peugeot",
+    "brand_b": "contitech",
+    "confidence": 1.0,
+    "provenance": "human",
+    "updated_at": "2026-08-06T14:09:33Z"
+  }
+}

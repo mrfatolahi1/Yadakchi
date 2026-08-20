@@ -6,6 +6,9 @@
 PyYAML==6.0.2
 types-PyYAML==6.0.12.20250516
 
+# Validates the event schemas and their examples (spec 02).
+jsonschema==4.23.0
+
 # Lint / type / test, the same versions CI uses.
 ruff==0.11.10
 mypy==1.15.0

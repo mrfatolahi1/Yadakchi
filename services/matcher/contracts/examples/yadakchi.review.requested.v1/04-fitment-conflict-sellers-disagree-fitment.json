@@ -1,0 +1,47 @@
+{
+  "event_id": "9169a567-c51f-4682-acd4-fc3dbc367a12",
+  "event_type": "review.requested",
+  "version": 1,
+  "occurred_at": "2026-08-19T07:21:48Z",
+  "producer": "fitment",
+  "trace_id": "5e2ab8c1d70f3496",
+  "payload": {
+    "request_uid": "11beeb4a-badf-46c7-af82-af74f38463fd",
+    "kind": "fitment_conflict",
+    "priority": 410,
+    "subject": {
+      "part_number": "425438",
+      "vehicle_slug": "peugeot-206-sd-v8",
+      "part_type": "brake_pad_front"
+    },
+    "evidence": {
+      "rule": "conflicting_consensus",
+      "compatible_claims": [
+        {
+          "offer_uid": "77c1eef0f4f43683ec120aa9e5453143",
+          "seller_key": "otoyar",
+          "title_normalized": "لنت جلو 206 تیپ 5 عظام دست چهار عددی",
+          "claim": "compatible"
+        },
+        {
+          "offer_uid": "f6254affc0a4ab65d4ac7fa35e556eef",
+          "seller_key": "yadaksara",
+          "title_normalized": "لنت ترمز جلو پژو 206 تیپ 5 و 6 عظام کد 425438",
+          "claim": "compatible"
+        }
+      ],
+      "incompatible_claims": [
+        {
+          "offer_uid": "ad1e2af57f36691329247db654602a4e",
+          "seller_key": "yadakyar",
+          "title_normalized": "لنت ترمز جلو پژو 206 تیپ 5 عظام",
+          "claim": "incompatible",
+          "note_fa": "فروشنده نوشته «مناسب صندوق‌دار نیست»"
+        }
+      ],
+      "vehicle_display_name_fa": "پژو ۲۰۶ صندوق‌دار V8",
+      "verdict_without_human": "unknown"
+    },
+    "requested_at": "2026-08-19T07:21:48Z"
+  }
+}

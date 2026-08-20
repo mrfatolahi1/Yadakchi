@@ -1,0 +1,81 @@
+{
+  "event_id": "0c013ee6-c994-4802-8819-f1f4b35ec415",
+  "event_type": "offers.fitted",
+  "version": 1,
+  "occurred_at": "2026-08-19T07:19:12Z",
+  "producer": "fitment",
+  "trace_id": "9d4c1f7a2b8e6053",
+  "payload": {
+    "offer_uid": "ad1e2af57f36691329247db654602a4e",
+    "fitments": [
+      {
+        "vehicle_slug": "peugeot-206-type-5",
+        "status": "compatible",
+        "confidence": 0.94,
+        "provenance": "consensus",
+        "evidence": {
+          "rule": "consensus_part_number",
+          "part_number": "425438",
+          "agreeing_sellers": 7,
+          "disagreeing_sellers": 0,
+          "seller_keys": [
+            "yadakyar",
+            "otoyar",
+            "yadaksara",
+            "yadak118",
+            "carinag",
+            "parsyadak",
+            "yadakbazar"
+          ],
+          "matched_hint": "پژو ۲۰۶ تیپ ۵"
+        }
+      },
+      {
+        "vehicle_slug": "peugeot-206-type-6",
+        "status": "compatible",
+        "confidence": 0.68,
+        "provenance": "consensus",
+        "evidence": {
+          "rule": "consensus_part_number",
+          "part_number": "425438",
+          "agreeing_sellers": 3,
+          "disagreeing_sellers": 0,
+          "seller_keys": [
+            "yadaksara",
+            "otoyar",
+            "carinag"
+          ],
+          "matched_hint": "تیپ 6"
+        }
+      },
+      {
+        "vehicle_slug": "peugeot-206-sd-v8",
+        "status": "unknown",
+        "confidence": 0.21,
+        "provenance": "rule",
+        "evidence": {
+          "rule": "single_seller_claim",
+          "agreeing_sellers": 1,
+          "note": "یک فروشنده ادعا کرده، برای تصمیم کافی نیست"
+        }
+      },
+      {
+        "vehicle_slug": "peugeot-405-glx",
+        "status": "incompatible",
+        "confidence": 0.81,
+        "provenance": "human",
+        "evidence": {
+          "rule": "human_correction",
+          "request_uid": "0f0b6d6e-8b2e-4d5a-9f2a-3b7c1d4e5a60",
+          "actor": "narges.k",
+          "note": "قطر دیسک ۴۰۵ متفاوت است"
+        }
+      }
+    ],
+    "crossref_codes": [
+      "425235"
+    ],
+    "risky_family": null,
+    "computed_at": "2026-08-19T07:19:12Z"
+  }
+}

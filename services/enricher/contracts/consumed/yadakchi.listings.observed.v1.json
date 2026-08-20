@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yadakchi.ir/schemas/yadakchi.listings.observed.v1.json",
+  "title": "yadakchi.listings.observed.v1",
+  "description": "One observed seller listing, exactly as fetched. crawler interprets nothing.\n\nProducers: crawler. Consumers: enricher.\nKafka message key: {source_key}:{external_key} — it must be set; compaction and partition ordering depend on it.\nCleanup: delete, retention 90 days.\n\nThis file validates a whole Kafka message body: the shared envelope from docs/specs/02-EVENT-CONTRACTS.md plus this topic's payload. Unknown fields are ignored, never rejected, at both levels — that is what lets a producer add an optional field without breaking a consumer.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "event_id",
+    "event_type",
+    "version",
+    "occurred_at",
+    "producer",
+    "trace_id",
+    "payload"
+  ],
+  "properties": {
+    "event_id": {
+      "description": "UUIDv4, unique per emission. Two emissions of the same fact carry different event_ids; consumers deduplicate on the payload's natural identity, not on this.",
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+    },
+    "event_type": {
+      "description": "The topic name without the 'yadakchi.' prefix and without the version suffix.",
+      "type": "string",
+      "const": "listings.observed"
+    },
+    "version": {
+      "description": "Envelope and payload version. A removed field, a renamed field or a changed type is a breaking change: publish to .v2 and run both until consumers migrate.",
+      "type": "integer",
+      "const": 1
+    },
+    "occurred_at": {
+      "description": "When the fact happened, ISO-8601 UTC with Z. Consumers tolerate out-of-order delivery across partitions by comparing this, never by assuming global ordering.",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$"
+    },
+    "producer": {
+      "description": "The service that emitted this message. Constrained to the producers declared for this topic in platform/kafka/topics.yml.",
+      "type": "string",
+      "enum": [
+        "crawler"
+      ]
+    },
+    "trace_id": {
+      "description": "Propagated across the whole chain for debugging. Minted by crawler on yadakchi.listings.observed.v1 and carried through every derived event; a service starting a chain of its own (a human admin edit, a scheduled recomputation) mints a fresh one. Every service logs it.",
+      "type": "string",
+      "minLength": 1
+    },
+    "payload": {
+      "description": "The full page lives in MinIO, not in Kafka. The per-listing fragment is inline because enricher needs it and re-fetching would be expensive. This topic is not compacted, so payload is never null; there is no tombstone on a delete-retention topic.",
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "source_key",
+        "external_key",
+        "url",
+        "raw_title",
+        "raw_fragment",
+        "archive_uri",
+        "content_hash",
+        "observed_at"
+      ],
+      "properties": {
+        "source_key": {
+          "description": "Stable slug of the source this listing was fetched from, minted by crawler.",
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:[-_][a-z0-9]+)*$"
+        },
+        "external_key": {
+          "description": "The seller's own id or url path. Stable within the source; it is half of the offer_uid input.",
+          "type": "string",
+          "minLength": 1
+        },
+        "url": {
+          "description": "Canonical URL of the listing on the seller's site.",
+          "type": "string",
+          "format": "uri",
+          "minLength": 1
+        },
+        "raw_title": {
+          "description": "The listing title exactly as published. Never normalized here.",
+          "type": "string",
+          "minLength": 1
+        },
+        "raw_price_text": {
+          "description": "Price text untouched, e.g. \"۲٬۴۵۰٬۰۰۰ تومان\". null when the page shows no price.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "raw_stock_text": {
+          "description": "Stock text untouched, e.g. \"موجود در انبار\". null when the page states nothing.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "image_url": {
+          "description": "Listing image URL, or null when the listing has no image.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        },
+        "raw_fragment": {
+          "description": "HTML or JSON of this listing only, capped at 64 KB. The maxLength below is a character ceiling; the 64 KB cap is on encoded bytes and is enforced by the producer.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 65536
+        },
+        "archive_uri": {
+          "description": "MinIO path to the full page snapshot in the raw-archive bucket.",
+          "type": "string",
+          "minLength": 1
+        },
+        "content_hash": {
+          "description": "sha256 of raw_fragment, lowercase hex.",
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "observed_at": {
+          "description": "When the listing was fetched. Replays reuse the original value.",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yadakchi.ir/schemas/yadakchi.review.requested.v1.json",
+  "title": "yadakchi.review.requested.v1",
+  "description": "Something a human has to decide.\n\nProducers: matcher, crawler, fitment, enricher, billing. Consumers: ops.\nKafka message key: request_uid — it must be set; compaction and partition ordering depend on it.\nCleanup: delete, retention 30 days.\n\nThis file validates a whole Kafka message body: the shared envelope from docs/specs/02-EVENT-CONTRACTS.md plus this topic's payload. Unknown fields are ignored, never rejected, at both levels — that is what lets a producer add an optional field without breaking a consumer.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "event_id",
+    "event_type",
+    "version",
+    "occurred_at",
+    "producer",
+    "trace_id",
+    "payload"
+  ],
+  "properties": {
+    "event_id": {
+      "description": "UUIDv4, unique per emission. Two emissions of the same fact carry different event_ids; consumers deduplicate on the payload's natural identity, not on this.",
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+    },
+    "event_type": {
+      "description": "The topic name without the 'yadakchi.' prefix and without the version suffix.",
+      "type": "string",
+      "const": "review.requested"
+    },
+    "version": {
+      "description": "Envelope and payload version. A removed field, a renamed field or a changed type is a breaking change: publish to .v2 and run both until consumers migrate.",
+      "type": "integer",
+      "const": 1
+    },
+    "occurred_at": {
+      "description": "When the fact happened, ISO-8601 UTC with Z. Consumers tolerate out-of-order delivery across partitions by comparing this, never by assuming global ordering.",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$"
+    },
+    "producer": {
+      "description": "The service that emitted this message. Constrained to the producers declared for this topic in platform/kafka/topics.yml.",
+      "type": "string",
+      "enum": [
+        "matcher",
+        "crawler",
+        "fitment",
+        "enricher",
+        "billing"
+      ]
+    },
+    "trace_id": {
+      "description": "Propagated across the whole chain for debugging. Minted by crawler on yadakchi.listings.observed.v1 and carried through every derived event; a service starting a chain of its own (a human admin edit, a scheduled recomputation) mints a fresh one. Every service logs it.",
+      "type": "string",
+      "minLength": 1
+    },
+    "payload": {
+      "description": "Five services produce to this topic; matcher owns the schema and every other producer carries a byte-identical consumed/ copy. evidence must be SELF-SUFFICIENT: ops renders the review screen from this event alone and must never query another service to do it — a review stays decidable when the rest of the system is down. This topic is not compacted, so payload is never null; there is no tombstone on a delete-retention topic.",
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "request_uid",
+        "kind",
+        "priority",
+        "subject",
+        "evidence",
+        "requested_at"
+      ],
+      "properties": {
+        "request_uid": {
+          "description": "Identity of this review request. Also the Kafka key; ops deduplicates on it.",
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "description": "What kind of decision is being asked for. Spec 02 documents merge_pair, split_product, adapter_broken, synonym_candidate and price_ambiguous; the field is an open string so a producer's own spec can name a further kind without a wire-format change.",
+          "type": "string",
+          "minLength": 1,
+          "examples": [
+            "merge_pair",
+            "split_product",
+            "adapter_broken",
+            "synonym_candidate",
+            "price_ambiguous"
+          ]
+        },
+        "priority": {
+          "description": "Higher is more urgent, traffic-derived where applicable. ops orders the queue by this and never FIFO — a reviewer working FIFO spends the day on products nobody looks at.",
+          "type": "integer"
+        },
+        "subject": {
+          "description": "The kind-specific identifiers this request is about: the offer_uids of a pair, a source_key, a candidate token and part type.",
+          "type": "object",
+          "additionalProperties": true
+        },
+        "evidence": {
+          "description": "Everything a human needs to decide, inline. For a merge_pair that is both titles raw and normalized, brands, part numbers, part types, pack quantities, authenticity claims, both prices, the resulting price range, fitment sets, images, the model's reason_fa and the score with the features that drove it.",
+          "type": "object",
+          "additionalProperties": true
+        },
+        "requested_at": {
+          "description": "When the request was raised.",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$"
+        }
+      }
+    }
+  }
+}

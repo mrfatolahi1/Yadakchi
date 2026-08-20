@@ -1,0 +1,17 @@
+{
+  "event_id": "084cb5e2-dd44-42ff-bcd7-144a85b8283d",
+  "event_type": "crossrefs.changed",
+  "version": 1,
+  "occurred_at": "2026-07-30T08:22:41Z",
+  "producer": "fitment",
+  "trace_id": "24c7f0b93ae15d8c",
+  "payload": {
+    "code_a": "425235",
+    "code_b": "425438",
+    "brand_a": "peugeot",
+    "brand_b": "ezam",
+    "confidence": 0.93,
+    "provenance": "consensus",
+    "updated_at": "2026-07-30T08:22:41Z"
+  }
+}

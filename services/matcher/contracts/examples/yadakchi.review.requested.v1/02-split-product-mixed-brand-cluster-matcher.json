@@ -1,0 +1,54 @@
+{
+  "event_id": "6dd1593a-3cb8-4bc9-bb65-d8f3b77b0dd9",
+  "event_type": "review.requested",
+  "version": 1,
+  "occurred_at": "2026-08-19T07:37:22Z",
+  "producer": "matcher",
+  "trace_id": "b52d7c04e19af836",
+  "payload": {
+    "request_uid": "eda6ce25-63b6-4385-b188-4da4f4ce248a",
+    "kind": "split_product",
+    "priority": 640,
+    "subject": {
+      "cluster_uid": "a941e714-9c9f-41a2-ab22-2a7a6e16ff75",
+      "offer_uids": [
+        "dece8380a022dfec9a040ea3221aedab",
+        "b0bc80f34262940227c54c3e78308181"
+      ]
+    },
+    "evidence": {
+      "reason": "brand_wall_violation_detected_in_legacy_cluster",
+      "brands_present": [
+        "sarkan",
+        "bosch"
+      ],
+      "members": [
+        {
+          "offer_uid": "dece8380a022dfec9a040ea3221aedab",
+          "seller_key": "yadak118",
+          "title_normalized": "فیلتر روغن پراید 131 سرکان",
+          "brand": "sarkan",
+          "part_number": "SF7710",
+          "price_toman": 320000
+        },
+        {
+          "offer_uid": "b0bc80f34262940227c54c3e78308181",
+          "seller_key": "carinag",
+          "title_normalized": "فیلتر روغن پراید و تیبا سرکان کد SF7710",
+          "brand": "sarkan",
+          "part_number": "SF7710",
+          "price_toman": 295000
+        }
+      ],
+      "proposed_split": {
+        "sarkan": [
+          "dece8380a022dfec9a040ea3221aedab",
+          "b0bc80f34262940227c54c3e78308181"
+        ],
+        "bosch": []
+      },
+      "reason_fa": "این خوشه دو برند متفاوت را در بر گرفته بود؛ دیوار برند اجازه ادغام بین برندها را نمی‌دهد."
+    },
+    "requested_at": "2026-08-19T07:37:22Z"
+  }
+}

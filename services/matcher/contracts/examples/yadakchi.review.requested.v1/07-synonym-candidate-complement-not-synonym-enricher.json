@@ -1,0 +1,31 @@
+{
+  "event_id": "eeddb843-17df-49e6-8efa-5947182af2ea",
+  "event_type": "review.requested",
+  "version": 1,
+  "occurred_at": "2026-08-18T21:14:41Z",
+  "producer": "enricher",
+  "trace_id": "a97c2e451f0b8d63",
+  "payload": {
+    "request_uid": "0b83fae0-6a0f-44b0-ae7e-be808bad1f35",
+    "kind": "synonym_candidate",
+    "priority": 90,
+    "subject": {
+      "token": "دیسک ترمز",
+      "part_type": "brake_pad_front"
+    },
+    "evidence": {
+      "signal": "unmapped_token_cooccurrence",
+      "cooccurrence_count": 132,
+      "distinct_sellers": 9,
+      "cooccurrence_ratio": 0.61,
+      "example_titles": [
+        "لنت و دیسک ترمز جلو پژو 206 تیپ 5",
+        "پکیج دیسک و لنت جلو پراید 131",
+        "دیسک ترمز جلو 405 به همراه لنت عظام"
+      ],
+      "canonical_surface_form": "لنت ترمز جلو",
+      "note_fa": "هشدار: «دیسک ترمز» قطعه‌ای مکمل است، نه هم‌معنی لنت. هم‌آیندی بالا لزوماً هم‌معنایی نیست."
+    },
+    "requested_at": "2026-08-18T21:14:41Z"
+  }
+}

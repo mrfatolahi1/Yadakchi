@@ -1,0 +1,22 @@
+{
+  "event_id": "812e99b8-865b-424f-ae94-7bc1e610f19a",
+  "event_type": "clusters.changed",
+  "version": 1,
+  "occurred_at": "2026-06-02T05:44:18Z",
+  "producer": "matcher",
+  "trace_id": "9d4c1f7a2b8e6053",
+  "payload": {
+    "cluster_uid": "93c9da93-7ffb-498e-afc1-2798ea05112e",
+    "members": [
+      {
+        "offer_uid": "ad1e2af57f36691329247db654602a4e",
+        "confidence": 1.0,
+        "provenance": "rule"
+      }
+    ],
+    "change_reason": "created",
+    "predecessor_uids": [],
+    "successor_uid": null,
+    "computed_at": "2026-06-02T05:44:18Z"
+  }
+}

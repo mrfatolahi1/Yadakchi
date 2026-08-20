@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yadakchi.ir/schemas/yadakchi.sellers.changed.v1.json",
+  "title": "yadakchi.sellers.changed.v1",
+  "description": "Seller identity and trust, as catalog computes it.\n\nProducers: catalog. Consumers: billing, ops.\nKafka message key: seller_key — it must be set; compaction and partition ordering depend on it.\nCleanup: compact, retention infinite.\n\nThis file validates a whole Kafka message body: the shared envelope from docs/specs/02-EVENT-CONTRACTS.md plus this topic's payload. Unknown fields are ignored, never rejected, at both levels — that is what lets a producer add an optional field without breaking a consumer.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "event_id",
+    "event_type",
+    "version",
+    "occurred_at",
+    "producer",
+    "trace_id",
+    "payload"
+  ],
+  "properties": {
+    "event_id": {
+      "description": "UUIDv4, unique per emission. Two emissions of the same fact carry different event_ids; consumers deduplicate on the payload's natural identity, not on this.",
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+    },
+    "event_type": {
+      "description": "The topic name without the 'yadakchi.' prefix and without the version suffix.",
+      "type": "string",
+      "const": "sellers.changed"
+    },
+    "version": {
+      "description": "Envelope and payload version. A removed field, a renamed field or a changed type is a breaking change: publish to .v2 and run both until consumers migrate.",
+      "type": "integer",
+      "const": 1
+    },
+    "occurred_at": {
+      "description": "When the fact happened, ISO-8601 UTC with Z. Consumers tolerate out-of-order delivery across partitions by comparing this, never by assuming global ordering.",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$"
+    },
+    "producer": {
+      "description": "The service that emitted this message. Constrained to the producers declared for this topic in platform/kafka/topics.yml.",
+      "type": "string",
+      "enum": [
+        "catalog"
+      ]
+    },
+    "trace_id": {
+      "description": "Propagated across the whole chain for debugging. Minted by crawler on yadakchi.listings.observed.v1 and carried through every derived event; a service starting a chain of its own (a human admin edit, a scheduled recomputation) mints a fresh one. Every service logs it.",
+      "type": "string",
+      "minLength": 1
+    },
+    "payload": {
+      "description": "billing keeps its local seller read model from this topic and never calls catalog. Wallet balances are billing's own and are not on this topic. A tombstone — payload: null with the envelope intact — means this entity is deleted; compaction keeps it as the last word on the key.",
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true,
+      "required": [
+        "seller_key",
+        "name",
+        "domain",
+        "is_panel",
+        "tier",
+        "trust_score",
+        "updated_at"
+      ],
+      "properties": {
+        "seller_key": {
+          "description": "Stable slug of the seller, minted by crawler.",
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:[-_][a-z0-9]+)*$"
+        },
+        "name": {
+          "description": "Display name, in Persian where the seller has one.",
+          "type": "string",
+          "minLength": 1
+        },
+        "domain": {
+          "description": "The seller's domain, without scheme.",
+          "type": "string",
+          "minLength": 1
+        },
+        "source_key": {
+          "description": "The crawl source this seller's listings arrive through, or null for a panel seller with no crawled source.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-z0-9]+(?:[-_][a-z0-9]+)*$"
+        },
+        "is_panel": {
+          "description": "true for a paying panel member with self-managed data. Crawled non-panel offers are displayed free and are never removed.",
+          "type": "boolean"
+        },
+        "tier": {
+          "description": "Visibility tier. A new seller starts at 'new' with a capped trust ceiling — visibility is earned.",
+          "type": "string",
+          "enum": [
+            "new",
+            "standard",
+            "trusted",
+            "suspended"
+          ]
+        },
+        "trust_score": {
+          "description": "Composite trust, driven mostly by observed price and stock accuracy because those are the signals we own and a seller cannot fake.",
+          "type": "number"
+        },
+        "price_accuracy": {
+          "description": "Share of recrawls where the advertised price still held. null before enough observations exist.",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "stock_accuracy": {
+          "description": "Share of recrawls where \"in stock\" was still true. null before enough observations exist.",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "updated_at": {
+          "description": "When this seller record last changed.",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$"
+        }
+      }
+    }
+  }
+}

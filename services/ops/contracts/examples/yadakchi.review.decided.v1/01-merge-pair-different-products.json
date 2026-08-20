@@ -1,0 +1,21 @@
+{
+  "event_id": "e268b884-a961-4716-9f32-06a65ae41f4f",
+  "event_type": "review.decided",
+  "version": 1,
+  "occurred_at": "2026-08-20T05:52:18Z",
+  "producer": "ops",
+  "trace_id": "b52d7c04e19af836",
+  "payload": {
+    "request_uid": "a92afbd8-b796-48af-a79f-692cc97bbc4b",
+    "kind": "merge_pair",
+    "decision": "different_products",
+    "subject": {
+      "offer_uid_a": "ad1e2af57f36691329247db654602a4e",
+      "offer_uid_b": "a21378893952f89cef62250154a38a7b",
+      "cluster_uid": "93c9da93-7ffb-498e-afc1-2798ea05112e"
+    },
+    "actor": "narges.k",
+    "reason": "یکی اصلی عظام و دیگری طرح است؛ ادغام باعث می‌شود ارزان‌ترین قیمت گمراه‌کننده شود.",
+    "decided_at": "2026-08-20T05:52:18Z"
+  }
+}

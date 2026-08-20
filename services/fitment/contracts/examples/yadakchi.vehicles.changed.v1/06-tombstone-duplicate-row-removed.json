@@ -1,0 +1,9 @@
+{
+  "event_id": "f4a1fe16-fc71-4516-9b40-4afa8a32ac11",
+  "event_type": "vehicles.changed",
+  "version": 1,
+  "occurred_at": "2026-08-12T09:14:02Z",
+  "producer": "fitment",
+  "trace_id": "24c7f0b93ae15d8c",
+  "payload": null
+}

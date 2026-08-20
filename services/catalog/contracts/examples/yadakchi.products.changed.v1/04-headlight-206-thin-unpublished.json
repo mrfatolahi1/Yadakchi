@@ -1,0 +1,47 @@
+{
+  "event_id": "12bc2c84-2e1f-429c-a751-186328620153",
+  "event_type": "products.changed",
+  "version": 1,
+  "occurred_at": "2026-08-19T08:11:27Z",
+  "producer": "catalog",
+  "trace_id": "e61390fa5c8b247d",
+  "payload": {
+    "product_uid": "872c5400-91e5-4822-a31c-8eb7c0fed8d7",
+    "slug": "چراغ-جلو-راست-پژو-206-a83f15",
+    "title": "چراغ جلو راست پژو 206",
+    "brand": null,
+    "part_type": "headlight_right",
+    "authenticity_dominant": "unknown",
+    "image_url": "https://cdn.yadakmarket.com/media/517640/cheragh-jolo-206.jpg",
+    "part_numbers": [],
+    "crossref_codes": [],
+    "vehicles_compatible": [],
+    "vehicles_incompatible": [],
+    "vehicles_unknown": [
+      "peugeot-206-type-5"
+    ],
+    "risky_family_note_fa": "چراغ جلو پژو ۲۰۶ بین سال‌های تولید متفاوت است؛ پیش از خرید سال ساخت خودرو را با فروشنده بررسی کنید.",
+    "offer_count": 1,
+    "min_price_toman": null,
+    "max_price_toman": null,
+    "median_price_toman": null,
+    "offers": [
+      {
+        "offer_uid": "46ac7120deb20594f796272a7a5d034c",
+        "seller_key": "parsyadak",
+        "seller_name": "پارس یدک",
+        "price_toman": null,
+        "stock_status": "in_stock",
+        "authenticity_claim": "unknown",
+        "trust_score": 0.33,
+        "rank_position": 1,
+        "url": "https://yadakmarket.com/p-517640",
+        "is_cheapest": true
+      }
+    ],
+    "price_series": [],
+    "is_published": false,
+    "successor_product_uid": null,
+    "updated_at": "2026-08-19T08:11:27Z"
+  }
+}

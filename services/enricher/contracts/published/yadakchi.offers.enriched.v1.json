@@ -1,0 +1,235 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yadakchi.ir/schemas/yadakchi.offers.enriched.v1.json",
+  "title": "yadakchi.offers.enriched.v1",
+  "description": "A structured Offer: one seller's listing after Persian normalization and field extraction.\n\nProducers: enricher. Consumers: fitment, matcher.\nKafka message key: offer_uid — it must be set; compaction and partition ordering depend on it.\nCleanup: delete, retention 90 days.\n\nThis file validates a whole Kafka message body: the shared envelope from docs/specs/02-EVENT-CONTRACTS.md plus this topic's payload. Unknown fields are ignored, never rejected, at both levels — that is what lets a producer add an optional field without breaking a consumer.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "event_id",
+    "event_type",
+    "version",
+    "occurred_at",
+    "producer",
+    "trace_id",
+    "payload"
+  ],
+  "properties": {
+    "event_id": {
+      "description": "UUIDv4, unique per emission. Two emissions of the same fact carry different event_ids; consumers deduplicate on the payload's natural identity, not on this.",
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+    },
+    "event_type": {
+      "description": "The topic name without the 'yadakchi.' prefix and without the version suffix.",
+      "type": "string",
+      "const": "offers.enriched"
+    },
+    "version": {
+      "description": "Envelope and payload version. A removed field, a renamed field or a changed type is a breaking change: publish to .v2 and run both until consumers migrate.",
+      "type": "integer",
+      "const": 1
+    },
+    "occurred_at": {
+      "description": "When the fact happened, ISO-8601 UTC with Z. Consumers tolerate out-of-order delivery across partitions by comparing this, never by assuming global ordering.",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$"
+    },
+    "producer": {
+      "description": "The service that emitted this message. Constrained to the producers declared for this topic in platform/kafka/topics.yml.",
+      "type": "string",
+      "enum": [
+        "enricher"
+      ]
+    },
+    "trace_id": {
+      "description": "Propagated across the whole chain for debugging. Minted by crawler on yadakchi.listings.observed.v1 and carried through every derived event; a service starting a chain of its own (a human admin edit, a scheduled recomputation) mints a fresh one. Every service logs it.",
+      "type": "string",
+      "minLength": 1
+    },
+    "payload": {
+      "description": "Emitted only when something material changed for this offer_uid, or when normalizer_version changed. A pure re-observation with identical values emits nothing. This topic is not compacted, so payload is never null; there is no tombstone on a delete-retention topic.",
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "offer_uid",
+        "source_key",
+        "external_key",
+        "seller_key",
+        "url",
+        "raw_title",
+        "title_normalized",
+        "authenticity_claim",
+        "pack_quantity",
+        "stock_status",
+        "vehicle_hints",
+        "overbroad_claim",
+        "confidences",
+        "extraction_provenance",
+        "normalizer_version",
+        "first_seen_at",
+        "last_seen_at",
+        "is_active"
+      ],
+      "properties": {
+        "offer_uid": {
+          "description": "sha256(\"{source_key}:{external_key}\")[:32], lowercase hex. Minted by enricher.",
+          "type": "string",
+          "pattern": "^[0-9a-f]{32}$"
+        },
+        "source_key": {
+          "description": "Stable slug of the source, carried through from listings.observed.",
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:[-_][a-z0-9]+)*$"
+        },
+        "external_key": {
+          "description": "The seller's own id or url path, carried through from listings.observed.",
+          "type": "string",
+          "minLength": 1
+        },
+        "seller_key": {
+          "description": "Stable slug of the seller behind this listing, minted by crawler.",
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:[-_][a-z0-9]+)*$"
+        },
+        "url": {
+          "description": "Outbound URL of the listing.",
+          "type": "string",
+          "format": "uri",
+          "minLength": 1
+        },
+        "raw_title": {
+          "description": "The seller's title, untouched. Kept alongside the normalized form.",
+          "type": "string",
+          "minLength": 1
+        },
+        "title_normalized": {
+          "description": "The cleaned title: character-unified, ZWNJ-normalized, promotional tokens stripped. This is what reaches page titles and search text.",
+          "type": "string",
+          "minLength": 1
+        },
+        "brand": {
+          "description": "Canonical brand key, not the surface form. null when no brand was extracted.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "part_number": {
+          "description": "Normalized part number: uppercase, no separators. null when none was extracted — absence is normal and is never forced.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[A-Z0-9]+$"
+        },
+        "part_type": {
+          "description": "Controlled vocabulary key, e.g. brake_pad_front. null when the title resolved to no known type.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "authenticity_claim": {
+          "description": "The seller's stated grade. This is a claim and is never verified.",
+          "type": "string",
+          "enum": [
+            "genuine",
+            "oem",
+            "aftermarket",
+            "used",
+            "refurbished",
+            "unknown"
+          ]
+        },
+        "pack_quantity": {
+          "description": "How many units one listing sells. Defaults to 1.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "price_toman": {
+          "description": "Integer tomans, never rials and never a float. null when the price was ambiguous under every interpretation — enricher never guesses.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "stock_status": {
+          "description": "Mapped stock state. Absence maps to unknown, never in_stock.",
+          "type": "string",
+          "enum": [
+            "in_stock",
+            "out_of_stock",
+            "unknown"
+          ]
+        },
+        "image_url": {
+          "description": "Listing image URL, or null.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        },
+        "vehicle_hints": {
+          "description": "Raw vehicle-looking strings lifted from the title, unresolved. Resolving them is fitment's job.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "overbroad_claim": {
+          "description": "true when the listing claimed something like \"مناسب تمام پژوها\". fitment rejects such claims as sole evidence and needs to know they were present.",
+          "type": "boolean"
+        },
+        "confidences": {
+          "description": "Field name → confidence in [0,1]. Derived from match specificity, competing matches or model certainty — never fabricated.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "extraction_provenance": {
+          "description": "Field name → how that field was obtained.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "enum": [
+              "rule",
+              "model",
+              "human",
+              "catalog",
+              "consensus"
+            ]
+          }
+        },
+        "normalizer_version": {
+          "description": "Version of the normalizer and extractors that produced this record.",
+          "type": "string",
+          "minLength": 1
+        },
+        "first_seen_at": {
+          "description": "First observation of this offer_uid. A reprocess must never reset it.",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$"
+        },
+        "last_seen_at": {
+          "description": "Most recent observation of this offer_uid.",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$"
+        },
+        "is_active": {
+          "description": "false once the listing has disappeared from the source.",
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

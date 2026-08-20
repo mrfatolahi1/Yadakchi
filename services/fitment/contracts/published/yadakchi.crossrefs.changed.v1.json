@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yadakchi.ir/schemas/yadakchi.crossrefs.changed.v1.json",
+  "title": "yadakchi.crossrefs.changed.v1",
+  "description": "Two part numbers that are equivalent across brands.\n\nProducers: fitment. Consumers: catalog, search.\nKafka message key: {code_a}|{code_b} — it must be set; compaction and partition ordering depend on it.\nCleanup: compact, retention infinite.\n\nThis file validates a whole Kafka message body: the shared envelope from docs/specs/02-EVENT-CONTRACTS.md plus this topic's payload. Unknown fields are ignored, never rejected, at both levels — that is what lets a producer add an optional field without breaking a consumer.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "event_id",
+    "event_type",
+    "version",
+    "occurred_at",
+    "producer",
+    "trace_id",
+    "payload"
+  ],
+  "properties": {
+    "event_id": {
+      "description": "UUIDv4, unique per emission. Two emissions of the same fact carry different event_ids; consumers deduplicate on the payload's natural identity, not on this.",
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+    },
+    "event_type": {
+      "description": "The topic name without the 'yadakchi.' prefix and without the version suffix.",
+      "type": "string",
+      "const": "crossrefs.changed"
+    },
+    "version": {
+      "description": "Envelope and payload version. A removed field, a renamed field or a changed type is a breaking change: publish to .v2 and run both until consumers migrate.",
+      "type": "integer",
+      "const": 1
+    },
+    "occurred_at": {
+      "description": "When the fact happened, ISO-8601 UTC with Z. Consumers tolerate out-of-order delivery across partitions by comparing this, never by assuming global ordering.",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$"
+    },
+    "producer": {
+      "description": "The service that emitted this message. Constrained to the producers declared for this topic in platform/kafka/topics.yml.",
+      "type": "string",
+      "enum": [
+        "fitment"
+      ]
+    },
+    "trace_id": {
+      "description": "Propagated across the whole chain for debugging. Minted by crawler on yadakchi.listings.observed.v1 and carried through every derived event; a service starting a chain of its own (a human admin edit, a scheduled recomputation) mints a fresh one. Every service logs it.",
+      "type": "string",
+      "minLength": 1
+    },
+    "payload": {
+      "description": "Pair ordering is normalized so each pair is stored once: code_a < code_b. A cross-reference is a display hint, not an identity claim. A tombstone — payload: null with the envelope intact — means this entity is deleted; compaction keeps it as the last word on the key.",
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true,
+      "required": [
+        "code_a",
+        "code_b",
+        "confidence",
+        "provenance",
+        "updated_at"
+      ],
+      "properties": {
+        "code_a": {
+          "description": "The lexicographically smaller code of the pair.",
+          "type": "string",
+          "minLength": 1
+        },
+        "code_b": {
+          "description": "The lexicographically larger code of the pair.",
+          "type": "string",
+          "minLength": 1
+        },
+        "brand_a": {
+          "description": "Brand behind code_a, or null when unknown.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "brand_b": {
+          "description": "Brand behind code_b, or null when unknown.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "confidence": {
+          "description": "Confidence that the two codes are equivalent, 0..1.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "provenance": {
+          "description": "How this pair was established.",
+          "type": "string",
+          "enum": [
+            "rule",
+            "model",
+            "human",
+            "catalog",
+            "consensus"
+          ]
+        },
+        "updated_at": {
+          "description": "When this pair last changed.",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$"
+        }
+      }
+    }
+  }
+}

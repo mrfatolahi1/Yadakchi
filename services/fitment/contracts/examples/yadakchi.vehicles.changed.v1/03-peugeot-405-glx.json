@@ -1,0 +1,28 @@
+{
+  "event_id": "ecf69fda-b950-4758-bcf9-5c7f7149beba",
+  "event_type": "vehicles.changed",
+  "version": 1,
+  "occurred_at": "2026-07-14T10:05:24Z",
+  "producer": "fitment",
+  "trace_id": "24c7f0b93ae15d8c",
+  "payload": {
+    "vehicle_slug": "peugeot-405-glx",
+    "brand": "Peugeot",
+    "model": "405",
+    "trim": "GLX",
+    "year_from": 1993,
+    "year_to": 2020,
+    "engine_code": "XU7JP",
+    "display_name_fa": "پژو ۴۰۵ GLX",
+    "aliases": [
+      "پژو 405 GLX",
+      "پژو ۴۰۵ جی ال ایکس",
+      "405 GLX",
+      "405glx",
+      "peugeot 405 glx",
+      "پژو۴۰۵"
+    ],
+    "is_published": true,
+    "updated_at": "2026-07-14T10:05:24Z"
+  }
+}

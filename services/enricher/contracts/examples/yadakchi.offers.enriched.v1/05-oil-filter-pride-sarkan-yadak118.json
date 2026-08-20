@@ -1,0 +1,51 @@
+{
+  "event_id": "1e143db5-68a8-4244-95a3-6d743754f5f7",
+  "event_type": "offers.enriched",
+  "version": 1,
+  "occurred_at": "2026-08-19T07:33:29Z",
+  "producer": "enricher",
+  "trace_id": "3a8f5d21c9b04e7f",
+  "payload": {
+    "offer_uid": "dece8380a022dfec9a040ea3221aedab",
+    "source_key": "yadak118",
+    "external_key": "10457",
+    "seller_key": "yadak118",
+    "url": "https://yadak118.ir/p/10457",
+    "raw_title": "فیلتر روغن پراید ۱۳۱ سرکان اورجینال ۱۰۰٪ | ارسال فوری",
+    "title_normalized": "فیلتر روغن پراید 131 سرکان",
+    "brand": "sarkan",
+    "part_number": "SF7710",
+    "part_type": "oil_filter",
+    "authenticity_claim": "genuine",
+    "pack_quantity": 1,
+    "price_toman": 320000,
+    "stock_status": "in_stock",
+    "image_url": "https://yadak118.ir/files/10457.jpg",
+    "vehicle_hints": [
+      "پراید ۱۳۱"
+    ],
+    "overbroad_claim": false,
+    "confidences": {
+      "brand": 0.99,
+      "part_number": 0.87,
+      "part_type": 0.99,
+      "authenticity_claim": 0.86,
+      "pack_quantity": 0.99,
+      "price_toman": 0.99,
+      "stock_status": 0.95
+    },
+    "extraction_provenance": {
+      "brand": "rule",
+      "part_number": "rule",
+      "part_type": "rule",
+      "authenticity_claim": "rule",
+      "pack_quantity": "rule",
+      "price_toman": "rule",
+      "stock_status": "rule"
+    },
+    "normalizer_version": "2026.08.1",
+    "first_seen_at": "2026-04-27T06:15:02Z",
+    "last_seen_at": "2026-08-19T07:31:20Z",
+    "is_active": true
+  }
+}

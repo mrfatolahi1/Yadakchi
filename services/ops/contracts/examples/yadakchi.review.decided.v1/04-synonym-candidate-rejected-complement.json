@@ -1,0 +1,20 @@
+{
+  "event_id": "3b0f935f-af2b-46e3-b237-ccb915009f1b",
+  "event_type": "review.decided",
+  "version": 1,
+  "occurred_at": "2026-08-20T06:11:27Z",
+  "producer": "ops",
+  "trace_id": "b52d7c04e19af836",
+  "payload": {
+    "request_uid": "0b83fae0-6a0f-44b0-ae7e-be808bad1f35",
+    "kind": "synonym_candidate",
+    "decision": "reject",
+    "subject": {
+      "token": "دیسک ترمز",
+      "part_type": "brake_pad_front"
+    },
+    "actor": "mehdi.r",
+    "reason": "دیسک ترمز قطعه مکمل است، هم‌معنی لنت نیست.",
+    "decided_at": "2026-08-20T06:11:27Z"
+  }
+}

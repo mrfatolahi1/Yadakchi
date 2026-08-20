@@ -1,0 +1,40 @@
+{
+  "event_id": "095a7e38-5c47-42ce-aa0c-63b5bf45790b",
+  "event_type": "review.requested",
+  "version": 1,
+  "occurred_at": "2026-08-19T08:04:35Z",
+  "producer": "enricher",
+  "trace_id": "e61390fa5c8b247d",
+  "payload": {
+    "request_uid": "5426b249-9549-4c18-840b-3b14990d8afa",
+    "kind": "price_ambiguous",
+    "priority": 120,
+    "subject": {
+      "offer_uid": "46ac7120deb20594f796272a7a5d034c",
+      "source_key": "yadakmarket",
+      "external_key": "p-517640"
+    },
+    "evidence": {
+      "raw_price_text": "۲۸٬۵۰۰٬۰۰۰",
+      "unit_word_found": null,
+      "parsed_number": 28500000,
+      "part_type": "headlight_right",
+      "toman_band": [
+        9000000,
+        32000000
+      ],
+      "rial_band": [
+        90000000,
+        320000000
+      ],
+      "toman_interpretation_toman": 28500000,
+      "rial_interpretation_toman": 2850000,
+      "both_plausible": true,
+      "emitted_price_toman": null,
+      "url": "https://yadakmarket.com/p-517640",
+      "raw_title": "چراغ جلو راست پژو 206 مناسب تمام پژوها ۲۸٬۵۰۰٬۰۰۰",
+      "note_fa": "واحد پول در صفحه ذکر نشده و هر دو تفسیر ریال و تومان در محدوده منطقی این نوع قطعه قرار می‌گیرند."
+    },
+    "requested_at": "2026-08-19T08:04:35Z"
+  }
+}

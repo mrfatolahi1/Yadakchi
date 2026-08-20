@@ -1,0 +1,20 @@
+{
+  "event_id": "cf908426-126d-4335-8935-abdf2f417d71",
+  "event_type": "sellers.changed",
+  "version": 1,
+  "occurred_at": "2026-08-19T02:00:14Z",
+  "producer": "catalog",
+  "trace_id": "0f7ae3d81b6c92455a",
+  "payload": {
+    "seller_key": "otoyar",
+    "name": "اتویار",
+    "domain": "otoyar.ir",
+    "source_key": "otoyar",
+    "is_panel": false,
+    "tier": "new",
+    "trust_score": 0.41,
+    "price_accuracy": null,
+    "stock_accuracy": null,
+    "updated_at": "2026-08-19T02:00:14Z"
+  }
+}

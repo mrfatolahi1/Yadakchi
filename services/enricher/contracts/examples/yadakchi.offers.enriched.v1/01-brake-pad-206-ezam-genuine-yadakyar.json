@@ -1,0 +1,52 @@
+{
+  "event_id": "456ce091-50a3-42c9-8c4a-9a23d6ec0366",
+  "event_type": "offers.enriched",
+  "version": 1,
+  "occurred_at": "2026-08-19T07:14:51Z",
+  "producer": "enricher",
+  "trace_id": "9d4c1f7a2b8e6053",
+  "payload": {
+    "offer_uid": "ad1e2af57f36691329247db654602a4e",
+    "source_key": "yadakmarket",
+    "external_key": "p-482913",
+    "seller_key": "yadakyar",
+    "url": "https://yadakmarket.com/p-482913",
+    "raw_title": "لنت ترمز جلو پژو ۲۰۶ تیپ ۵ عظام اصلی ⭐ ارسال رایگان ⭐ گارانتی ۶ ماهه",
+    "title_normalized": "لنت ترمز جلو پژو 206 تیپ 5 عظام",
+    "brand": "ezam",
+    "part_number": "425438",
+    "part_type": "brake_pad_front",
+    "authenticity_claim": "genuine",
+    "pack_quantity": 4,
+    "price_toman": 2450000,
+    "stock_status": "in_stock",
+    "image_url": "https://cdn.yadakmarket.com/media/482913/lent-tormoz-206-ezam.jpg",
+    "vehicle_hints": [
+      "پژو ۲۰۶ تیپ ۵",
+      "206"
+    ],
+    "overbroad_claim": false,
+    "confidences": {
+      "brand": 0.97,
+      "part_number": 0.93,
+      "part_type": 0.99,
+      "authenticity_claim": 0.9,
+      "pack_quantity": 0.82,
+      "price_toman": 0.98,
+      "stock_status": 0.95
+    },
+    "extraction_provenance": {
+      "brand": "rule",
+      "part_number": "rule",
+      "part_type": "rule",
+      "authenticity_claim": "rule",
+      "pack_quantity": "rule",
+      "price_toman": "rule",
+      "stock_status": "rule"
+    },
+    "normalizer_version": "2026.08.1",
+    "first_seen_at": "2026-06-02T05:41:09Z",
+    "last_seen_at": "2026-08-19T07:12:44Z",
+    "is_active": true
+  }
+}

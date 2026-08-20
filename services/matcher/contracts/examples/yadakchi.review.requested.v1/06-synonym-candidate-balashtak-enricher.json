@@ -1,0 +1,39 @@
+{
+  "event_id": "f4787508-d53e-406e-94ee-dc9b36501d19",
+  "event_type": "review.requested",
+  "version": 1,
+  "occurred_at": "2026-08-18T21:14:39Z",
+  "producer": "enricher",
+  "trace_id": "a97c2e451f0b8d63",
+  "payload": {
+    "request_uid": "67571857-8d98-4020-85c1-bb19cb10f101",
+    "kind": "synonym_candidate",
+    "priority": 260,
+    "subject": {
+      "token": "بالشتک جلو",
+      "part_type": "brake_pad_front"
+    },
+    "evidence": {
+      "signal": "unmapped_token_cooccurrence",
+      "cooccurrence_count": 47,
+      "distinct_sellers": 6,
+      "seller_keys": [
+        "yadakyar",
+        "otoyar",
+        "yadaksara",
+        "yadak118",
+        "carinag",
+        "parsyadak"
+      ],
+      "cooccurrence_ratio": 0.94,
+      "example_titles": [
+        "بالشتک جلو پژو 206 تیپ 5 عظام",
+        "بالشتک ترمز جلو پراید 131 اصلی",
+        "بالشتک جلو 405 SLX درجه یک"
+      ],
+      "canonical_surface_form": "لنت ترمز جلو",
+      "note_fa": "«بالشتک» نام رایج بازار برای لنت ترمز است و با هیچ مدخل واژگانی مطابقت ندارد."
+    },
+    "requested_at": "2026-08-18T21:14:39Z"
+  }
+}

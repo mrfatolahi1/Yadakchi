@@ -1,0 +1,24 @@
+{
+  "event_id": "ae0428fe-0eed-453b-89d9-81e4bf1c230f",
+  "event_type": "review.decided",
+  "version": 1,
+  "occurred_at": "2026-08-20T05:55:41Z",
+  "producer": "ops",
+  "trace_id": "b52d7c04e19af836",
+  "payload": {
+    "request_uid": "eda6ce25-63b6-4385-b188-4da4f4ce248a",
+    "kind": "split_product",
+    "decision": "approve",
+    "subject": {
+      "cluster_uid": "a941e714-9c9f-41a2-ab22-2a7a6e16ff75",
+      "successor_uid": "b4191885-f836-4ccd-bfc4-e0ccaf88dcae",
+      "offer_uids": [
+        "dece8380a022dfec9a040ea3221aedab",
+        "b0bc80f34262940227c54c3e78308181"
+      ]
+    },
+    "actor": "narges.k",
+    "reason": "دو برند متفاوت در یک خوشه بودند.",
+    "decided_at": "2026-08-20T05:55:41Z"
+  }
+}

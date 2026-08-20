@@ -1,0 +1,28 @@
+{
+  "event_id": "32b49941-d814-4506-8d33-f69f8cfa739a",
+  "event_type": "vehicles.changed",
+  "version": 1,
+  "occurred_at": "2026-07-21T13:48:09Z",
+  "producer": "fitment",
+  "trace_id": "24c7f0b93ae15d8c",
+  "payload": {
+    "vehicle_slug": "tiba-2",
+    "brand": "SAIPA",
+    "model": "Tiba",
+    "trim": "2",
+    "year_from": 2015,
+    "year_to": null,
+    "engine_code": "M15",
+    "display_name_fa": "تیبا ۲",
+    "aliases": [
+      "تیبا 2",
+      "تيبا 2",
+      "تیبا۲",
+      "تیبا هاچبک",
+      "tiba 2",
+      "tiba2"
+    ],
+    "is_published": true,
+    "updated_at": "2026-07-21T13:48:09Z"
+  }
+}

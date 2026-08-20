@@ -1,0 +1,34 @@
+{
+  "event_id": "022299e2-b8b5-4e80-be8f-811c0b56be23",
+  "event_type": "offers.fitted",
+  "version": 1,
+  "occurred_at": "2026-08-19T08:07:41Z",
+  "producer": "fitment",
+  "trace_id": "e61390fa5c8b247d",
+  "payload": {
+    "offer_uid": "46ac7120deb20594f796272a7a5d034c",
+    "fitments": [
+      {
+        "vehicle_slug": "peugeot-206-type-5",
+        "status": "unknown",
+        "confidence": 0.18,
+        "provenance": "rule",
+        "evidence": {
+          "rule": "risky_family_missing_granularity",
+          "required_granularity": "year",
+          "year_evidence_found": false,
+          "overbroad_claim": true,
+          "overbroad_pattern": "مناسب تمام پژوها",
+          "note": "ادعای فراگیر تنها مدرک موجود بود و پذیرفته نشد"
+        }
+      }
+    ],
+    "crossref_codes": [],
+    "risky_family": {
+      "part_type": "headlight_right",
+      "required_granularity": "year",
+      "note_fa": "چراغ جلو پژو ۲۰۶ بین سال‌های تولید متفاوت است؛ پیش از خرید سال ساخت خودرو را با فروشنده بررسی کنید."
+    },
+    "computed_at": "2026-08-19T08:07:41Z"
+  }
+}

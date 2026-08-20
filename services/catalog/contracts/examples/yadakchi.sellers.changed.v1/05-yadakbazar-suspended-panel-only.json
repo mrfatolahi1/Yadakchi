@@ -1,0 +1,20 @@
+{
+  "event_id": "e5f0cccf-d75a-4587-851f-59b6e3a47b7e",
+  "event_type": "sellers.changed",
+  "version": 1,
+  "occurred_at": "2026-08-19T02:00:15Z",
+  "producer": "catalog",
+  "trace_id": "0f7ae3d81b6c92455a",
+  "payload": {
+    "seller_key": "yadakbazar",
+    "name": "یدک بازار",
+    "domain": "yadakbazar.com",
+    "source_key": null,
+    "is_panel": true,
+    "tier": "suspended",
+    "trust_score": 0.12,
+    "price_accuracy": 0.34,
+    "stock_accuracy": 0.21,
+    "updated_at": "2026-08-19T02:00:15Z"
+  }
+}

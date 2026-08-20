@@ -1,0 +1,34 @@
+{
+  "event_id": "1cd459ce-fabe-4291-b525-07ce535c52b6",
+  "event_type": "review.requested",
+  "version": 1,
+  "occurred_at": "2026-08-19T06:05:00Z",
+  "producer": "crawler",
+  "trace_id": "6ac21f9e07d3b845",
+  "payload": {
+    "request_uid": "68807d4e-7ac3-4f27-9559-72179474af97",
+    "kind": "adapter_broken",
+    "priority": 950,
+    "subject": {
+      "source_key": "yadaksara",
+      "adapter_key": "yadaksara_html"
+    },
+    "evidence": {
+      "window": "2026-08-19T00:00:00Z/2026-08-19T06:00:00Z",
+      "attempted": 1842,
+      "parsed_ok": 755,
+      "parse_rate": 0.41,
+      "baseline_rate": 0.93,
+      "baseline_window_days": 7,
+      "drop_ratio": 0.559,
+      "sample_failed_urls": [
+        "https://yadaksara.com/product/SKU-11204",
+        "https://yadaksara.com/product/SKU-11987",
+        "https://yadaksara.com/product/SKU-12043"
+      ],
+      "sample_failure": "selector '.product-price' matched 0 nodes",
+      "note_fa": "به نظر می‌رسد ساختار صفحه فروشنده تغییر کرده است."
+    },
+    "requested_at": "2026-08-19T06:05:00Z"
+  }
+}

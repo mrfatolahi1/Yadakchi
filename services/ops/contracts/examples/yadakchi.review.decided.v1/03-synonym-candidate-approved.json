@@ -1,0 +1,20 @@
+{
+  "event_id": "dd7d557d-a980-4a47-8a31-884ae7396ac5",
+  "event_type": "review.decided",
+  "version": 1,
+  "occurred_at": "2026-08-20T06:10:02Z",
+  "producer": "ops",
+  "trace_id": "b52d7c04e19af836",
+  "payload": {
+    "request_uid": "67571857-8d98-4020-85c1-bb19cb10f101",
+    "kind": "synonym_candidate",
+    "decision": "approve",
+    "subject": {
+      "token": "بالشتک جلو",
+      "part_type": "brake_pad_front"
+    },
+    "actor": "mehdi.r",
+    "reason": "اصطلاح رایج بازار برای همان قطعه است.",
+    "decided_at": "2026-08-20T06:10:02Z"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "event_id": "c96232df-058c-4eed-a361-401ec0280cd8",
+  "event_type": "vehicles.changed",
+  "version": 1,
+  "occurred_at": "2026-07-14T10:05:23Z",
+  "producer": "fitment",
+  "trace_id": "24c7f0b93ae15d8c",
+  "payload": {
+    "vehicle_slug": "pride-131",
+    "brand": "SAIPA",
+    "model": "Pride",
+    "trim": "131",
+    "year_from": 2008,
+    "year_to": 2020,
+    "engine_code": "M13NI",
+    "display_name_fa": "پراید ۱۳۱",
+    "aliases": [
+      "پراید 131",
+      "پراید ۱۳۱",
+      "پرايد 131",
+      "پراید صندوق دار 131",
+      "pride 131",
+      "131 SE",
+      "131SX"
+    ],
+    "is_published": true,
+    "updated_at": "2026-07-14T10:05:23Z"
+  }
+}

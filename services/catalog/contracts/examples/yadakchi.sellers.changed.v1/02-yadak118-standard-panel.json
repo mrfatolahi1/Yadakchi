@@ -1,0 +1,20 @@
+{
+  "event_id": "e7fb878c-6cd1-4604-9acd-82ecbd71ce56",
+  "event_type": "sellers.changed",
+  "version": 1,
+  "occurred_at": "2026-08-19T02:00:12Z",
+  "producer": "catalog",
+  "trace_id": "0f7ae3d81b6c92455a",
+  "payload": {
+    "seller_key": "yadak118",
+    "name": "یدک ۱۱۸",
+    "domain": "yadak118.ir",
+    "source_key": "yadak118",
+    "is_panel": true,
+    "tier": "standard",
+    "trust_score": 0.63,
+    "price_accuracy": 0.88,
+    "stock_accuracy": 0.74,
+    "updated_at": "2026-08-19T02:00:12Z"
+  }
+}

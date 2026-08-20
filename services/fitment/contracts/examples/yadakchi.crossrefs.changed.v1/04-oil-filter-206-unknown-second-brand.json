@@ -1,0 +1,17 @@
+{
+  "event_id": "da45c102-42cd-4663-b928-690569802bef",
+  "event_type": "crossrefs.changed",
+  "version": 1,
+  "occurred_at": "2026-08-15T07:55:04Z",
+  "producer": "fitment",
+  "trace_id": "24c7f0b93ae15d8c",
+  "payload": {
+    "code_a": "1109AY",
+    "code_b": "W71230",
+    "brand_a": "peugeot",
+    "brand_b": null,
+    "confidence": 0.61,
+    "provenance": "model",
+    "updated_at": "2026-08-15T07:55:04Z"
+  }
+}

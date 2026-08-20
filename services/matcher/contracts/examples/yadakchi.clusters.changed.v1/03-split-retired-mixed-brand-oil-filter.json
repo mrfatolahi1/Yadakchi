@@ -1,0 +1,16 @@
+{
+  "event_id": "c40abd63-8f81-4fe2-8109-a3490ade118a",
+  "event_type": "clusters.changed",
+  "version": 1,
+  "occurred_at": "2026-08-19T07:39:50Z",
+  "producer": "matcher",
+  "trace_id": "b52d7c04e19af836",
+  "payload": {
+    "cluster_uid": "a941e714-9c9f-41a2-ab22-2a7a6e16ff75",
+    "members": [],
+    "change_reason": "split",
+    "predecessor_uids": [],
+    "successor_uid": "b4191885-f836-4ccd-bfc4-e0ccaf88dcae",
+    "computed_at": "2026-08-19T07:39:50Z"
+  }
+}

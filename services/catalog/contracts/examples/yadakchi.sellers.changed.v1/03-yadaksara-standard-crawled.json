@@ -1,0 +1,20 @@
+{
+  "event_id": "225e5cc9-0a65-4040-ba42-2ddbd5e2dc94",
+  "event_type": "sellers.changed",
+  "version": 1,
+  "occurred_at": "2026-08-19T02:00:13Z",
+  "producer": "catalog",
+  "trace_id": "0f7ae3d81b6c92455a",
+  "payload": {
+    "seller_key": "yadaksara",
+    "name": "یدک‌سرا",
+    "domain": "yadaksara.com",
+    "source_key": "yadaksara",
+    "is_panel": false,
+    "tier": "standard",
+    "trust_score": 0.55,
+    "price_accuracy": 0.79,
+    "stock_accuracy": 0.62,
+    "updated_at": "2026-08-19T02:00:13Z"
+  }
+}

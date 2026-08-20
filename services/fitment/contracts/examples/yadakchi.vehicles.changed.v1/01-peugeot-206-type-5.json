@@ -1,0 +1,30 @@
+{
+  "event_id": "993956c1-97fb-45d2-81ba-e1fde01d18a6",
+  "event_type": "vehicles.changed",
+  "version": 1,
+  "occurred_at": "2026-07-14T10:05:22Z",
+  "producer": "fitment",
+  "trace_id": "24c7f0b93ae15d8c",
+  "payload": {
+    "vehicle_slug": "peugeot-206-type-5",
+    "brand": "Peugeot",
+    "model": "206",
+    "trim": "Type 5",
+    "year_from": 2005,
+    "year_to": 2015,
+    "engine_code": "TU5JP4",
+    "display_name_fa": "پژو ۲۰۶ تیپ ۵",
+    "aliases": [
+      "پژو 206 تیپ 5",
+      "پژو ۲۰۶ تیپ ۵",
+      "206 تیپ 5",
+      "206تیپ5",
+      "پژو۲۰۶تیپ۵",
+      "206 TU5",
+      "peugeot 206 type 5",
+      "206 تيپ 5"
+    ],
+    "is_published": true,
+    "updated_at": "2026-07-14T10:05:22Z"
+  }
+}

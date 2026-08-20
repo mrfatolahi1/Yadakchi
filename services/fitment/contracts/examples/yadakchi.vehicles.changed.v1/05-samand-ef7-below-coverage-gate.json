@@ -1,0 +1,27 @@
+{
+  "event_id": "c803f235-da43-427f-9f8d-246ce3dd126c",
+  "event_type": "vehicles.changed",
+  "version": 1,
+  "occurred_at": "2026-08-11T16:30:55Z",
+  "producer": "fitment",
+  "trace_id": "24c7f0b93ae15d8c",
+  "payload": {
+    "vehicle_slug": "samand-ef7",
+    "brand": "IKCO",
+    "model": "Samand",
+    "trim": "EF7",
+    "year_from": 2007,
+    "year_to": null,
+    "engine_code": "EF7",
+    "display_name_fa": "سمند EF7",
+    "aliases": [
+      "سمند EF7",
+      "سمند ای اف 7",
+      "سمند موتور ملی",
+      "samand ef7",
+      "EF7"
+    ],
+    "is_published": false,
+    "updated_at": "2026-08-11T16:30:55Z"
+  }
+}

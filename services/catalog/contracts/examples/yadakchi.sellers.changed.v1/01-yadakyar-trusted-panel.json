@@ -1,0 +1,20 @@
+{
+  "event_id": "d8b19b03-a62b-4468-a865-f127bdd51899",
+  "event_type": "sellers.changed",
+  "version": 1,
+  "occurred_at": "2026-08-19T02:00:11Z",
+  "producer": "catalog",
+  "trace_id": "0f7ae3d81b6c92455a",
+  "payload": {
+    "seller_key": "yadakyar",
+    "name": "یدک‌یار",
+    "domain": "yadakyar.ir",
+    "source_key": "yadakmarket",
+    "is_panel": true,
+    "tier": "trusted",
+    "trust_score": 0.82,
+    "price_accuracy": 0.96,
+    "stock_accuracy": 0.91,
+    "updated_at": "2026-08-19T02:00:11Z"
+  }
+}

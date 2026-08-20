@@ -1,0 +1,17 @@
+{
+  "event_id": "b25c7830-8c61-4c18-a2e9-be275ffe3d80",
+  "event_type": "crossrefs.changed",
+  "version": 1,
+  "occurred_at": "2026-08-02T11:47:19Z",
+  "producer": "fitment",
+  "trace_id": "24c7f0b93ae15d8c",
+  "payload": {
+    "code_a": "0K30E14302",
+    "code_b": "SF7710",
+    "brand_a": "kia",
+    "brand_b": "sarkan",
+    "confidence": 0.88,
+    "provenance": "rule",
+    "updated_at": "2026-08-02T11:47:19Z"
+  }
+}

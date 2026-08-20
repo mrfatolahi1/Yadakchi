@@ -1,0 +1,21 @@
+{
+  "event_id": "92e9fdf0-92bb-44d6-957b-15f4df7cbfb5",
+  "event_type": "review.decided",
+  "version": 1,
+  "occurred_at": "2026-08-20T06:13:55Z",
+  "producer": "ops",
+  "trace_id": "b52d7c04e19af836",
+  "payload": {
+    "request_uid": "5426b249-9549-4c18-840b-3b14990d8afa",
+    "kind": "price_ambiguous",
+    "decision": "skip",
+    "subject": {
+      "offer_uid": "46ac7120deb20594f796272a7a5d034c",
+      "source_key": "yadakmarket",
+      "external_key": "p-517640"
+    },
+    "actor": "mehdi.r",
+    "reason": null,
+    "decided_at": "2026-08-20T06:13:55Z"
+  }
+}

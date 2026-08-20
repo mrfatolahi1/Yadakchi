@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yadakchi.ir/schemas/yadakchi.clusters.changed.v1.json",
+  "title": "yadakchi.clusters.changed.v1",
+  "description": "The set of offers matcher believes describe one physical product.\n\nProducers: matcher. Consumers: catalog.\nKafka message key: cluster_uid — it must be set; compaction and partition ordering depend on it.\nCleanup: delete, retention 90 days.\n\nThis file validates a whole Kafka message body: the shared envelope from docs/specs/02-EVENT-CONTRACTS.md plus this topic's payload. Unknown fields are ignored, never rejected, at both levels — that is what lets a producer add an optional field without breaking a consumer.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "event_id",
+    "event_type",
+    "version",
+    "occurred_at",
+    "producer",
+    "trace_id",
+    "payload"
+  ],
+  "properties": {
+    "event_id": {
+      "description": "UUIDv4, unique per emission. Two emissions of the same fact carry different event_ids; consumers deduplicate on the payload's natural identity, not on this.",
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+    },
+    "event_type": {
+      "description": "The topic name without the 'yadakchi.' prefix and without the version suffix.",
+      "type": "string",
+      "const": "clusters.changed"
+    },
+    "version": {
+      "description": "Envelope and payload version. A removed field, a renamed field or a changed type is a breaking change: publish to .v2 and run both until consumers migrate.",
+      "type": "integer",
+      "const": 1
+    },
+    "occurred_at": {
+      "description": "When the fact happened, ISO-8601 UTC with Z. Consumers tolerate out-of-order delivery across partitions by comparing this, never by assuming global ordering.",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$"
+    },
+    "producer": {
+      "description": "The service that emitted this message. Constrained to the producers declared for this topic in platform/kafka/topics.yml.",
+      "type": "string",
+      "enum": [
+        "matcher"
+      ]
+    },
+    "trace_id": {
+      "description": "Propagated across the whole chain for debugging. Minted by crawler on yadakchi.listings.observed.v1 and carried through every derived event; a service starting a chain of its own (a human admin edit, a scheduled recomputation) mints a fresh one. Every service logs it.",
+      "type": "string",
+      "minLength": 1
+    },
+    "payload": {
+      "description": "cluster_uid is minted by matcher as a UUIDv4 and is stable for the life of the cluster; catalog adopts it unchanged as product_uid. A cluster_uid is never silently dropped — a retired cluster carries successor_uid and the clusters that replace it list it in predecessor_uids, which catalog turns into 301 redirects. This topic is not compacted, so payload is never null; there is no tombstone on a delete-retention topic.",
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "cluster_uid",
+        "members",
+        "change_reason",
+        "predecessor_uids",
+        "computed_at"
+      ],
+      "properties": {
+        "cluster_uid": {
+          "description": "UUIDv4 minted by matcher. catalog adopts it as product_uid unchanged.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+        },
+        "members": {
+          "description": "The offers in this cluster, with how confident matcher is about each membership.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": [
+              "offer_uid",
+              "confidence",
+              "provenance"
+            ],
+            "properties": {
+              "offer_uid": {
+                "description": "The member offer.",
+                "type": "string",
+                "pattern": "^[0-9a-f]{32}$"
+              },
+              "confidence": {
+                "description": "Confidence in this membership, 0..1.",
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "provenance": {
+                "description": "How the membership was decided. human always wins over a computed value.",
+                "type": "string",
+                "enum": [
+                  "rule",
+                  "model",
+                  "human",
+                  "catalog",
+                  "consensus"
+                ]
+              }
+            }
+          }
+        },
+        "change_reason": {
+          "description": "Why this event was emitted.",
+          "type": "string",
+          "examples": [
+            "created",
+            "member_added",
+            "member_removed",
+            "split",
+            "merged"
+          ]
+        },
+        "predecessor_uids": {
+          "description": "Clusters this one absorbed, or the cluster it was split out of. Empty on creation.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+          }
+        },
+        "successor_uid": {
+          "description": "Set when this cluster is retired, pointing at the cluster that replaces it. null while the cluster is live.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+        },
+        "computed_at": {
+          "description": "When this clustering was computed.",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$"
+        }
+      }
+    }
+  }
+}

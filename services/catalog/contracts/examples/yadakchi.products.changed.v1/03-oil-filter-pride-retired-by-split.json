@@ -1,0 +1,52 @@
+{
+  "event_id": "3653b1d4-9af4-4e38-b1b7-546ea932a614",
+  "event_type": "products.changed",
+  "version": 1,
+  "occurred_at": "2026-08-19T07:42:15Z",
+  "producer": "catalog",
+  "trace_id": "b52d7c04e19af836",
+  "payload": {
+    "product_uid": "a941e714-9c9f-41a2-ab22-2a7a6e16ff75",
+    "slug": "فیلتر-روغن-پراید-2c7d40",
+    "title": "فیلتر روغن پراید",
+    "brand": null,
+    "part_type": "oil_filter",
+    "authenticity_dominant": "genuine",
+    "image_url": null,
+    "part_numbers": [
+      "SF7710",
+      "0451103318"
+    ],
+    "crossref_codes": [
+      "0K30E14302"
+    ],
+    "vehicles_compatible": [
+      "pride-131",
+      "pride-111",
+      "tiba-2"
+    ],
+    "vehicles_incompatible": [],
+    "vehicles_unknown": [],
+    "risky_family_note_fa": null,
+    "offer_count": 0,
+    "min_price_toman": null,
+    "max_price_toman": null,
+    "median_price_toman": null,
+    "offers": [],
+    "price_series": [
+      {
+        "date": "2026-08-17",
+        "min_toman": 295000,
+        "median_toman": 341000
+      },
+      {
+        "date": "2026-08-18",
+        "min_toman": 295000,
+        "median_toman": 344000
+      }
+    ],
+    "is_published": false,
+    "successor_product_uid": "b4191885-f836-4ccd-bfc4-e0ccaf88dcae",
+    "updated_at": "2026-08-19T07:42:15Z"
+  }
+}

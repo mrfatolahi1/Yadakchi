@@ -1,0 +1,48 @@
+{
+  "event_id": "15403cb1-02f5-4587-91f6-5dc263b33903",
+  "event_type": "offers.enriched",
+  "version": 1,
+  "occurred_at": "2026-08-19T08:04:33Z",
+  "producer": "enricher",
+  "trace_id": "e61390fa5c8b247d",
+  "payload": {
+    "offer_uid": "46ac7120deb20594f796272a7a5d034c",
+    "source_key": "yadakmarket",
+    "external_key": "p-517640",
+    "seller_key": "parsyadak",
+    "url": "https://yadakmarket.com/p-517640",
+    "raw_title": "چراغ جلو راست پژو 206 مناسب تمام پژوها ۲۸٬۵۰۰٬۰۰۰",
+    "title_normalized": "چراغ جلو راست پژو 206",
+    "brand": null,
+    "part_number": null,
+    "part_type": "headlight_right",
+    "authenticity_claim": "unknown",
+    "pack_quantity": 1,
+    "price_toman": null,
+    "stock_status": "in_stock",
+    "image_url": "https://cdn.yadakmarket.com/media/517640/cheragh-jolo-206.jpg",
+    "vehicle_hints": [
+      "پژو 206",
+      "تمام پژوها"
+    ],
+    "overbroad_claim": true,
+    "confidences": {
+      "part_type": 0.72,
+      "authenticity_claim": 0.3,
+      "pack_quantity": 0.5,
+      "price_toman": 0.11,
+      "stock_status": 0.6
+    },
+    "extraction_provenance": {
+      "part_type": "model",
+      "authenticity_claim": "rule",
+      "pack_quantity": "rule",
+      "price_toman": "rule",
+      "stock_status": "rule"
+    },
+    "normalizer_version": "2026.08.1",
+    "first_seen_at": "2026-08-19T08:02:16Z",
+    "last_seen_at": "2026-08-19T08:02:16Z",
+    "is_active": true
+  }
+}

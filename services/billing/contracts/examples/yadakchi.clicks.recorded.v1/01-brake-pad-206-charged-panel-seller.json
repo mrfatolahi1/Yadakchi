@@ -1,0 +1,17 @@
+{
+  "event_id": "a5599ef0-6188-4629-b0f7-af1a6e2853f0",
+  "event_type": "clicks.recorded",
+  "version": 1,
+  "occurred_at": "2026-08-20T06:41:58Z",
+  "producer": "billing",
+  "trace_id": "d18b3f7c05ae9264",
+  "payload": {
+    "click_id": "b9dd5c43-f5d2-48ca-9032-412456242c2b",
+    "product_uid": "93c9da93-7ffb-498e-afc1-2798ea05112e",
+    "offer_uid": "ad1e2af57f36691329247db654602a4e",
+    "seller_key": "yadakyar",
+    "cost_toman": 4200,
+    "is_suspicious": false,
+    "occurred_at": "2026-08-20T06:41:58Z"
+  }
+}

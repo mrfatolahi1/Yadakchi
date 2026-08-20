@@ -1,0 +1,71 @@
+{
+  "event_id": "c1f4acc2-bdff-44c9-96cf-e3f935e4f3fd",
+  "event_type": "review.requested",
+  "version": 1,
+  "occurred_at": "2026-08-19T07:49:05Z",
+  "producer": "matcher",
+  "trace_id": "c40d9b6e1f8a2753",
+  "payload": {
+    "request_uid": "a92afbd8-b796-48af-a79f-692cc97bbc4b",
+    "kind": "merge_pair",
+    "priority": 870,
+    "subject": {
+      "offer_uid_a": "ad1e2af57f36691329247db654602a4e",
+      "offer_uid_b": "a21378893952f89cef62250154a38a7b",
+      "cluster_uid": "93c9da93-7ffb-498e-afc1-2798ea05112e"
+    },
+    "evidence": {
+      "reason": "price_circuit_breaker",
+      "price_range_factor": 3.14,
+      "price_range_factor_limit": 2.5,
+      "resulting_median_toman": 2450000,
+      "score": 0.79,
+      "features": {
+        "part_number_match": "exact",
+        "brand_match": true,
+        "part_type_match": true,
+        "pack_quantity_match": true,
+        "authenticity_claim_match": false,
+        "title_similarity": 0.86,
+        "fitment_jaccard": 0.75,
+        "price_log_ratio": 1.145,
+        "embedding_cosine": 0.91
+      },
+      "reason_fa": "هر دو آگهی لنت جلو پژو ۲۰۶ با کد ۴۲۵۴۳۸ هستند، اما یکی «اصلی عظام» و دیگری «طرح عظام» است و اختلاف قیمت بیش از سه برابر است.",
+      "offer_a": {
+        "offer_uid": "ad1e2af57f36691329247db654602a4e",
+        "seller_key": "yadakyar",
+        "raw_title": "لنت ترمز جلو پژو ۲۰۶ تیپ ۵ عظام اصلی ⭐ ارسال رایگان ⭐ گارانتی ۶ ماهه",
+        "title_normalized": "لنت ترمز جلو پژو 206 تیپ 5 عظام",
+        "brand": "ezam",
+        "part_number": "425438",
+        "part_type": "brake_pad_front",
+        "pack_quantity": 4,
+        "authenticity_claim": "genuine",
+        "price_toman": 2450000,
+        "image_url": "https://cdn.yadakmarket.com/media/482913/lent-tormoz-206-ezam.jpg",
+        "vehicles_compatible": [
+          "peugeot-206-type-5",
+          "peugeot-206-type-6"
+        ]
+      },
+      "offer_b": {
+        "offer_uid": "a21378893952f89cef62250154a38a7b",
+        "seller_key": "carinag",
+        "raw_title": "لنت ترمز جلو پژو 206 طرح عظام درجه یک ارزان‌ترین قیمت بازار 📞 09121234567",
+        "title_normalized": "لنت ترمز جلو پژو 206 طرح عظام درجه یک",
+        "brand": "ezam",
+        "part_number": "425438",
+        "part_type": "brake_pad_front",
+        "pack_quantity": 4,
+        "authenticity_claim": "aftermarket",
+        "price_toman": 780000,
+        "image_url": "https://carinag.com/uploads/lent-206-tarh.jpg",
+        "vehicles_compatible": [
+          "peugeot-206-type-5"
+        ]
+      }
+    },
+    "requested_at": "2026-08-19T07:49:05Z"
+  }
+}

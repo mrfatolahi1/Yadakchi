@@ -1,0 +1,51 @@
+{
+  "event_id": "2f8e4f30-35d8-49b1-af86-9be96fd5c517",
+  "event_type": "offers.enriched",
+  "version": 1,
+  "occurred_at": "2026-08-19T07:20:07Z",
+  "producer": "enricher",
+  "trace_id": "1b77e0c3a4f92d68",
+  "payload": {
+    "offer_uid": "77c1eef0f4f43683ec120aa9e5453143",
+    "source_key": "otoyar",
+    "external_key": "parts/lent-tormoz-jolo-206-ezam",
+    "seller_key": "otoyar",
+    "url": "https://otoyar.ir/parts/lent-tormoz-jolo-206-ezam",
+    "raw_title": "لنت جلو 206 تيپ 5 عظام (دست چهار عددی) اورجینال",
+    "title_normalized": "لنت جلو 206 تیپ 5 عظام دست چهار عددی",
+    "brand": "ezam",
+    "part_number": "425438",
+    "part_type": "brake_pad_front",
+    "authenticity_claim": "genuine",
+    "pack_quantity": 4,
+    "price_toman": 2690000,
+    "stock_status": "in_stock",
+    "image_url": "https://otoyar.ir/img/products/lent-206.jpg",
+    "vehicle_hints": [
+      "206 تيپ 5"
+    ],
+    "overbroad_claim": false,
+    "confidences": {
+      "brand": 0.95,
+      "part_number": 0.91,
+      "part_type": 0.99,
+      "authenticity_claim": 0.88,
+      "pack_quantity": 0.96,
+      "price_toman": 0.98,
+      "stock_status": 0.9
+    },
+    "extraction_provenance": {
+      "brand": "rule",
+      "part_number": "rule",
+      "part_type": "rule",
+      "authenticity_claim": "rule",
+      "pack_quantity": "rule",
+      "price_toman": "rule",
+      "stock_status": "rule"
+    },
+    "normalizer_version": "2026.08.1",
+    "first_seen_at": "2026-07-11T09:26:31Z",
+    "last_seen_at": "2026-08-19T07:18:02Z",
+    "is_active": true
+  }
+}

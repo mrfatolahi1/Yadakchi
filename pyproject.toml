@@ -41,8 +41,8 @@ files = ["platform/scripts", "platform/tests"]
 exclude = "^services/"
 
 [[tool.mypy.overrides]]
-# Infra test dependencies without bundled stubs.
-module = ["confluent_kafka.*", "minio.*"]
+# Test dependencies without bundled stubs.
+module = ["confluent_kafka.*", "minio.*", "jsonschema.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

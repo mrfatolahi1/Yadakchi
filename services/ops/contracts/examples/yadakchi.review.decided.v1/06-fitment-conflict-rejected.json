@@ -1,0 +1,21 @@
+{
+  "event_id": "23d524ed-7f09-4a7d-8e7c-872b05bfaf47",
+  "event_type": "review.decided",
+  "version": 1,
+  "occurred_at": "2026-08-20T06:20:09Z",
+  "producer": "ops",
+  "trace_id": "b52d7c04e19af836",
+  "payload": {
+    "request_uid": "11beeb4a-badf-46c7-af82-af74f38463fd",
+    "kind": "fitment_conflict",
+    "decision": "reject",
+    "subject": {
+      "part_number": "425438",
+      "vehicle_slug": "peugeot-206-sd-v8",
+      "status": "incompatible"
+    },
+    "actor": "narges.k",
+    "reason": "صندوق‌دار V8 دیسک بزرگ‌تری دارد؛ این لنت مناسب نیست.",
+    "decided_at": "2026-08-20T06:20:09Z"
+  }
+}

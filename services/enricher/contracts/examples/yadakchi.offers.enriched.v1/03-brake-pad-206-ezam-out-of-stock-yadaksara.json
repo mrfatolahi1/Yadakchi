@@ -1,0 +1,52 @@
+{
+  "event_id": "06e9b3d7-ea53-4747-a6fd-d1684acd870a",
+  "event_type": "offers.enriched",
+  "version": 1,
+  "occurred_at": "2026-08-19T07:27:44Z",
+  "producer": "enricher",
+  "trace_id": "5e2ab8c1d70f3496",
+  "payload": {
+    "offer_uid": "f6254affc0a4ab65d4ac7fa35e556eef",
+    "source_key": "yadaksara",
+    "external_key": "SKU-11204",
+    "seller_key": "yadaksara",
+    "url": "https://yadaksara.com/product/SKU-11204",
+    "raw_title": "لنت ترمز جلو پژو 206 تیپ ۵ و ۶ عظام کد 425438",
+    "title_normalized": "لنت ترمز جلو پژو 206 تیپ 5 و 6 عظام کد 425438",
+    "brand": "ezam",
+    "part_number": "425438",
+    "part_type": "brake_pad_front",
+    "authenticity_claim": "genuine",
+    "pack_quantity": 4,
+    "price_toman": 2380000,
+    "stock_status": "out_of_stock",
+    "image_url": null,
+    "vehicle_hints": [
+      "پژو 206 تیپ 5",
+      "تیپ 6"
+    ],
+    "overbroad_claim": false,
+    "confidences": {
+      "brand": 0.96,
+      "part_number": 0.99,
+      "part_type": 0.99,
+      "authenticity_claim": 0.72,
+      "pack_quantity": 0.6,
+      "price_toman": 0.97,
+      "stock_status": 0.94
+    },
+    "extraction_provenance": {
+      "brand": "rule",
+      "part_number": "rule",
+      "part_type": "rule",
+      "authenticity_claim": "rule",
+      "pack_quantity": "rule",
+      "price_toman": "rule",
+      "stock_status": "rule"
+    },
+    "normalizer_version": "2026.08.1",
+    "first_seen_at": "2026-05-19T11:03:57Z",
+    "last_seen_at": "2026-08-19T07:25:38Z",
+    "is_active": true
+  }
+}

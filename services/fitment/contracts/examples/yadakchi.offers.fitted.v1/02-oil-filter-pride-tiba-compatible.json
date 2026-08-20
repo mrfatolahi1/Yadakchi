@@ -1,0 +1,55 @@
+{
+  "event_id": "c02ab5e6-acd0-4b60-a75f-56bcc8648316",
+  "event_type": "offers.fitted",
+  "version": 1,
+  "occurred_at": "2026-08-19T07:36:04Z",
+  "producer": "fitment",
+  "trace_id": "3a8f5d21c9b04e7f",
+  "payload": {
+    "offer_uid": "dece8380a022dfec9a040ea3221aedab",
+    "fitments": [
+      {
+        "vehicle_slug": "pride-131",
+        "status": "compatible",
+        "confidence": 0.97,
+        "provenance": "consensus",
+        "evidence": {
+          "rule": "consensus_part_number",
+          "part_number": "SF7710",
+          "agreeing_sellers": 11,
+          "disagreeing_sellers": 0,
+          "matched_hint": "پراید ۱۳۱"
+        }
+      },
+      {
+        "vehicle_slug": "pride-111",
+        "status": "compatible",
+        "confidence": 0.9,
+        "provenance": "consensus",
+        "evidence": {
+          "rule": "consensus_part_number",
+          "part_number": "SF7710",
+          "agreeing_sellers": 6,
+          "disagreeing_sellers": 0
+        }
+      },
+      {
+        "vehicle_slug": "tiba-2",
+        "status": "compatible",
+        "confidence": 0.88,
+        "provenance": "consensus",
+        "evidence": {
+          "rule": "consensus_part_number",
+          "part_number": "SF7710",
+          "agreeing_sellers": 5,
+          "disagreeing_sellers": 0
+        }
+      }
+    ],
+    "crossref_codes": [
+      "0K30E14302"
+    ],
+    "risky_family": null,
+    "computed_at": "2026-08-19T07:36:04Z"
+  }
+}

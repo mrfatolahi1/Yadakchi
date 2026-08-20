@@ -1,0 +1,17 @@
+{
+  "event_id": "864ea9ed-8c8b-4fbd-86cc-cd00e00daadf",
+  "event_type": "clicks.recorded",
+  "version": 1,
+  "occurred_at": "2026-08-20T08:19:07Z",
+  "producer": "billing",
+  "trace_id": "d18b3f7c05ae9264",
+  "payload": {
+    "click_id": "ed45997d-0968-42f8-af29-9aae223d7365",
+    "product_uid": "93c9da93-7ffb-498e-afc1-2798ea05112e",
+    "offer_uid": "f6254affc0a4ab65d4ac7fa35e556eef",
+    "seller_key": "yadaksara",
+    "cost_toman": 0,
+    "is_suspicious": false,
+    "occurred_at": "2026-08-20T08:19:07Z"
+  }
+}

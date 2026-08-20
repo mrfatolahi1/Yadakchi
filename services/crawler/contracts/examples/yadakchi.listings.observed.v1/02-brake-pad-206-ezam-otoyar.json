@@ -1,0 +1,21 @@
+{
+  "event_id": "6da4f554-8612-4359-a481-b293af78e1fb",
+  "event_type": "listings.observed",
+  "version": 1,
+  "occurred_at": "2026-08-19T07:18:02Z",
+  "producer": "crawler",
+  "trace_id": "1b77e0c3a4f92d68",
+  "payload": {
+    "source_key": "otoyar",
+    "external_key": "parts/lent-tormoz-jolo-206-ezam",
+    "url": "https://otoyar.ir/parts/lent-tormoz-jolo-206-ezam",
+    "raw_title": "لنت جلو 206 تيپ 5 عظام (دست چهار عددی) اورجینال",
+    "raw_price_text": "۲,۶۹۰,۰۰۰ تومان",
+    "raw_stock_text": "موجود",
+    "image_url": "https://otoyar.ir/img/products/lent-206.jpg",
+    "raw_fragment": "<div class=\"product-card\" data-sku=\"parts/lent-tormoz-jolo-206-ezam\"><h1 class=\"product-title\">لنت جلو 206 تيپ 5 عظام (دست چهار عددی) اورجینال</h1><span class=\"price\">۲,۶۹۰,۰۰۰ تومان</span><span class=\"availability\">موجود</span><img src=\"https://otoyar.ir/img/products/lent-206.jpg\" alt=\"لنت جلو 206 تيپ 5 عظام (دست چهار عددی) اورجینال\"><ul class=\"specs\"><li>کد فنی: 425438</li><li>تعداد در بسته: ۴</li></ul></div>",
+    "archive_uri": "s3://raw-archive/otoyar/2026/08/19/cd70b2798002ca16fc7c5bedc4778ff9effb6fa3dd5bc2f28cb493eef1a46729.gz",
+    "content_hash": "cd70b2798002ca16fc7c5bedc4778ff9effb6fa3dd5bc2f28cb493eef1a46729",
+    "observed_at": "2026-08-19T07:18:02Z"
+  }
+}

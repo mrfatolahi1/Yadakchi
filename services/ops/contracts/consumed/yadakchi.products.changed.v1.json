@@ -1,0 +1,339 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yadakchi.ir/schemas/yadakchi.products.changed.v1.json",
+  "title": "yadakchi.products.changed.v1",
+  "description": "The full renderable product. The largest payload in the system, deliberately.\n\nProducers: catalog. Consumers: search, ops, web.\nKafka message key: product_uid — it must be set; compaction and partition ordering depend on it.\nCleanup: compact, retention infinite.\n\nThis file validates a whole Kafka message body: the shared envelope from docs/specs/02-EVENT-CONTRACTS.md plus this topic's payload. Unknown fields are ignored, never rejected, at both levels — that is what lets a producer add an optional field without breaking a consumer.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "event_id",
+    "event_type",
+    "version",
+    "occurred_at",
+    "producer",
+    "trace_id",
+    "payload"
+  ],
+  "properties": {
+    "event_id": {
+      "description": "UUIDv4, unique per emission. Two emissions of the same fact carry different event_ids; consumers deduplicate on the payload's natural identity, not on this.",
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+    },
+    "event_type": {
+      "description": "The topic name without the 'yadakchi.' prefix and without the version suffix.",
+      "type": "string",
+      "const": "products.changed"
+    },
+    "version": {
+      "description": "Envelope and payload version. A removed field, a renamed field or a changed type is a breaking change: publish to .v2 and run both until consumers migrate.",
+      "type": "integer",
+      "const": 1
+    },
+    "occurred_at": {
+      "description": "When the fact happened, ISO-8601 UTC with Z. Consumers tolerate out-of-order delivery across partitions by comparing this, never by assuming global ordering.",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$"
+    },
+    "producer": {
+      "description": "The service that emitted this message. Constrained to the producers declared for this topic in platform/kafka/topics.yml.",
+      "type": "string",
+      "enum": [
+        "catalog"
+      ]
+    },
+    "trace_id": {
+      "description": "Propagated across the whole chain for debugging. Minted by crawler on yadakchi.listings.observed.v1 and carried through every derived event; a service starting a chain of its own (a human admin edit, a scheduled recomputation) mints a fresh one. Every service logs it.",
+      "type": "string",
+      "minLength": 1
+    },
+    "payload": {
+      "description": "search and web must never call back to catalog to render a result, so everything needed to render is here: the ordered offer list, all three vehicle status arrays, cross-reference equivalents and the downsampled price series. The payload never varies by user or vehicle — it must be globally cacheable. A tombstone — payload: null with the envelope intact — means this entity is deleted; compaction keeps it as the last word on the key.",
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true,
+      "required": [
+        "product_uid",
+        "slug",
+        "title",
+        "authenticity_dominant",
+        "part_numbers",
+        "crossref_codes",
+        "vehicles_compatible",
+        "vehicles_incompatible",
+        "vehicles_unknown",
+        "offer_count",
+        "offers",
+        "price_series",
+        "is_published",
+        "updated_at"
+      ],
+      "properties": {
+        "product_uid": {
+          "description": "The cluster_uid minted by matcher, adopted unchanged. Assigned once, never changes.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+        },
+        "slug": {
+          "description": "Persian, URL-safe, derived from the title plus a short identity suffix. May change when the title improves; old slugs still resolve.",
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "description": "Built from the representative member's title_normalized, never its raw_title — promotional junk here goes straight into the HTML title tag.",
+          "type": "string",
+          "minLength": 1
+        },
+        "brand": {
+          "description": "Canonical brand key of the product, or null when the cluster has none.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "part_type": {
+          "description": "Controlled vocabulary key, or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "authenticity_dominant": {
+          "description": "The modal authenticity claim across members. Prices differ ~4x across these grades, so comparing without the label is misleading.",
+          "type": "string",
+          "enum": [
+            "genuine",
+            "oem",
+            "aftermarket",
+            "used",
+            "refurbished",
+            "unknown"
+          ]
+        },
+        "image_url": {
+          "description": "Representative image, or null.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        },
+        "part_numbers": {
+          "description": "Every part number seen on the members.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "crossref_codes": {
+          "description": "Equivalent part numbers from other brands. A display hint only.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "vehicles_compatible": {
+          "description": "vehicle_slugs confirmed compatible.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:[-_][a-z0-9]+)*$"
+          }
+        },
+        "vehicles_incompatible": {
+          "description": "vehicle_slugs confirmed incompatible. Stored explicitly: search excludes only these, so that unmapped products stay visible.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:[-_][a-z0-9]+)*$"
+          }
+        },
+        "vehicles_unknown": {
+          "description": "vehicle_slugs evaluated with no verdict. Shown with a caveat, never hidden.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:[-_][a-z0-9]+)*$"
+          }
+        },
+        "risky_family_note_fa": {
+          "description": "Persian warning when this product belongs to a risky part family and the required granularity is missing. null otherwise.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "offer_count": {
+          "description": "Number of active offers on this product.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "min_price_toman": {
+          "description": "Lowest price across IN-STOCK offers only. The headline lowest price must never be a number nobody can buy. null when nothing is in stock.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "max_price_toman": {
+          "description": "Highest price across in-stock offers only, or null.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "median_price_toman": {
+          "description": "Median price across in-stock offers, or null.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "offers": {
+          "description": "The ranked seller list, ordered by rank_position. Ranking is trust score first, then price — never purchasable. Out-of-stock offers are retained and labelled, never deleted.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": [
+              "offer_uid",
+              "seller_key",
+              "seller_name",
+              "price_toman",
+              "stock_status",
+              "authenticity_claim",
+              "trust_score",
+              "rank_position",
+              "url",
+              "is_cheapest"
+            ],
+            "properties": {
+              "offer_uid": {
+                "description": "The member offer this row denormalizes.",
+                "type": "string",
+                "pattern": "^[0-9a-f]{32}$"
+              },
+              "seller_key": {
+                "description": "Stable slug of the seller.",
+                "type": "string",
+                "pattern": "^[a-z0-9]+(?:[-_][a-z0-9]+)*$"
+              },
+              "seller_name": {
+                "description": "The seller's display name, in Persian where they have one.",
+                "type": "string",
+                "minLength": 1
+              },
+              "price_toman": {
+                "description": "Integer tomans, or null when the offer carries no usable price.",
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0
+              },
+              "stock_status": {
+                "description": "Stock state of this offer.",
+                "type": "string",
+                "enum": [
+                  "in_stock",
+                  "out_of_stock",
+                  "unknown"
+                ]
+              },
+              "authenticity_claim": {
+                "description": "The seller's own claim for this offer.",
+                "type": "string",
+                "enum": [
+                  "genuine",
+                  "oem",
+                  "aftermarket",
+                  "used",
+                  "refurbished",
+                  "unknown"
+                ]
+              },
+              "trust_score": {
+                "description": "The seller's trust score at the time this list was built.",
+                "type": "number"
+              },
+              "rank_position": {
+                "description": "Position in the ranked list.",
+                "type": "integer"
+              },
+              "url": {
+                "description": "Outbound URL of the offer.",
+                "type": "string",
+                "format": "uri",
+                "minLength": 1
+              },
+              "is_cheapest": {
+                "description": "Exactly one offer per product carries true, so the frontend can badge it even when trust-first ordering puts another seller first.",
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "price_series": {
+          "description": "Downsampled daily price history, so web can draw the chart without a second call.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": [
+              "date",
+              "min_toman",
+              "median_toman"
+            ],
+            "properties": {
+              "date": {
+                "description": "The day this point summarizes, YYYY-MM-DD.",
+                "type": "string",
+                "format": "date",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+              },
+              "min_toman": {
+                "description": "Lowest in-stock price that day.",
+                "type": "integer",
+                "minimum": 0
+              },
+              "median_toman": {
+                "description": "Median in-stock price that day.",
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "is_published": {
+          "description": "true only with at least one active offer, a non-empty title and — for risky part families — an explicit verdict or the attached warning.",
+          "type": "boolean"
+        },
+        "successor_product_uid": {
+          "description": "Set when this product was retired by a split or merge; drives 301 redirects. null while the product is live. A product is never deleted.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+        },
+        "updated_at": {
+          "description": "When this product last changed.",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$"
+        }
+      }
+    }
+  }
+}
