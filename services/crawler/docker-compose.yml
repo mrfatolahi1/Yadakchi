@@ -1,0 +1,82 @@
+name: yadakchi
+
+include:
+  - path: ../../platform/docker-compose.infra.yml
+    env_file: ../../platform/.env
+
+networks:
+  default:
+    external: true
+    name: yadakchi
+
+x-crawler-common: &crawler-common
+  build:
+    context: .
+    target: runtime
+  env_file:
+    - ../../platform/.env
+  environment:
+    DJANGO_ALLOWED_HOSTS: "*"
+    KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    MINIO_ENDPOINT_URL: http://minio:9000
+  restart: unless-stopped
+  depends_on:
+    postgres:
+      condition: service_started
+    redis:
+      condition: service_started
+    kafka:
+      condition: service_started
+    minio:
+      condition: service_started
+
+services:
+  crawler-migrate:
+    <<: *crawler-common
+    restart: "no"
+    command: python manage.py migrate --noinput
+
+  crawler:
+    <<: *crawler-common
+    depends_on:
+      crawler-migrate:
+        condition: service_completed_successfully
+    ports:
+      - "8040:8000"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8000/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  crawler-worker:
+    <<: *crawler-common
+    depends_on:
+      crawler-migrate:
+        condition: service_completed_successfully
+    command: celery -A crawler worker --loglevel=INFO --concurrency=4
+
+  crawler-beat:
+    <<: *crawler-common
+    depends_on:
+      crawler-migrate:
+        condition: service_completed_successfully
+    command: celery -A crawler beat --loglevel=INFO
+
+  crawler-click-consumer:
+    <<: *crawler-common
+    depends_on:
+      crawler-migrate:
+        condition: service_completed_successfully
+    command: python manage.py consume_clicks
+
+  crawler-check:
+    profiles: ["check"]
+    build:
+      context: .
+      target: test
+    environment:
+      DATABASE_URL: sqlite:////tmp/crawler-check.sqlite3
+      CRAWLER_REDIS_URL: redis://localhost:6379/15
+    command: make check
+    restart: "no"

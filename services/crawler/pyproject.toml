@@ -1,0 +1,40 @@
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "crawler.settings"
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "--strict-markers --strict-config"
+markers = [
+  "integration: requires local infrastructure",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "DJ", "RUF", "ASYNC", "SIM"]
+ignore = ["DJ001", "RUF012"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/crawler/migrations/**" = ["E501", "I001"]
+"tests/**" = ["RUF001"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.mypy]
+python_version = "3.12"
+plugins = ["mypy_django_plugin.main"]
+strict = true
+warn_unused_ignores = true
+ignore_missing_imports = true
+mypy_path = "src"
+
+[tool.django-stubs]
+django_settings_module = "crawler.settings"
+
+[[tool.mypy.overrides]]
+module = ["tests.*", "crawler.migrations.*"]
+disallow_untyped_defs = false
+disable_error_code = ["attr-defined"]

@@ -1,0 +1,8 @@
+-r requirements.txt
+django-stubs==5.2.2
+fakeredis==2.31.0
+mypy==1.17.1
+pytest==8.4.1
+pytest-asyncio==1.1.0
+pytest-django==4.11.1
+ruff==0.12.9

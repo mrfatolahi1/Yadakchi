@@ -1,0 +1,13 @@
+Django==5.2.5
+boto3==1.40.14
+celery[redis]==5.5.3
+confluent-kafka==2.11.1
+dj-database-url==3.0.1
+gunicorn==23.0.0
+httpx[http2]==0.28.1
+jsonschema==4.25.1
+prometheus-client==0.22.1
+psycopg[binary]==3.2.9
+pydantic==2.11.7
+redis==5.2.1
+selectolax==0.3.32
