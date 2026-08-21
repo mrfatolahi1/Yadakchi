@@ -34,7 +34,15 @@ EXPECTED: dict[str, tuple[int, str, int, set[str], set[str]]] = {
     "yadakchi.clusters.changed.v1": (6, "delete", 90 * DAY_MS, {"matcher"}, {"catalog"}),
     "yadakchi.products.changed.v1": (6, "compact", -1, {"catalog"}, {"search", "ops", "web"}),
     "yadakchi.sellers.changed.v1": (1, "compact", -1, {"catalog"}, {"billing", "ops"}),
-    "yadakchi.clicks.recorded.v1": (3, "delete", 30 * DAY_MS, {"billing"}, {"catalog", "matcher"}),
+    # crawler consumes clicks too — traffic is what drives hot-tier crawl
+    # scheduling (04-CRAWLER.md).
+    "yadakchi.clicks.recorded.v1": (
+        3,
+        "delete",
+        30 * DAY_MS,
+        {"billing"},
+        {"catalog", "matcher", "crawler"},
+    ),
     # Five producers: matcher (merge_pair), crawler (adapter_broken), fitment
     # (fitment_conflict), enricher (price_ambiguous, synonym_candidate) and
     # billing (click-velocity anomalies). 11-OPS.md consumes from all five.

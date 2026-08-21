@@ -14,8 +14,8 @@
     "raw_stock_text": "موجود",
     "image_url": "https://cdn.yadakmarket.com/media/517640/cheragh-jolo-206.jpg",
     "raw_fragment": "<div class=\"product-card\" data-sku=\"p-517640\"><h1 class=\"product-title\">چراغ جلو راست پژو 206 مناسب تمام پژوها ۲۸٬۵۰۰٬۰۰۰</h1><span class=\"price\">۲۸٬۵۰۰٬۰۰۰</span><span class=\"availability\">موجود</span><img src=\"https://cdn.yadakmarket.com/media/517640/cheragh-jolo-206.jpg\" alt=\"چراغ جلو راست پژو 206 مناسب تمام پژوها ۲۸٬۵۰۰٬۰۰۰\"><div class=\"note\">قیمت با تماس تلفنی نهایی می‌شود</div></div>",
-    "archive_uri": "s3://raw-archive/yadakmarket/2026/08/19/fe7ad660b1966263a48c0fb5f5b0e293d8431ff200648b959e0aa46f3fca0eb9.gz",
-    "content_hash": "fe7ad660b1966263a48c0fb5f5b0e293d8431ff200648b959e0aa46f3fca0eb9",
+    "archive_uri": "s3://raw-archive/yadakmarket/2026/08/19/abb4417986bdf425292d2ed6c29fcf90e554b73aff70bfa6ef54dc6e634d0cde.gz",
+    "fragment_hash": "fe7ad660b1966263a48c0fb5f5b0e293d8431ff200648b959e0aa46f3fca0eb9",
     "observed_at": "2026-08-19T08:02:16Z"
   }
 }

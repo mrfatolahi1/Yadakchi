@@ -157,12 +157,26 @@ def _check_copies(
     return verified
 
 
+def _is_openapi_document(path: Path) -> bool:
+    """OpenAPI documents share the contracts/ folders but are not event schemas.
+
+    Five service specs put one here — `openapi.json` for ai, catalog, search and
+    billing, and `catalog-openapi.json` / `search-openapi.json` in web's
+    consumed/. Spec 02 puts HTTP API schemas explicitly out of scope for the
+    event contracts, so this guard must not mistake them for an invented topic.
+    They are versioned with their service and need no cross-service drift check.
+    """
+    return path.stem == "openapi" or path.stem.endswith("-openapi")
+
+
 def _check_strays(registry: Registry, services: list[str], errors: list[str]) -> None:
     """No schema may exist for a topic nobody declared, or in a service that
     was never declared to read it. This is how an agent quietly inventing a
     topic gets caught."""
     for service in services:
         for path in sorted(published_dir(service).glob("*.json")):
+            if _is_openapi_document(path):
+                continue
             topic = registry.by_name(path.stem)
             if topic is None:
                 errors.append(
@@ -170,6 +184,8 @@ def _check_strays(registry: Registry, services: list[str], errors: list[str]) ->
                     "platform/kafka/topics.yml — declare the topic first"
                 )
         for path in sorted(consumed_dir(service).glob("*.json")):
+            if _is_openapi_document(path):
+                continue
             topic = registry.by_name(path.stem)
             if topic is None:
                 errors.append(

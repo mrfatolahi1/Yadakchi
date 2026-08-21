@@ -123,7 +123,11 @@ topics:
     key: product_uid
     schema_owner: billing
     producers: [billing]
-    consumers: [catalog, matcher]
+    # crawler reads this too: clicks are the traffic signal behind hot-tier
+    # crawl scheduling (04-CRAWLER.md, "How it connects" and the tiered
+    # scheduler). It matches clicks to its own listings by deriving
+    # offer_uid = sha256("{source_key}:{external_key}")[:32] locally.
+    consumers: [catalog, matcher, crawler]
     dlq: true
 
   - name: yadakchi.review.requested.v1

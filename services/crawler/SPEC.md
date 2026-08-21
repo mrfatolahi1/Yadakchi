@@ -12,7 +12,7 @@ Fetches listings from Iranian online spare-parts sellers, archives the raw bytes
 
 **This service interprets nothing.** It does not parse prices into numbers, identify brands, or clean Persian text. It fetches, archives, and announces. Everything downstream is rebuildable from what you archive — if you lose or mangle raw data, the system is unrecoverable without re-crawling.
 
-**Stack: Django 5 + httpx/asyncio + Celery.** Django for the source registry, archive metadata, migrations, and admin. Celery for tiered scheduling. Kafka consumption: none.
+**Stack: Django 5 + httpx/asyncio + Celery.** Django for the source registry, archive metadata, migrations, and admin. Celery for tiered scheduling. Kafka: produces `listings.observed` and `review.requested`; consumes `clicks.recorded` for crawl tiering.
 
 > Scrapy was considered and rejected: its Twisted reactor conflicts with the Django + Kafka process model, and we implement tiered scheduling and politeness ourselves anyway.
 
@@ -24,7 +24,7 @@ Fetches listings from Iranian online spare-parts sellers, archives the raw bytes
 |---|---|---|---|
 | **produces** | `enricher` | Kafka `yadakchi.listings.observed.v1` | one message per observed listing, key `{source_key}:{external_key}` |
 | **produces** | `ops` | Kafka `yadakchi.review.requested.v1` | `kind: adapter_broken` when parse rate collapses |
-| **consumes** | `billing` | Kafka `yadakchi.clicks.recorded.v1` | traffic signal for crawl tiering — maintain a small local read model of clicks per `product_uid`; tolerate its absence early on |
+| **consumes** | `billing` | Kafka `yadakchi.clicks.recorded.v1` | traffic signal for crawl tiering — maintain a small local read model of clicks per `offer_uid`; tolerate its absence early on |
 | writes | MinIO bucket `raw-archive` | S3 API | **exclusive owner** |
 | writes | Postgres `yadakchi_crawler` | — | **exclusive owner** |
 
@@ -44,11 +44,13 @@ raw_stock_text  string|null
 image_url       string|null
 raw_fragment    string     HTML/JSON of this listing only, capped at 64 KB
 archive_uri     string     MinIO path to the full page snapshot
-content_hash    string     sha256 of the fragment
+fragment_hash   string     sha256 of raw_fragment
 observed_at     timestamp
 ```
 
 The full page goes to MinIO; only the per-listing fragment goes on the wire. `enricher` needs the fragment and re-fetching would be expensive.
+
+**Two hashes, and they are not interchangeable.** `fragment_hash` is the sha256 of `raw_fragment` and is the only one on the wire: it is what decides whether a listing changed. `page_hash` is the sha256 of the full fetched page bytes; it names the archive object and drives archive deduplication, and it never leaves this service. A page whose navigation or advert markup changed has a new `page_hash` and the same `fragment_hash` — treating one as the other makes every unchanged listing look changed, or hides a real change.
 
 ---
 
@@ -84,9 +86,9 @@ Two base classes: `HtmlAdapter` (CSS/XPath selectors declared as class attribute
 
 ### Archive
 
-Full page gzipped to MinIO at `{source_key}/{yyyy}/{mm}/{dd}/{content_hash}.gz`.
+Full page gzipped to MinIO at `{source_key}/{yyyy}/{mm}/{dd}/{page_hash}.gz`.
 
-**Deduplication:** if the newest archive record for `(source_id, url_hash)` has the same `content_hash`, do not write a new object — record the observation referencing the existing one. Most refetches are unchanged; without this, storage is unbounded.
+**Deduplication:** if the newest archive record for `(source_id, url_hash)` has the same `page_hash`, do not write a new object — record the observation referencing the existing one. Most refetches are unchanged; without this, storage is unbounded.
 
 Retention: prune objects older than 180 days only when superseded. Configurable.
 
@@ -94,13 +96,23 @@ Retention: prune objects older than 180 days only when superseded. Configurable.
 
 | Tier | Selection | Frequency |
 |---|---|---|
-| Hot | listings on products with the most clicks in 7 days | hourly |
+| Hot | listings with the most clicks in 7 days | hourly |
 | Warm | active listings with recent price changes | 6-hourly |
 | Cold | everything else active | daily |
 | Discovery | category and listing pages | daily |
 | Dormant | inactive 30+ days | weekly, then dropped |
 
 Celery beat dispatches per source per tier. **Runs must be resumable** — persist a cursor so a restart does not begin at page one.
+
+**How a click becomes a tier.** `clicks.recorded` carries `product_uid` and `offer_uid`. You have no mapping from a product to your own listings — products are `catalog`'s construct and you never see one — so **key `ClickSignal` on `offer_uid`, not `product_uid`**, and ignore `product_uid` entirely.
+
+You can match an incoming `offer_uid` to your own listing without asking anyone, because the identity is derived from data you already hold:
+
+```
+offer_uid = sha256("{source_key}:{external_key}")[:32]
+```
+
+Compute that for your own `Observation` rows and index it. A click whose `offer_uid` matches nothing you crawl belongs to another source; count nothing and move on. Do not call `catalog`, and do not try to reverse a `product_uid`.
 
 ### Adapter health — the most important operational feature here
 
@@ -114,13 +126,13 @@ Hand-written adapters break silently when a site changes markup. Without this al
 
 A management command `replay_archive --source= --since= --until=` re-emits `listings.observed` for every archived document, **without touching seller sites**. This is the system-wide rebuild path: when `enricher` changes its normalizer, the whole pipeline is regenerated from here.
 
-Replay must be resumable, rate-limited, and must reuse the original `observed_at` and `content_hash`.
+Replay must be resumable, rate-limited, and must reuse the original `observed_at` and `fragment_hash`.
 
 ---
 
 ## Django models (your database only)
 
-`Source` (key, name, base_url, kind, adapter_key, priority, politeness_delay_ms, is_active), `ArchivedDocument` (source, url, url_hash, http_status, fetched_at, archive_uri, content_hash, error), `Observation` (source, external_key, url_hash, content_hash, observed_at, emitted_at), `AdapterHealth` (source, window, attempted, parsed_ok, parse_rate, baseline_rate, alerted), `CrawlCursor` (source, tier, position, updated_at), `ClickSignal` (product_uid, count_7d, updated_at — local read model).
+`Source` (key, name, base_url, kind, adapter_key, priority, politeness_delay_ms, is_active), `ArchivedDocument` (source, url, url_hash, http_status, fetched_at, archive_uri, page_hash, error), `Observation` (source, external_key, url_hash, fragment_hash, observed_at, emitted_at), `AdapterHealth` (source, window, attempted, parsed_ok, parse_rate, baseline_rate, alerted), `CrawlCursor` (source, tier, position, updated_at), `ClickSignal` (offer_uid, count_7d, updated_at — local read model).
 
 Register everything in Django admin — the source registry is edited by humans.
 
@@ -159,7 +171,7 @@ Seed `Source` with real Iranian spare-parts sellers — a mix of marketplaces an
 
 ## Acceptance criteria
 
-1. A crawl run produces archive objects in MinIO whose sha256 matches the recorded `content_hash`.
+1. A crawl run produces archive objects in MinIO whose sha256 matches the recorded `page_hash`.
 2. Re-running with unchanged upstream content writes **no new archive objects**.
 3. A `robots.txt`-disallowed URL is never fetched; a counter records the skip.
 4. Two concurrent workers on one source respect the combined politeness delay — timing test against a local server.

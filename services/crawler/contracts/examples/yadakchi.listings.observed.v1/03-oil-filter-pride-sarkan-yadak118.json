@@ -14,8 +14,8 @@
     "raw_stock_text": "موجود در انبار",
     "image_url": "https://yadak118.ir/files/10457.jpg",
     "raw_fragment": "<div class=\"product-card\" data-sku=\"10457\"><h1 class=\"product-title\">فیلتر روغن پراید ۱۳۱ سرکان اورجینال ۱۰۰٪ | ارسال فوری</h1><span class=\"price\">۳۲۰٬۰۰۰ تومان</span><span class=\"availability\">موجود در انبار</span><img src=\"https://yadak118.ir/files/10457.jpg\" alt=\"فیلتر روغن پراید ۱۳۱ سرکان اورجینال ۱۰۰٪ | ارسال فوری\"><ul class=\"specs\"><li>کد: SF-7710</li></ul></div>",
-    "archive_uri": "s3://raw-archive/yadak118/2026/08/19/ed84f34c9c05b5643692dca82405d7c74dd36d2079771e7a93ff5883ac6487c3.gz",
-    "content_hash": "ed84f34c9c05b5643692dca82405d7c74dd36d2079771e7a93ff5883ac6487c3",
+    "archive_uri": "s3://raw-archive/yadak118/2026/08/19/6846520930977b7913dfcd12e70529d80f54698b088a449612fb3770e1bff8c0.gz",
+    "fragment_hash": "ed84f34c9c05b5643692dca82405d7c74dd36d2079771e7a93ff5883ac6487c3",
     "observed_at": "2026-08-19T07:31:20Z"
   }
 }

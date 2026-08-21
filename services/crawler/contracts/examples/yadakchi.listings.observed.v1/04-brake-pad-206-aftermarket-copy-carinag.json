@@ -14,8 +14,8 @@
     "raw_stock_text": "موجود",
     "image_url": "https://carinag.com/uploads/lent-206-tarh.jpg",
     "raw_fragment": "<div class=\"product-card\" data-sku=\"product/lent-jolo-206-tarh-ezam\"><h1 class=\"product-title\">لنت ترمز جلو پژو 206 طرح عظام درجه یک ارزان‌ترین قیمت بازار 📞 09121234567</h1><span class=\"price\">۷۸۰٬۰۰۰ تومان</span><span class=\"availability\">موجود</span><img src=\"https://carinag.com/uploads/lent-206-tarh.jpg\" alt=\"لنت ترمز جلو پژو 206 طرح عظام درجه یک ارزان‌ترین قیمت بازار 📞 09121234567\"></div>",
-    "archive_uri": "s3://raw-archive/carinag/2026/08/19/821c606e945410d31d8c74c27686922183f44f6616fbf4dceddaa0a38667dbeb.gz",
-    "content_hash": "821c606e945410d31d8c74c27686922183f44f6616fbf4dceddaa0a38667dbeb",
+    "archive_uri": "s3://raw-archive/carinag/2026/08/19/64f05109339a39f320c69c6de3a9382f7b78a2482d29e5fe4017e6bafd825bb1.gz",
+    "fragment_hash": "821c606e945410d31d8c74c27686922183f44f6616fbf4dceddaa0a38667dbeb",
     "observed_at": "2026-08-19T07:44:51Z"
   }
 }

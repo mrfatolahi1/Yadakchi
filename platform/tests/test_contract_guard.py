@@ -164,6 +164,30 @@ def test_unknown_topic_fails(fake_repo: Path, capsys: pytest.CaptureFixture[str]
     assert "yadakchi.invented.v1" in capsys.readouterr().err
 
 
+def test_openapi_documents_are_not_mistaken_for_topics(fake_repo: Path) -> None:
+    """Five service specs put an OpenAPI document in a contracts/ folder:
+    `openapi.json` for ai, catalog, search and billing, and web's vendored
+    `catalog-openapi.json` / `search-openapi.json` in consumed/. Spec 02 puts
+    HTTP API schemas out of scope for the event contracts, so the stray check
+    must let them through instead of demanding a topic named 'openapi'."""
+    publish_and_sync(fake_repo)
+    write_schema(fake_repo, "ai", "published", "openapi", {"openapi": "3.1.0"})
+    write_schema(fake_repo, "catalog", "published", "openapi", {"openapi": "3.1.0"})
+    write_schema(fake_repo, "web", "consumed", "catalog-openapi", {"openapi": "3.1.0"})
+    write_schema(fake_repo, "web", "consumed", "search-openapi", {"openapi": "3.1.0"})
+    assert check_contracts.main([]) == 0
+
+
+def test_an_invented_topic_is_still_caught_next_to_an_openapi_document(
+    fake_repo: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The OpenAPI exemption must not become a hole an invented topic fits through."""
+    write_schema(fake_repo, "ai", "published", "openapi", {"openapi": "3.1.0"})
+    write_schema(fake_repo, "ai", "published", "openapi-ish", SCHEMA)
+    assert check_contracts.main([]) == 1
+    assert "openapi-ish" in capsys.readouterr().err
+
+
 def test_malformed_schema_fails(fake_repo: Path) -> None:
     path = _registry.published_dir(OWNER) / f"{TOPIC}.json"
     path.parent.mkdir(parents=True, exist_ok=True)

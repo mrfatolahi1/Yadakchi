@@ -32,7 +32,7 @@ Everything downstream depends on this. A field you fail to extract is a match ca
 
 ```
 source_key, external_key, url, raw_title, raw_price_text, raw_stock_text,
-image_url, raw_fragment, archive_uri, content_hash, observed_at
+image_url, raw_fragment, archive_uri, fragment_hash, observed_at
 ```
 
 ### Event you produce — `yadakchi.offers.enriched.v1`
@@ -137,7 +137,7 @@ For a full system rebuild, `crawler` replays `listings.observed` and you simply 
 
 ## Django models
 
-`Offer` (all extracted fields, `offer_uid` unique, `normalizer_version`, `first_seen_at`, `last_seen_at`, `is_active`), `ObservationRecord` (raw fragment copy, content_hash, observed_at — your local input archive), `ProcessedEvent` (event_id, processed_at — the idempotency guard).
+`Offer` (all extracted fields, `offer_uid` unique, `normalizer_version`, `first_seen_at`, `last_seen_at`, `is_active`), `ObservationRecord` (raw fragment copy, fragment_hash, observed_at — your local input archive), `ProcessedEvent` (event_id, processed_at — the idempotency guard).
 
 Register `Offer` in admin with search and filters. Being able to eyeball extraction results is worth the ten minutes.
 

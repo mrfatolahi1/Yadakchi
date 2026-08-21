@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yadakchi.ir/schemas/yadakchi.clicks.recorded.v1.json",
+  "title": "yadakchi.clicks.recorded.v1",
+  "description": "One outbound click on a seller offer.\n\nProducers: billing. Consumers: catalog, matcher.\nKafka message key: product_uid — it must be set; compaction and partition ordering depend on it.\nCleanup: delete, retention 30 days.\n\nThis file validates a whole Kafka message body: the shared envelope from docs/specs/02-EVENT-CONTRACTS.md plus this topic's payload. Unknown fields are ignored, never rejected, at both levels — that is what lets a producer add an optional field without breaking a consumer.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "event_id",
+    "event_type",
+    "version",
+    "occurred_at",
+    "producer",
+    "trace_id",
+    "payload"
+  ],
+  "properties": {
+    "event_id": {
+      "description": "UUIDv4, unique per emission. Two emissions of the same fact carry different event_ids; consumers deduplicate on the payload's natural identity, not on this.",
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+    },
+    "event_type": {
+      "description": "The topic name without the 'yadakchi.' prefix and without the version suffix.",
+      "type": "string",
+      "const": "clicks.recorded"
+    },
+    "version": {
+      "description": "Envelope and payload version. A removed field, a renamed field or a changed type is a breaking change: publish to .v2 and run both until consumers migrate.",
+      "type": "integer",
+      "const": 1
+    },
+    "occurred_at": {
+      "description": "When the fact happened, ISO-8601 UTC with Z. Consumers tolerate out-of-order delivery across partitions by comparing this, never by assuming global ordering.",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$"
+    },
+    "producer": {
+      "description": "The service that emitted this message. Constrained to the producers declared for this topic in platform/kafka/topics.yml.",
+      "type": "string",
+      "enum": [
+        "billing"
+      ]
+    },
+    "trace_id": {
+      "description": "Propagated across the whole chain for debugging. Minted by crawler on yadakchi.listings.observed.v1 and carried through every derived event; a service starting a chain of its own (a human admin edit, a scheduled recomputation) mints a fresh one. Every service logs it.",
+      "type": "string",
+      "minLength": 1
+    },
+    "payload": {
+      "description": "Consumers use this only for traffic-derived priority: review queue ordering and crawl tiering. It is NOT financial truth — that stays inside billing, and no other service computes money from this topic. This topic is not compacted, so payload is never null; there is no tombstone on a delete-retention topic.",
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "click_id",
+        "product_uid",
+        "offer_uid",
+        "seller_key",
+        "cost_toman",
+        "is_suspicious",
+        "occurred_at"
+      ],
+      "properties": {
+        "click_id": {
+          "description": "billing's identity for this click. Charging is idempotent on it.",
+          "type": "string",
+          "minLength": 1
+        },
+        "product_uid": {
+          "description": "The product the user was looking at.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+        },
+        "offer_uid": {
+          "description": "The offer the user clicked through to.",
+          "type": "string",
+          "pattern": "^[0-9a-f]{32}$"
+        },
+        "seller_key": {
+          "description": "The seller who received the click.",
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:[-_][a-z0-9]+)*$"
+        },
+        "cost_toman": {
+          "description": "What the seller was charged, resolved from the price-band rate card at click time and frozen. 0 for a suspicious or non-panel click.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "is_suspicious": {
+          "description": "true when a fraud heuristic fired. A suspicious click is still redirected and still recorded — it is simply not charged.",
+          "type": "boolean"
+        },
+        "occurred_at": {
+          "description": "When the click happened.",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$"
+        }
+      }
+    }
+  }
+}

@@ -456,13 +456,31 @@ def test_example_offer_uids_are_really_derived() -> None:
     assert checked >= 5, "the fixtures should exercise the derivation on real offers"
 
 
-def test_example_content_hashes_are_really_sha256_of_the_fragment() -> None:
+def test_example_fragment_hashes_are_really_sha256_of_the_fragment() -> None:
     topic = REGISTRY.by_name("yadakchi.listings.observed.v1")
     assert topic is not None
     for path in example_files(topic):
         payload = load_json(path)["payload"]
         digest = hashlib.sha256(payload["raw_fragment"].encode("utf-8")).hexdigest()
-        assert payload["content_hash"] == digest, path.name
+        assert payload["fragment_hash"] == digest, path.name
+
+
+def test_the_archive_path_is_not_named_by_the_fragment_hash() -> None:
+    """fragment_hash and page_hash are two different hashes over two different
+    things. The archive object is named by page_hash, which never reaches the
+    wire — so the fragment_hash must not appear in archive_uri. If it does,
+    the two have been collapsed back into one and change detection is wrong:
+    a page whose advert markup changed would look like a changed listing.
+    """
+    topic = REGISTRY.by_name("yadakchi.listings.observed.v1")
+    assert topic is not None
+    assert "content_hash" not in schema_path(topic).read_text(encoding="utf-8")
+    for path in example_files(topic):
+        payload = load_json(path)["payload"]
+        assert payload["fragment_hash"] not in payload["archive_uri"], (
+            f"{path.name}: archive_uri is named by the fragment hash, "
+            "but the archive holds the whole page"
+        )
 
 
 def test_the_examples_are_one_connected_dataset() -> None:

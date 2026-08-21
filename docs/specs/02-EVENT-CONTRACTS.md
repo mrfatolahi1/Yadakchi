@@ -81,11 +81,13 @@ raw_stock_text    string|null
 image_url         string|null
 raw_fragment      string        HTML/JSON of this listing only, capped at 64 KB
 archive_uri       string        MinIO path to the full page snapshot
-content_hash      string        sha256 of the fragment
+fragment_hash     string        sha256 of raw_fragment
 observed_at       timestamp
 ```
 
 The full page lives in MinIO, not in Kafka. The fragment is inline because `enricher` needs it and re-fetching would be expensive.
+
+**`fragment_hash` hashes the fragment, not the page.** `crawler` keeps a second hash, `page_hash`, over the full fetched page bytes; that one names the archive object and drives archive deduplication, and it **stays inside `crawler`** — it is not on the wire. The two values are different, and conflating them silently breaks change detection: a page whose surrounding markup changed but whose listing did not must not look like a changed listing. Downstream, `fragment_hash` is the only hash that means "this listing changed".
 
 ### `yadakchi.offers.enriched.v1`
 **enricher → fitment, matcher.** Key: `offer_uid`

@@ -60,7 +60,7 @@
         "raw_title",
         "raw_fragment",
         "archive_uri",
-        "content_hash",
+        "fragment_hash",
         "observed_at"
       ],
       "properties": {
@@ -114,12 +114,12 @@
           "maxLength": 65536
         },
         "archive_uri": {
-          "description": "MinIO path to the full page snapshot in the raw-archive bucket.",
+          "description": "MinIO path to the full page snapshot in the raw-archive bucket, named by the page's own hash: {source_key}/{yyyy}/{mm}/{dd}/{page_hash}.gz. That page_hash is crawler's alone and is deliberately NOT on the wire.",
           "type": "string",
           "minLength": 1
         },
-        "content_hash": {
-          "description": "sha256 of raw_fragment, lowercase hex.",
+        "fragment_hash": {
+          "description": "sha256 of raw_fragment, lowercase hex. This is the hash that means 'this listing changed'. It is NOT the hash of the archived page: a page whose navigation or advert markup changed has a new page_hash and an unchanged fragment_hash, and conflating the two makes every unchanged listing look changed.",
           "type": "string",
           "pattern": "^[0-9a-f]{64}$"
         },
