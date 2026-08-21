@@ -20,7 +20,7 @@ Everything downstream depends on this. A field you fail to extract is a match ca
 
 | Direction | Peer | Channel |
 |---|---|---|
-| **consumes** | `crawler` | Kafka `yadakchi.listings.observed.v1` |
+| **consumes** | `crawler` | Kafka `yadakchi.listings.observed.v2` |
 | **produces** | `fitment`, `matcher` | Kafka `yadakchi.offers.enriched.v1` |
 | **produces** | `ops` | Kafka `yadakchi.review.requested.v1` — `kind: price_ambiguous \| synonym_candidate` |
 | **calls** | `ai` | HTTP `POST /v1/extract` — cascade stage two only |
@@ -28,7 +28,7 @@ Everything downstream depends on this. A field you fail to extract is a match ca
 
 **On `review.requested.v1`:** you produce to this topic but do not own its schema — `matcher` does. Hold a byte-identical `consumed/` copy; never place this file in `published/`. `make sync-contracts` puts it there for you, and `make check-contracts` fails the build if two services publish the same topic.
 
-### Event you consume — `yadakchi.listings.observed.v1`
+### Event you consume — `yadakchi.listings.observed.v2`
 
 ```
 source_key, external_key, url, raw_title, raw_price_text, raw_stock_text,
@@ -150,7 +150,7 @@ services/enricher/
 ├── Dockerfile  requirements.txt  docker-compose.yml  Makefile  README.md
 ├── manage.py
 ├── contracts/
-│   ├── consumed/{yadakchi.listings.observed.v1,yadakchi.review.requested.v1}.json
+│   ├── consumed/{yadakchi.listings.observed.v2,yadakchi.review.requested.v1}.json
 │   └── published/yadakchi.offers.enriched.v1.json
 ├── src/enricher/
 │   ├── settings.py  models.py  admin.py

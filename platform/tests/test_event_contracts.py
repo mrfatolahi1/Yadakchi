@@ -47,9 +47,11 @@ ENVELOPE_FIELDS = (
     "payload",
 )
 
-# Envelope fields whose sub-schema is identical in all eleven files. event_type
-# and producer are legitimately per-topic; the rest are the shared envelope.
-INVARIANT_ENVELOPE_FIELDS = ("event_id", "version", "occurred_at", "trace_id")
+# Envelope fields whose sub-schema is identical in all eleven files. Three are
+# legitimately per-topic and are checked elsewhere instead: event_type and
+# producer, and — since listings.observed went to .v2 — version, which tracks
+# the topic's own version suffix (see test_schema_identifies_its_topic).
+INVARIANT_ENVELOPE_FIELDS = ("event_id", "occurred_at", "trace_id")
 
 PERSIAN = re.compile(r"[؀-ۿ]")
 
@@ -72,6 +74,18 @@ PLACEHOLDERS = {
 
 def load_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def split_topic_name(topic: Topic) -> tuple[str, int]:
+    """ "yadakchi.listings.observed.v2" -> ("listings.observed", 2).
+
+    event_type is the topic name without the prefix and without the version
+    suffix, so it is stable across a version bump: v1 and v2 of one topic share
+    an event_type and differ in the envelope's version field.
+    """
+    match = re.fullmatch(r"yadakchi\.(?P<event>.+)\.v(?P<version>[1-9][0-9]*)", topic.name)
+    assert match is not None, f"{topic.name} is not a versioned yadakchi topic"
+    return match.group("event"), int(match.group("version"))
 
 
 def schema_path(topic: Topic) -> Path:
@@ -174,9 +188,9 @@ def test_only_the_owner_publishes_the_schema(topic: Topic) -> None:
 def test_schema_identifies_its_topic(topic: Topic) -> None:
     schema = schema_of(topic)
     assert schema["title"] == topic.name
-    event_type = topic.name[len("yadakchi.") : -len(".v1")]
+    event_type, version = split_topic_name(topic)
     assert schema["properties"]["event_type"]["const"] == event_type
-    assert schema["properties"]["version"]["const"] == 1
+    assert schema["properties"]["version"]["const"] == version
 
 
 # ---------------------------------------------------------------------------
@@ -359,12 +373,12 @@ def test_examples_carry_real_persian_data(topic: Topic) -> None:
 
 @pytest.mark.parametrize("topic", TOPICS, ids=TOPIC_IDS)
 def test_examples_agree_with_the_registry(topic: Topic) -> None:
-    event_type = topic.name[len("yadakchi.") : -len(".v1")]
+    event_type, version = split_topic_name(topic)
     producers_seen: set[str] = set()
     for path in example_files(topic):
         message = load_json(path)
         assert message["event_type"] == event_type, path.name
-        assert message["version"] == 1, path.name
+        assert message["version"] == version, path.name
         assert message["producer"] in topic.producers, path.name
         producers_seen.add(message["producer"])
     assert producers_seen, topic.name
@@ -483,7 +497,7 @@ def test_example_offer_uids_are_really_derived() -> None:
 
 
 def test_example_fragment_hashes_are_really_sha256_of_the_fragment() -> None:
-    topic = REGISTRY.by_name("yadakchi.listings.observed.v1")
+    topic = REGISTRY.by_name("yadakchi.listings.observed.v2")
     assert topic is not None
     for path in example_files(topic):
         payload = load_json(path)["payload"]
@@ -498,9 +512,11 @@ def test_the_archive_path_is_not_named_by_the_fragment_hash() -> None:
     the two have been collapsed back into one and change detection is wrong:
     a page whose advert markup changed would look like a changed listing.
     """
-    topic = REGISTRY.by_name("yadakchi.listings.observed.v1")
+    topic = REGISTRY.by_name("yadakchi.listings.observed.v2")
     assert topic is not None
-    assert "content_hash" not in schema_path(topic).read_text(encoding="utf-8")
+    payload_properties = payload_schema(topic)["properties"]
+    assert "content_hash" not in payload_properties, "v1's field name is still on the wire"
+    assert "fragment_hash" in payload_properties
     for path in example_files(topic):
         payload = load_json(path)["payload"]
         assert payload["fragment_hash"] not in payload["archive_uri"], (

@@ -1,7 +1,7 @@
 {
   "event_id": "6da4f554-8612-4359-a481-b293af78e1fb",
   "event_type": "listings.observed",
-  "version": 1,
+  "version": 2,
   "occurred_at": "2026-08-19T07:18:02Z",
   "producer": "crawler",
   "trace_id": "1b77e0c3a4f92d68",

@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://yadakchi.ir/schemas/yadakchi.listings.observed.v1.json",
-  "title": "yadakchi.listings.observed.v1",
-  "description": "One observed seller listing, exactly as fetched. crawler interprets nothing.\n\nProducers: crawler. Consumers: enricher.\nKafka message key: {source_key}:{external_key} — it must be set; compaction and partition ordering depend on it.\nCleanup: delete, retention 90 days.\n\nThis file validates a whole Kafka message body: the shared envelope from docs/specs/02-EVENT-CONTRACTS.md plus this topic's payload. Unknown fields are ignored, never rejected, at both levels — that is what lets a producer add an optional field without breaking a consumer.",
+  "$id": "https://yadakchi.ir/schemas/yadakchi.listings.observed.v2.json",
+  "title": "yadakchi.listings.observed.v2",
+  "description": "One observed seller listing, exactly as fetched. crawler interprets nothing.\n\nSupersedes yadakchi.listings.observed.v1, which carried the same payload with fragment_hash named content_hash. That name was one field doing two jobs: the archive object and its deduplication are keyed on the hash of the whole page, which is a different value. v1 was withdrawn before it carried a message or had a consumer, so nothing dual-runs — there is no v1 to migrate from.\n\nProducers: crawler. Consumers: enricher.\nKafka message key: {source_key}:{external_key} — it must be set; compaction and partition ordering depend on it.\nCleanup: delete, retention 90 days.\n\nThis file validates a whole Kafka message body: the shared envelope from docs/specs/02-EVENT-CONTRACTS.md plus this topic's payload. Unknown fields are ignored, never rejected, at both levels — that is what lets a producer add an optional field without breaking a consumer.",
   "type": "object",
   "additionalProperties": true,
   "required": [
@@ -29,7 +29,7 @@
     "version": {
       "description": "Envelope and payload version. A removed field, a renamed field or a changed type is a breaking change: publish to .v2 and run both until consumers migrate.",
       "type": "integer",
-      "const": 1
+      "const": 2
     },
     "occurred_at": {
       "description": "When the fact happened, ISO-8601 UTC with Z. Consumers tolerate out-of-order delivery across partitions by comparing this, never by assuming global ordering.",
@@ -45,7 +45,7 @@
       ]
     },
     "trace_id": {
-      "description": "Propagated across the whole chain for debugging. Minted by crawler on yadakchi.listings.observed.v1 and carried through every derived event; a service starting a chain of its own (a human admin edit, a scheduled recomputation) mints a fresh one. Every service logs it.",
+      "description": "Propagated across the whole chain for debugging. Minted by crawler on the listings.observed topic and carried through every derived event; a service starting a chain of its own (a human admin edit, a scheduled recomputation) mints a fresh one. Every service logs it.",
       "type": "string",
       "minLength": 1
     },

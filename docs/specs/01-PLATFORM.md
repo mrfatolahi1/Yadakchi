@@ -121,7 +121,7 @@ Single-broker KRaft-mode Kafka (no ZooKeeper). Acceptable for one server; docume
 
 | Topic | Partitions | Cleanup | Retention |
 |---|---|---|---|
-| `yadakchi.listings.observed.v1` | 6 | delete | 90 days |
+| `yadakchi.listings.observed.v2` | 6 | delete | 90 days |
 | `yadakchi.offers.enriched.v1` | 6 | delete | 90 days |
 | `yadakchi.offers.fitted.v1` | 6 | delete | 90 days |
 | `yadakchi.vehicles.changed.v1` | 1 | **compact** | — |

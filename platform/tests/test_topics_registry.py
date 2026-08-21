@@ -8,6 +8,7 @@ silently reading a topic nobody writes.
 
 from __future__ import annotations
 
+import re
 import subprocess
 from pathlib import Path
 
@@ -20,7 +21,7 @@ CREATE_TOPICS_SH = REPO_ROOT / "platform" / "kafka" / "create_topics.sh"
 
 # name -> (partitions, cleanup, retention_ms, producers, consumers)
 EXPECTED: dict[str, tuple[int, str, int, set[str], set[str]]] = {
-    "yadakchi.listings.observed.v1": (6, "delete", 90 * DAY_MS, {"crawler"}, {"enricher"}),
+    "yadakchi.listings.observed.v2": (6, "delete", 90 * DAY_MS, {"crawler"}, {"enricher"}),
     "yadakchi.offers.enriched.v1": (6, "delete", 90 * DAY_MS, {"enricher"}, {"fitment", "matcher"}),
     "yadakchi.offers.fitted.v1": (6, "delete", 90 * DAY_MS, {"fitment"}, {"matcher", "catalog"}),
     "yadakchi.vehicles.changed.v1": (
@@ -114,9 +115,11 @@ def test_dlq_companion_for_every_non_compacted_topic(registry: _registry.Registr
 
 
 def test_topic_names_are_versioned_and_namespaced(registry: _registry.Registry) -> None:
+    """Namespaced and version-suffixed. Not every topic is on .v1 any more:
+    listings.observed went to .v2 when content_hash became fragment_hash."""
     for topic in registry.topics:
         assert topic.name.startswith("yadakchi."), topic.name
-        assert topic.name.endswith(".v1"), topic.name
+        assert re.fullmatch(r"yadakchi\.[a-z.]+\.v[1-9][0-9]*", topic.name), topic.name
 
 
 def _yaml_plan(registry: _registry.Registry) -> list[tuple[str, str, str, str, str]]:

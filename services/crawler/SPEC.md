@@ -22,7 +22,7 @@ Fetches listings from Iranian online spare-parts sellers, archives the raw bytes
 
 | Direction | Peer | Channel | Detail |
 |---|---|---|---|
-| **produces** | `enricher` | Kafka `yadakchi.listings.observed.v1` | one message per observed listing, key `{source_key}:{external_key}` |
+| **produces** | `enricher` | Kafka `yadakchi.listings.observed.v2` | one message per observed listing, key `{source_key}:{external_key}` |
 | **produces** | `ops` | Kafka `yadakchi.review.requested.v1` | `kind: adapter_broken` when parse rate collapses |
 | **consumes** | `billing` | Kafka `yadakchi.clicks.recorded.v1` | traffic signal for crawl tiering — maintain a small local read model of clicks per `offer_uid`; tolerate its absence early on |
 | writes | MinIO bucket `raw-archive` | S3 API | **exclusive owner** |
@@ -30,7 +30,7 @@ Fetches listings from Iranian online spare-parts sellers, archives the raw bytes
 
 **On `review.requested.v1`:** you produce to this topic but do not own its schema — `matcher` does. Hold a byte-identical `consumed/` copy; never place this file in `published/`. `make sync-contracts` puts it there for you, and `make check-contracts` fails the build if two services publish the same topic.
 
-### Event you produce — `yadakchi.listings.observed.v1`
+### Event you produce — `yadakchi.listings.observed.v2`
 
 Envelope per spec 02, `producer: "crawler"`. You **mint `trace_id`** here; it flows through the entire chain.
 
@@ -145,7 +145,7 @@ services/crawler/
 ├── Dockerfile  requirements.txt  docker-compose.yml  Makefile  README.md
 ├── manage.py
 ├── contracts/
-│   ├── published/yadakchi.listings.observed.v1.json
+│   ├── published/yadakchi.listings.observed.v2.json
 │   └── consumed/{yadakchi.clicks.recorded.v1,yadakchi.review.requested.v1}.json
 ├── src/crawler/
 │   ├── settings.py  models.py  admin.py

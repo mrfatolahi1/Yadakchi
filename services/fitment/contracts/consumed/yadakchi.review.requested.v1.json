@@ -49,7 +49,7 @@
       ]
     },
     "trace_id": {
-      "description": "Propagated across the whole chain for debugging. Minted by crawler on yadakchi.listings.observed.v1 and carried through every derived event; a service starting a chain of its own (a human admin edit, a scheduled recomputation) mints a fresh one. Every service logs it.",
+      "description": "Propagated across the whole chain for debugging. Minted by crawler on the listings.observed topic and carried through every derived event; a service starting a chain of its own (a human admin edit, a scheduled recomputation) mints a fresh one. Every service logs it.",
       "type": "string",
       "minLength": 1
     },

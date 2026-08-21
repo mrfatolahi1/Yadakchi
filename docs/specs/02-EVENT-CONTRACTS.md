@@ -12,15 +12,15 @@ Ten services built by different agents must agree on the wire format. There is *
 
 After this is merged, **payload shapes are frozen**. Changing one requires a version bump and human review.
 
-> **One correction was made in place under that rule, and the exception is now closed.**
-> `yadakchi.listings.observed.v1` renamed `content_hash` to `fragment_hash` after the
-> contracts were merged, without going to `.v2`. It was safe only because the topic had
-> never been used: `crawler` is its sole producer and had no code, `enricher` is its sole
-> consumer and had no code, no service source referenced the field, and no broker had
-> ever carried the message. The rename was directed and reviewed by the repository owner.
-> **This is not a precedent.** Every later change to any payload — including one that
-> looks equally harmless — goes to `.v2` and runs both versions until consumers migrate.
-> The moment a topic has one running consumer, in-place is off the table.
+> **One topic is already on `.v2`, and that is what the rule looks like in practice.**
+> `yadakchi.listings.observed` renamed `content_hash` to `fragment_hash` — one name that
+> was doing two jobs, since the archive object and its deduplication key on the hash of
+> the whole page, a different value. The corrected `.v1` had already been pushed to the
+> shared repository, so the rename took a **new version** rather than mutating a shape
+> other agents could already have pulled. Because `.v1` had never carried a message and
+> had no consumer — nothing was dual-running and there was nothing to migrate — `.v2`
+> replaced it outright instead of running alongside it. A topic with even one live
+> consumer does not get that shortcut: it runs both until every consumer has moved.
 
 Your job: write the schema files exactly as specified below, plus a validation test per schema, plus example payloads that service agents can use as fixtures.
 
@@ -78,7 +78,7 @@ Money is always `*_toman`, integer. Timestamps are ISO-8601 UTC with `Z`.
 
 ## Topic payloads
 
-### `yadakchi.listings.observed.v1`
+### `yadakchi.listings.observed.v2`
 **crawler → enricher.** Key: `{source_key}:{external_key}`
 
 ```

@@ -36,7 +36,11 @@ defaults:
     retention_ms: 7776000000 # 90 days — failures must outlive a long weekend
 
 topics:
-  - name: yadakchi.listings.observed.v1
+  # v2: the field carried as content_hash in v1 is fragment_hash here. v1 was
+  # pushed to the shared repo before the correction, so the rename took a new
+  # version rather than mutating a published shape. v1 never carried a message
+  # and had no consumer, so it is replaced outright rather than dual-run.
+  - name: yadakchi.listings.observed.v2
     partitions: 6
     cleanup: delete
     retention_ms: 7776000000 # 90 days
