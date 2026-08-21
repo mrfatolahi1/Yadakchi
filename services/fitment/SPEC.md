@@ -24,7 +24,7 @@ This is the product's competitive moat. Generic price comparison engines don't h
 | **consumes** | `ops` | Kafka `yadakchi.review.decided.v1` — human fitment corrections |
 | **produces** | `matcher`, `catalog` | Kafka `yadakchi.offers.fitted.v1` |
 | **produces** | `matcher`, `catalog`, `search`, `web` | Kafka `yadakchi.vehicles.changed.v1` *(compacted)* |
-| **produces** | `catalog`, `search` | Kafka `yadakchi.crossrefs.changed.v1` *(compacted)* |
+| **produces** | `catalog`, `search`, `matcher` | Kafka `yadakchi.crossrefs.changed.v1` *(compacted)* |
 | **produces** | `ops` | Kafka `yadakchi.review.requested.v1` — `kind: fitment_conflict` |
 | owns | Postgres `yadakchi_fitment`, Redis db 3 | |
 

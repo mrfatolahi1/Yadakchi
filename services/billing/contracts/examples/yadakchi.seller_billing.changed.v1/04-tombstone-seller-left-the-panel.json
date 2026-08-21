@@ -1,0 +1,9 @@
+{
+  "event_id": "3f70c8d5-1b29-4ea6-97c4-6d825b0fa317",
+  "event_type": "seller_billing.changed",
+  "version": 1,
+  "occurred_at": "2026-08-20T15:02:19Z",
+  "producer": "billing",
+  "trace_id": "b7e04c2f19a35d68",
+  "payload": null
+}

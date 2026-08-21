@@ -233,6 +233,10 @@
                 "type": "string",
                 "minLength": 1
               },
+              "is_panel_offer": {
+                "description": "true when this offer is supplied by the seller through the panel rather than crawled. Chargeability and suspension are per OFFER, not per seller: a panel member can also have crawled listings, so is_panel on sellers.changed cannot answer 'is this offer chargeable'. Only a panel offer is ever charged, and only panel offers are hidden on zero balance — crawled offers are free and never removed.\n\nweb signs this into the click token so billing, which may not call catalog, can price a click without a lookup.\n\nOPTIONAL and additive: added after v1 shipped. ABSENT MEANS false — not a panel offer, therefore not chargeable. The default is the safe direction: a missing flag must never cause a seller to be billed.",
+                "type": "boolean"
+              },
               "price_toman": {
                 "description": "Integer tomans, or null when the offer carries no usable price.",
                 "type": [

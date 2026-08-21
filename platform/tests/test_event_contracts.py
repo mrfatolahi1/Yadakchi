@@ -1,7 +1,7 @@
 """The wire format itself — spec 02's acceptance criteria, as executable tests.
 
 `test_contract_guard.py` proves the *distribution* of schemas cannot drift.
-This file proves the *content* is right: that all eleven topics are published
+This file proves the *content* is right: that every declared topic is published
 by the service topics.yml names, that every schema is a valid JSON Schema, and
 that the example payloads ten other agents will use as fixtures actually
 validate against them.
@@ -47,7 +47,7 @@ ENVELOPE_FIELDS = (
     "payload",
 )
 
-# Envelope fields whose sub-schema is identical in all eleven files. Three are
+# Envelope fields whose sub-schema is identical in every schema. Three are
 # legitimately per-topic and are checked elsewhere instead: event_type and
 # producer, and — since listings.observed went to .v2 — version, which tracks
 # the topic's own version suffix (see test_schema_identifies_its_topic).
@@ -157,11 +157,15 @@ def is_nullable(prop_schema: dict[str, Any]) -> bool:
 
 
 # ---------------------------------------------------------------------------
-# Criterion 1 — a schema exists for all eleven topics, owned by the one service
+# Criterion 1 — a schema exists for every declared topic, owned by the one service
 # topics.yml names, and it is a valid JSON Schema.
 # ---------------------------------------------------------------------------
-def test_all_eleven_topics_are_published() -> None:
-    assert len(TOPICS) == 11, "topics.yml no longer declares eleven topics"
+def test_every_declared_topic_is_published() -> None:
+    """Every topic in the registry, whatever the count. It was eleven;
+    seller_billing.changed made it twelve when billing needed to tell catalog a
+    wallet had run dry. Pinning the number just makes adding a topic fail here
+    for no reason."""
+    assert len(TOPICS) >= 11, "topics went missing from the registry"
     missing = [t.name for t in TOPICS if not schema_path(t).is_file()]
     assert not missing, f"no published schema for: {missing}"
 
@@ -222,7 +226,7 @@ def test_review_requested_has_five_producers_and_one_owner() -> None:
 
 # ---------------------------------------------------------------------------
 # The shared envelope. There is no shared code package, so the envelope is
-# repeated in all eleven schemas — which is only safe if it is really identical.
+# repeated in every schema — which is only safe if it is really identical.
 # ---------------------------------------------------------------------------
 @pytest.mark.parametrize("topic", TOPICS, ids=TOPIC_IDS)
 def test_envelope_shape_is_the_same_everywhere(topic: Topic) -> None:
@@ -287,6 +291,10 @@ def test_payload_accepts_unknown_fields(topic: Topic) -> None:
 # .v2. Listed explicitly so each is a decision on the record, not a slip.
 ADDITIVE_OPTIONAL_FIELDS: dict[str, set[str]] = {
     "yadakchi.offers.enriched.v1": {"vehicle_hints_excluded"},
+    # offers[].is_panel_offer — chargeability is per offer, not per seller, and
+    # web signs it into the click token. Absent means false, which is the safe
+    # direction: a missing flag must never cause a seller to be billed.
+    "yadakchi.products.changed.v1": {"is_panel_offer"},
 }
 
 
@@ -305,12 +313,15 @@ def test_non_nullable_fields_are_required(topic: Topic) -> None:
                 "ADDITIVE_OPTIONAL_FIELDS with the reason."
             )
     # An exemption must name a field that really exists and really is optional,
-    # so the list cannot rot into a blanket excuse.
+    # so the list cannot rot into a blanket excuse. Fields may be nested — an
+    # additive field inside offers[] is as real as one at the top level.
     for name in exempt:
-        assert name in payload["properties"], f"{topic.name}: stale exemption {name!r}"
-        assert name not in payload["required"], (
-            f"{topic.name}: {name!r} is exempt but is now required — drop the exemption"
-        )
+        holders = [sub for sub in object_schemas(payload) if name in sub["properties"]]
+        assert holders, f"{topic.name}: stale exemption {name!r} — no such field"
+        for sub in holders:
+            assert name not in sub.get("required", []), (
+                f"{topic.name}: {name!r} is exempt but is now required — drop the exemption"
+            )
 
 
 @pytest.mark.parametrize("topic", TOPICS, ids=TOPIC_IDS)
@@ -379,6 +390,7 @@ def test_examples_carry_real_persian_data(topic: Topic) -> None:
         "yadakchi.crossrefs.changed.v1",  # two part codes and canonical brand keys
         "yadakchi.clusters.changed.v1",  # uids, confidences, provenance
         "yadakchi.clicks.recorded.v1",  # uids, a cost, a boolean
+        "yadakchi.seller_billing.changed.v1",  # a seller_key, a flag, a reason code
     }
     persian_seen = any(
         PERSIAN.search(value)

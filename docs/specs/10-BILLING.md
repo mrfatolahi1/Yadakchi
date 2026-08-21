@@ -26,7 +26,8 @@ Sends the user to the seller's site, counts the click, charges the seller's wall
 | Direction | Peer | Channel |
 |---|---|---|
 | **consumes** | `catalog` | Kafka `yadakchi.sellers.changed.v1` *(compacted)* — local seller read model |
-| **produces** | `catalog`, `matcher` | Kafka `yadakchi.clicks.recorded.v1` |
+| **produces** | `catalog`, `matcher`, `crawler` | Kafka `yadakchi.clicks.recorded.v1` |
+| **produces** | `catalog` | Kafka `yadakchi.seller_billing.changed.v1` *(compacted)* — panel-offer display state |
 | **produces** | `ops` | Kafka `yadakchi.review.requested.v1` — per-seller click-velocity anomalies |
 | **serves** | end users | `GET /go/{token}` — public, never cached |
 | **serves** | `ops` | internal API for the seller dashboard |
@@ -46,7 +47,7 @@ Consumers use this only for traffic-derived priority. **Financial truth stays in
 
 | Endpoint | Purpose |
 |---|---|
-| `GET /v1/sellers/{seller_key}/stats` | clicks, impressions, spend over time |
+| `GET /v1/sellers/{seller_key}/stats` | clicks and spend over time. **Impressions are deferred to phase two** — no service emits them, and the two that witness one (`web`, `search`) have no path here. Do not invent a source; leave the field out rather than returning a fabricated number |
 | `GET /v1/sellers/{seller_key}/wallet` | balance and transactions |
 | `POST /v1/sellers/{seller_key}/topup` | record a top-up |
 | `GET /v1/rates` | active CPC rate card |
@@ -73,12 +74,21 @@ Publish `openapi.json` to `contracts/published/`.
 user clicks an offer on the product page
   → GET /go/{token}
   → verify signature and freshness
-  → resolve destination from your own record
+  → take the destination from the verified token
   → 302 to seller
   → asynchronously: record click, evaluate fraud, charge wallet, emit clicks.recorded
 ```
 
-The token is a **signed click intent**: `product_uid`, `offer_uid`, `seller_key`, `destination_url`, `issued_at`, `nonce`, signed with `CLICK_SIGNING_KEY`. `web` mints it using the same shared secret; document the token format in your README so the `web` agent can implement it from your spec alone.
+The token is a **signed click intent**: `product_uid`, `offer_uid`, `seller_key`, `destination_url`, `price_toman`, `is_panel_offer`, `issued_at`, `nonce`, signed with `CLICK_SIGNING_KEY`. `web` mints it using the same shared secret; document the token format in your README so the `web` agent can implement it from your spec alone.
+
+**Why `price_toman` and `is_panel_offer` are in the token.** The rate card is keyed by price band and charging depends on whether the offer is a panel offer, and you can look up neither at click time: `sellers.changed` carries no product pricing, `is_panel` is a property of the *seller* rather than of the offer, and you may not call `catalog`. Both facts are already in front of `web` — they are fields of the product payload it just rendered — so `web` signs them in and you read them from a token you have verified. A signed value is not user input: it cannot be tampered with without breaking the signature, and a tampered token is rejected before any of this is read.
+
+Consequences to implement deliberately:
+
+- **The price you charge on is the price the user saw.** It can be at most one token lifetime stale (default 30 minutes). That is the correct behaviour, not a tolerated flaw — billing a band the user was never shown would be indefensible to the seller.
+- **`price_toman` may be `null`** when the offer had no usable price. Fall back to the lowest band rather than refusing the redirect; never block a user over a rate lookup.
+- **`is_panel_offer` is per offer, not per seller.** A panel seller can also have crawled listings, so `is_panel` on `sellers.changed` cannot answer "is *this* offer chargeable". Only a panel offer is ever charged, and only panel offers are suspended on zero balance; crawled offers are free and stay visible. Trust the token's flag, not the seller read model.
+- Both fields are **inside the signature**. Reject the token if either is absent — an unsigned or missing price is a pricing decision made by the caller.
 
 - Reject tokens older than a short window (default 30 minutes).
 - Reject replayed nonces within the window (Redis set).
@@ -110,7 +120,7 @@ Resolve the rate at click time and **freeze `cost_toman` onto the click record**
 Prepaid. Every charge writes a transaction with `balance_after_toman` for auditability.
 
 - **Charging must be atomic and idempotent**, keyed on `click_id`. A retried drain task must never double-charge.
-- On zero balance: the seller's **panel** offers stop being displayed. Emit the state so `catalog` can rebuild affected products, and notify the seller.
+- On zero balance: the seller's **panel** offers stop being displayed. Emit `yadakchi.seller_billing.changed.v1` with `panel_offers_active: false` and `suspension_reason: "zero_balance"` so `catalog` can rebuild affected products, and notify the seller. Emit it again with `true` and a null reason on top-up. It carries the display consequence only — **never** a balance, a spend figure or a transaction; financial truth does not leave this service.
 - **Crawled non-panel offers are never charged and never suspended.** Free listing keeps catalog coverage alive.
 - Top-up through the domestic gateway; record the reference. The gateway integration may be stubbed initially.
 
@@ -124,7 +134,7 @@ Working proposal your implementation must support: crawled offers stay free but 
 
 ## Django models
 
-`Seller` (local read model from `sellers.changed`, plus wallet balance which is **yours**), `ClickEvent`, `WalletTransaction`, `CpcRate`, `SuspicionRule`, `ProcessedEvent`. Admin for rates and manual adjustments.
+`Seller` (local read model from `sellers.changed`, plus wallet balance which is **yours**), `ClickEvent`, `WalletTransaction`, `CpcRate`, `SuspicionRule`, `ProcessedEvent`. No impression model — see the stats endpoint. Admin for rates and manual adjustments.
 
 ---
 
@@ -136,7 +146,7 @@ services/billing/
 ├── manage.py
 ├── contracts/
 │   ├── consumed/{yadakchi.sellers.changed.v1,yadakchi.review.requested.v1}.json
-│   └── published/{yadakchi.clicks.recorded.v1,openapi}.json
+│   └── published/{yadakchi.clicks.recorded.v1,yadakchi.seller_billing.changed.v1,openapi}.json
 ├── src/billing/
 │   ├── settings.py  models.py  admin.py  api.py
 │   ├── redirect_view.py     # stripped middleware, hot path
@@ -158,7 +168,7 @@ Compose: this service plus Postgres, Redis, Kafka.
 4. Retrying the drain task never double-charges — duplicate-delivery test.
 5. Exceeding the per-IP limit marks clicks suspicious, skips the charge, and still redirects.
 6. A known bot user agent is never charged.
-7. Zero balance suspends panel offers and emits the state; **crawled non-panel offers remain visible**.
+7. Zero balance suspends panel offers and emits `seller_billing.changed` with `panel_offers_active: false`; **crawled non-panel offers remain visible**. A top-up re-emits it as `true`.
 8. CPC rate is resolved from the price band and frozen; changing the card does not alter historical charges.
 9. Seller stats endpoints return correct figures against seeded data.
 10. Nightly reconciliation finds zero discrepancies on a seeded day.

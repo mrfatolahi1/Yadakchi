@@ -61,6 +61,7 @@ EXPECTED: dict[str, tuple[int, str, int, set[str], set[str]]] = {
     # Five producers: matcher (merge_pair), crawler (adapter_broken), fitment
     # (fitment_conflict), enricher (price_ambiguous, synonym_candidate) and
     # billing (click-velocity anomalies). 11-OPS.md consumes from all five.
+    "yadakchi.seller_billing.changed.v1": (1, "compact", -1, {"billing"}, {"catalog"}),
     "yadakchi.review.requested.v1": (
         3,
         "delete",
@@ -78,7 +79,7 @@ def registry() -> _registry.Registry:
     return _registry.load_topics()
 
 
-def test_all_eleven_topics_declared(registry: _registry.Registry) -> None:
+def test_all_declared_topics_are_transcribed(registry: _registry.Registry) -> None:
     assert registry.names == set(EXPECTED)
 
 
@@ -109,6 +110,7 @@ def test_reference_state_is_compacted(registry: _registry.Registry) -> None:
         "yadakchi.crossrefs.changed.v1",
         "yadakchi.products.changed.v1",
         "yadakchi.sellers.changed.v1",
+        "yadakchi.seller_billing.changed.v1",
         "yadakchi.review.decided.v1",
     }
     for topic in registry.topics:
@@ -134,7 +136,7 @@ def test_topic_names_are_versioned_and_namespaced(registry: _registry.Registry) 
     listings.observed went to .v2 when content_hash became fragment_hash."""
     for topic in registry.topics:
         assert topic.name.startswith("yadakchi."), topic.name
-        assert re.fullmatch(r"yadakchi\.[a-z.]+\.v[1-9][0-9]*", topic.name), topic.name
+        assert re.fullmatch(r"yadakchi\.[a-z._]+\.v[1-9][0-9]*", topic.name), topic.name
 
 
 def _yaml_plan(registry: _registry.Registry) -> list[tuple[str, str, str, str, str]]:
@@ -197,7 +199,7 @@ def test_shell_plan_carries_the_declared_settings(registry: _registry.Registry) 
 # disagree, one of them is a bug — fail here rather than in an agent's inbox.
 # ---------------------------------------------------------------------------
 
-TOPIC_IN_TEXT = re.compile(r"yadakchi\.[a-z.]+\.v[1-9][0-9]*")
+TOPIC_IN_TEXT = re.compile(r"yadakchi\.[a-z._]+\.v[1-9][0-9]*")
 EDGE_ROW = re.compile(r"^\|\s*\*\*(consumes|produces)\*\*\s*\|")
 
 # web is listed in topics.yml as a consumer of vehicles.changed and
@@ -211,15 +213,25 @@ SPEC_REGISTRY_EXEMPT: dict[str, str] = {
 }
 
 
-def _edges_declared_in_spec(service: str) -> dict[str, set[str]]:
-    """The Kafka topics a service's own spec says it consumes and produces."""
+def _edge_rows(service: str) -> list[tuple[str, set[str], set[str]]]:
+    """(direction, peers, topics) for each Kafka row of a spec's edge table."""
     path = _registry.SPECS_DIR / _registry.SPEC_MAP[service]
-    edges: dict[str, set[str]] = {"consumes": set(), "produces": set()}
+    rows: list[tuple[str, set[str], set[str]]] = []
     for line in path.read_text(encoding="utf-8").splitlines():
         row = EDGE_ROW.match(line)
         if row is None or "Kafka" not in line:
             continue
-        edges[row.group(1)].update(TOPIC_IN_TEXT.findall(line))
+        cells = line.split("|")
+        peers = {n for n in re.findall(r"`([a-z]+)`", cells[2]) if n in _registry.SERVICES}
+        rows.append((row.group(1), peers, set(TOPIC_IN_TEXT.findall(line))))
+    return rows
+
+
+def _edges_declared_in_spec(service: str) -> dict[str, set[str]]:
+    """The Kafka topics a service's own spec says it consumes and produces."""
+    edges: dict[str, set[str]] = {"consumes": set(), "produces": set()}
+    for direction, _peers, topics in _edge_rows(service):
+        edges[direction].update(topics)
     return edges
 
 
@@ -245,6 +257,49 @@ def test_spec_edges_match_the_registry(service: str, registry: _registry.Registr
             f"topics.yml has {service} {direction} {sorted(extra)}, but "
             f"{_registry.SPEC_MAP[service]} never declares it"
         )
+
+
+@pytest.mark.parametrize("service", _registry.SERVICES)
+def test_spec_edge_peers_match_the_registry(service: str, registry: _registry.Registry) -> None:
+    """The Peer column has to be right too, not just the topic name.
+
+    Adding crawler to clicks.recorded updated the registry and every schema, but
+    10-BILLING.md's row went on saying the topic goes to `catalog`, `matcher` —
+    and the first guard passed it, because billing does still produce the topic.
+    A stale peer list is how a service learns the wrong set of downstreams.
+    """
+    if service in SPEC_REGISTRY_EXEMPT:
+        pytest.skip(f"{service}: {SPEC_REGISTRY_EXEMPT[service]}")
+
+    for direction, peers, topics in _edge_rows(service):
+        for name in topics:
+            topic = registry.by_name(name)
+            assert topic is not None, f"{service}: unknown topic {name}"
+            expected = set(topic.consumers) if direction == "produces" else set(topic.producers)
+            # A row may cover several topics with one peer list, so the row's
+            # peers must be a subset of what the registry allows, and every
+            # registry peer must appear somewhere in the rows for that topic.
+            assert peers <= expected, (
+                f"{_registry.SPEC_MAP[service]}: row for {name} lists peers "
+                f"{sorted(peers - expected)} that the registry does not have as "
+                f"{'consumers' if direction == 'produces' else 'producers'}"
+            )
+
+    for direction in ("consumes", "produces"):
+        for topic in registry.topics:
+            mine = service in (topic.producers if direction == "produces" else topic.consumers)
+            if not mine:
+                continue
+            expected = set(topic.consumers) if direction == "produces" else set(topic.producers)
+            listed: set[str] = set()
+            for row_dir, peers, topics in _edge_rows(service):
+                if row_dir == direction and topic.name in topics:
+                    listed |= peers
+            missing = expected - listed - {service}
+            assert not missing, (
+                f"{_registry.SPEC_MAP[service]}: {direction} row for {topic.name} "
+                f"omits {sorted(missing)} — the registry has them, so this spec is stale"
+            )
 
 
 def test_the_exemption_list_does_not_quietly_grow(registry: _registry.Registry) -> None:

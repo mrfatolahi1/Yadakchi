@@ -1,0 +1,14 @@
+{
+  "event_id": "0b5f7c31-2a48-4e9d-8f16-3c7d90ab4e52",
+  "event_type": "seller_billing.changed",
+  "version": 1,
+  "occurred_at": "2026-08-20T09:12:04Z",
+  "producer": "billing",
+  "trace_id": "b7e04c2f19a35d68",
+  "payload": {
+    "seller_key": "yadakbazar",
+    "panel_offers_active": false,
+    "suspension_reason": "zero_balance",
+    "updated_at": "2026-08-20T09:12:04Z"
+  }
+}

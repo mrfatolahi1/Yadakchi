@@ -213,9 +213,11 @@ offer_count             integer
 min_price_toman         integer|null   in-stock offers only
 max_price_toman         integer|null   in-stock offers only
 median_price_toman      integer|null
-offers                  [ { offer_uid, seller_key, seller_name, price_toman,
-                            stock_status, authenticity_claim, trust_score,
-                            rank_position, url, is_cheapest } ]
+offers                  [ { offer_uid, seller_key, seller_name, is_panel_offer,
+                            price_toman, stock_status, authenticity_claim,
+                            trust_score, rank_position, url, is_cheapest } ]
+                        is_panel_offer is OPTIONAL and additive; absent means false,
+                        i.e. not a panel offer and therefore never charged
 price_series            [ { date, min_toman, median_toman } ]   downsampled
 is_published            boolean
 successor_product_uid   string|null    set on split; drives 301 redirects
@@ -252,6 +254,18 @@ occurred_at    timestamp
 ```
 
 Consumers use this only for **traffic-derived priority** (review queue ordering, crawl tiering). It is not financial truth — that stays inside `billing`.
+
+### `yadakchi.seller_billing.changed.v1`  *(compacted)*
+**billing → catalog.** Key: `seller_key`
+
+```
+seller_key           string
+panel_offers_active  boolean    false while the wallet is empty
+suspension_reason    string|null  e.g. "zero_balance"; null when active
+updated_at           timestamp
+```
+
+The **display consequence only**. No balance, no spend, no transaction — financial truth never leaves `billing`, and `catalog` needs one boolean to decide whether to rebuild affected products. Crawled non-panel offers are never suspended by this: they are free, they keep catalogue coverage alive, and hiding them would destroy the coverage the free listing exists to protect.
 
 ### `yadakchi.review.requested.v1`
 **matcher, crawler, fitment → ops.** Key: `request_uid`
@@ -335,7 +349,7 @@ Every consumer must:
 
 ## Acceptance criteria
 
-1. A JSON Schema file exists at `services/<producer>/contracts/published/<topic>.json` for all eleven topics, and validates the example payloads.
+1. A JSON Schema file exists at `services/<producer>/contracts/published/<topic>.json` for **every topic in `platform/kafka/topics.yml`** — twelve at the time of writing — and validates the example payloads. The count is not fixed: `seller_billing.changed` was added when `billing` needed a channel to tell `catalog` a wallet had run dry.
 2. A `consumed/` copy exists in every consumer, byte-identical, and `make check-contracts` passes.
 3. At least three realistic example payloads per topic exist under `contracts/examples/`, using **real Persian spare-parts data** — service agents will use them as test fixtures.
 4. A test proves an envelope with an unknown extra field validates successfully.

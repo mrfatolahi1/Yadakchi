@@ -21,7 +21,7 @@ Everything downstream depends on this. A field you fail to extract is a match ca
 | Direction | Peer | Channel |
 |---|---|---|
 | **consumes** | `crawler` | Kafka `yadakchi.listings.observed.v2` |
-| **produces** | `fitment`, `matcher` | Kafka `yadakchi.offers.enriched.v1` |
+| **produces** | `fitment`, `matcher`, `catalog` | Kafka `yadakchi.offers.enriched.v1` |
 | **produces** | `ops` | Kafka `yadakchi.review.requested.v1` — `kind: price_ambiguous \| synonym_candidate` |
 | **calls** | `ai` | HTTP `POST /v1/extract` — cascade stage two only |
 | owns | Postgres `yadakchi_enricher`, Redis db 2 | |

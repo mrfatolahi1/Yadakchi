@@ -24,6 +24,7 @@ This is where SEO and user trust are actually manufactured.
 | **consumes** | `enricher` | Kafka `yadakchi.offers.enriched.v1` |
 | **consumes** | `fitment` | Kafka `yadakchi.offers.fitted.v1`, `yadakchi.vehicles.changed.v1`, `yadakchi.crossrefs.changed.v1` |
 | **consumes** | `billing` | Kafka `yadakchi.clicks.recorded.v1` |
+| **consumes** | `billing` | Kafka `yadakchi.seller_billing.changed.v1` *(compacted)* — hide a seller's panel offers when their wallet is empty |
 | **produces** | `search`, `ops`, `web` | Kafka `yadakchi.products.changed.v1` *(compacted)* |
 | **produces** | `billing`, `ops` | Kafka `yadakchi.sellers.changed.v1` *(compacted)* |
 | **serves** | `web`, `ops` | HTTP read API |
@@ -81,6 +82,10 @@ Hard rules:
 Rebuild whenever a cluster or any member offer changes. For each active member denormalize price, stock, authenticity claim, seller, trust score, url, and a computed `rank_position`.
 
 **Ranking = trust score first**, then price, then stock, then price freshness. Weighted formula, weights in config.
+
+Also set **`is_panel_offer`** on each row. Chargeability is per offer, not per seller: a panel member can also have crawled listings, so `is_panel` on the seller cannot answer it. `web` signs this flag into the click token and `billing` charges on it, because `billing` may not call you.
+
+The precise rule for classifying an offer belongs with the unresolved panel-versus-crawled business question in `10-BILLING.md`, so until that is settled: **emit `false` unless you positively know the offer came through the seller's panel feed.** Absent and `false` both mean "not chargeable". The default must fall this way — a wrongly-`true` flag bills a seller for a listing they never paid to place, which is the one error here that costs money and trust.
 
 Two mandatory display rules:
 

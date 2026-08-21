@@ -141,6 +141,19 @@ topics:
     consumers: [catalog, matcher, crawler]
     dlq: true
 
+  # The display consequence of a wallet running dry, and nothing more. Financial
+  # truth stays inside billing: no balance, no spend, no transaction ever appears
+  # here. catalog needs only "should this seller's panel offers still show".
+  - name: yadakchi.seller_billing.changed.v1
+    partitions: 1
+    cleanup: compact
+    retention_ms: -1
+    key: seller_key
+    schema_owner: billing
+    producers: [billing]
+    consumers: [catalog]
+    dlq: false
+
   - name: yadakchi.review.requested.v1
     partitions: 3
     cleanup: delete

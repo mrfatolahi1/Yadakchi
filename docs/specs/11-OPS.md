@@ -107,7 +107,7 @@ Synonym candidates arrive as `review.requested` with `kind: synonym_candidate`, 
 
 Rendered here; data from `billing`'s API and `catalog`'s product data.
 
-For a logged-in seller: clicks, impressions, spend over time; **price rank per product** — "your price ranks 7th on this item"; comparison against the market median; wallet balance, transactions, top-up; and for panel members, offer management.
+For a logged-in seller: clicks and spend over time (**impressions are deferred to phase two** — `billing` has no source for them, so do not show the column); **price rank per product** — "your price ranks 7th on this item"; comparison against the market median; wallet balance, transactions, top-up; and for panel members, offer management.
 
 Also show their tier and **what would raise it** (price accuracy, stock accuracy), so earned visibility is legible rather than mysterious.
 

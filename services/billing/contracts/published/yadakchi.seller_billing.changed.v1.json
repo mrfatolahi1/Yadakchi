@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yadakchi.ir/schemas/yadakchi.seller_billing.changed.v1.json",
+  "title": "yadakchi.seller_billing.changed.v1",
+  "description": "Whether a seller's panel offers should still be displayed.\n\nEmitted when a wallet runs dry and again when it is topped up. It carries the DISPLAY CONSEQUENCE only — never a balance, a spend figure or a transaction. Financial truth stays inside billing and no other service computes money from it; catalog needs one boolean to decide whether to rebuild affected products.\n\nCrawled non-panel offers are never suspended and are never affected by this event. They are free, they keep catalogue coverage alive, and removing them would punish a seller for not paying while destroying the very coverage the free listing exists to protect.\n\nProducers: billing. Consumers: catalog.\nKafka message key: seller_key — it must be set; compaction and partition ordering depend on it.\nCleanup: compact, retention infinite.\n\nThis file validates a whole Kafka message body: the shared envelope from docs/specs/02-EVENT-CONTRACTS.md plus this topic's payload. Unknown fields are ignored, never rejected, at both levels — that is what lets a producer add an optional field without breaking a consumer.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "event_id",
+    "event_type",
+    "version",
+    "occurred_at",
+    "producer",
+    "trace_id",
+    "payload"
+  ],
+  "properties": {
+    "event_id": {
+      "description": "UUIDv4, unique per emission. Two emissions of the same fact carry different event_ids; consumers deduplicate on the payload's natural identity, not on this.",
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+    },
+    "event_type": {
+      "description": "The topic name without the 'yadakchi.' prefix and without the version suffix.",
+      "type": "string",
+      "const": "seller_billing.changed"
+    },
+    "version": {
+      "description": "Envelope and payload version. A removed field, a renamed field or a changed type is a breaking change: publish to .v2 and run both until consumers migrate.",
+      "type": "integer",
+      "const": 1
+    },
+    "occurred_at": {
+      "description": "When the fact happened, ISO-8601 UTC with Z. Consumers tolerate out-of-order delivery across partitions by comparing this, never by assuming global ordering.",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$"
+    },
+    "producer": {
+      "description": "The service that emitted this message. Constrained to the producers declared for this topic in platform/kafka/topics.yml.",
+      "type": "string",
+      "enum": [
+        "billing"
+      ]
+    },
+    "trace_id": {
+      "description": "Propagated across the whole chain for debugging. Minted by crawler on the listings.observed topic and carried through every derived event; a service starting a chain of its own (a human admin edit, a scheduled recomputation) mints a fresh one. Every service logs it.",
+      "type": "string",
+      "minLength": 1
+    },
+    "payload": {
+      "description": "A tombstone — payload: null with the envelope intact — means this entity is deleted; compaction keeps it as the last word on the key.",
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true,
+      "required": [
+        "seller_key",
+        "panel_offers_active",
+        "updated_at"
+      ],
+      "properties": {
+        "seller_key": {
+          "description": "The seller whose panel offers this is about.",
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:[-_][a-z0-9]+)*$"
+        },
+        "panel_offers_active": {
+          "description": "false when this seller's PANEL offers must stop being displayed — currently only because the prepaid wallet hit zero. true when they may be shown again. Crawled offers from the same seller are unaffected either way.",
+          "type": "boolean"
+        },
+        "suspension_reason": {
+          "description": "Why, for the seller-facing panel and for ops — e.g. \"zero_balance\". null whenever panel_offers_active is true.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "updated_at": {
+          "description": "When the state last changed.",
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$"
+        }
+      }
+    }
+  }
+}

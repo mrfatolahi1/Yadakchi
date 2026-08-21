@@ -130,6 +130,7 @@ Single-broker KRaft-mode Kafka (no ZooKeeper). Acceptable for one server; docume
 | `yadakchi.products.changed.v1` | 6 | **compact** | — |
 | `yadakchi.sellers.changed.v1` | 1 | **compact** | — |
 | `yadakchi.clicks.recorded.v1` | 3 | delete | 30 days |
+| `yadakchi.seller_billing.changed.v1` | 1 | compact | infinite |
 | `yadakchi.review.requested.v1` | 3 | delete | 30 days |
 | `yadakchi.review.decided.v1` | 1 | **compact** | **infinite** |
 
