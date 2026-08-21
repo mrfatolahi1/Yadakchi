@@ -230,6 +230,32 @@ def test_producer_is_constrained_to_the_registry(topic: Topic) -> None:
     assert declared == list(topic.producers)
 
 
+@pytest.mark.parametrize("topic", TOPICS, ids=TOPIC_IDS)
+def test_schema_prose_matches_the_registry(topic: Topic) -> None:
+    """Each schema documents its own producers, consumers and key in prose.
+
+    That prose is a second copy of what topics.yml already says, and a second
+    copy drifts: adding crawler to clicks.recorded left every copy of that
+    schema — including the read-only consumed/ ones — still claiming
+    "Consumers: catalog, matcher". consumed/ files cannot be corrected in
+    place, so the drift has to be caught here, at the publisher.
+    """
+    description = schema_of(topic)["description"]
+
+    producers = re.search(r"^Producers: (.+?)\. Consumers: (.+?)\.$", description, re.MULTILINE)
+    assert producers is not None, f"{topic.name}: no 'Producers: … Consumers: …' line"
+    assert producers.group(1) == ", ".join(topic.producers), topic.name
+    assert producers.group(2) == ", ".join(topic.consumers), topic.name
+
+    key = re.search(r"^Kafka message key: (.+?) — ", description, re.MULTILINE)
+    assert key is not None, f"{topic.name}: no 'Kafka message key:' line"
+    assert key.group(1) == topic.key, topic.name
+
+    cleanup = re.search(r"^Cleanup: (compact|delete), ", description, re.MULTILINE)
+    assert cleanup is not None, f"{topic.name}: no 'Cleanup:' line"
+    assert cleanup.group(1) == topic.cleanup, topic.name
+
+
 # ---------------------------------------------------------------------------
 # Criterion 7 — additionalProperties: true at the payload level, and required
 # declared for every non-nullable field.

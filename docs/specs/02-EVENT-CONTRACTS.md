@@ -12,6 +12,16 @@ Ten services built by different agents must agree on the wire format. There is *
 
 After this is merged, **payload shapes are frozen**. Changing one requires a version bump and human review.
 
+> **One correction was made in place under that rule, and the exception is now closed.**
+> `yadakchi.listings.observed.v1` renamed `content_hash` to `fragment_hash` after the
+> contracts were merged, without going to `.v2`. It was safe only because the topic had
+> never been used: `crawler` is its sole producer and had no code, `enricher` is its sole
+> consumer and had no code, no service source referenced the field, and no broker had
+> ever carried the message. The rename was directed and reviewed by the repository owner.
+> **This is not a precedent.** Every later change to any payload — including one that
+> looks equally harmless — goes to `.v2` and runs both versions until consumers migrate.
+> The moment a topic has one running consumer, in-place is off the table.
+
 Your job: write the schema files exactly as specified below, plus a validation test per schema, plus example payloads that service agents can use as fixtures.
 
 ---

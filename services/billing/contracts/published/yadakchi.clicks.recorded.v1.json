@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://yadakchi.ir/schemas/yadakchi.clicks.recorded.v1.json",
   "title": "yadakchi.clicks.recorded.v1",
-  "description": "One outbound click on a seller offer.\n\nProducers: billing. Consumers: catalog, matcher.\nKafka message key: product_uid — it must be set; compaction and partition ordering depend on it.\nCleanup: delete, retention 30 days.\n\nThis file validates a whole Kafka message body: the shared envelope from docs/specs/02-EVENT-CONTRACTS.md plus this topic's payload. Unknown fields are ignored, never rejected, at both levels — that is what lets a producer add an optional field without breaking a consumer.",
+  "description": "One outbound click on a seller offer.\n\nProducers: billing. Consumers: catalog, matcher, crawler.\nKafka message key: product_uid — it must be set; compaction and partition ordering depend on it.\nCleanup: delete, retention 30 days.\n\nThis file validates a whole Kafka message body: the shared envelope from docs/specs/02-EVENT-CONTRACTS.md plus this topic's payload. Unknown fields are ignored, never rejected, at both levels — that is what lets a producer add an optional field without breaking a consumer.",
   "type": "object",
   "additionalProperties": true,
   "required": [
