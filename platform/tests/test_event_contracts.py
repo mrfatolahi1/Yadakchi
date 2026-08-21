@@ -552,6 +552,8 @@ def test_the_archive_path_is_not_named_by_the_fragment_hash() -> None:
 SUBJECT_KEYS: dict[str, set[str]] = {
     "merge_pair": {"offer_uid_a", "offer_uid_b", "cluster_uid"},
     "split_product": {"cluster_uid", "successor_uid", "offer_uids"},
+    # fitment_conflict drops part_type and adds status — a decision subject is
+    # not a verbatim copy of the request's.
     "fitment_conflict": {"part_number", "vehicle_slug", "status"},
     "synonym_candidate": {"token", "part_type"},
     "price_ambiguous": {"offer_uid", "source_key", "external_key"},
@@ -621,6 +623,45 @@ def test_negative_vehicle_claims_are_carried_never_inferred() -> None:
         if excluded:
             excluded_seen = True
     assert excluded_seen, "no fixture exercises a negative vehicle claim"
+
+
+def test_a_model_level_vehicle_row_exists() -> None:
+    """Acceptance criterion 3 — a bare "206" resolves to model level — is only
+    testable if there is a model-level row to resolve to. trim: null is what
+    makes one, and the hierarchy is derived from (brand, model) rather than a
+    parent_slug field, so the row must carry both."""
+    topic = REGISTRY.by_name("yadakchi.vehicles.changed.v1")
+    assert topic is not None
+    rows = [load_json(f)["payload"] for f in example_files(topic)]
+    rows = [r for r in rows if r is not None]
+    model_level = [r for r in rows if r["trim"] is None]
+    trims = [r for r in rows if r["trim"] is not None]
+
+    assert model_level, "no model-level vehicle fixture — a bare '206' resolves to nothing"
+    for row in model_level:
+        assert row["engine_code"] is None, "a model spans engines; do not guess one"
+        assert row["brand"] and row["model"], "the hierarchy is derived from brand+model"
+        assert any(t["brand"] == row["brand"] and t["model"] == row["model"] for t in trims), (
+            f"{row['vehicle_slug']} has no trim row sharing its brand and model"
+        )
+
+
+def test_model_level_unknowns_are_marked_for_the_coverage_denominator() -> None:
+    """A trim-level unknown produced because the seller only said "206" is
+    silence about the trim, not a failed decision. Part five excludes it from the
+    coverage denominator, which is only computable if it is marked."""
+    topic = REGISTRY.by_name("yadakchi.offers.fitted.v1")
+    assert topic is not None
+    found = False
+    for path in example_files(topic):
+        for fit in load_json(path)["payload"]["fitments"]:
+            if fit["evidence"].get("rule") != "model_level_only":
+                continue
+            found = True
+            assert fit["status"] == "unknown", path.name
+            assert fit["evidence"]["excluded_from_coverage_denominator"] is True, path.name
+            assert fit["evidence"]["resolved_to"], "must name the model it did resolve to"
+    assert found, "no fixture shows the bare-model case criterion 3 tests"
 
 
 def test_the_examples_are_one_connected_dataset() -> None:

@@ -1,0 +1,81 @@
+{
+  "event_id": "3ea6c15f-08b7-42d9-9e14-6c5b73a0df82",
+  "event_type": "offers.fitted",
+  "version": 1,
+  "occurred_at": "2026-08-19T07:47:26Z",
+  "producer": "fitment",
+  "trace_id": "9d4c1f7a2b8e6053",
+  "payload": {
+    "offer_uid": "a21378893952f89cef62250154a38a7b",
+    "fitments": [
+      {
+        "vehicle_slug": "peugeot-206",
+        "status": "compatible",
+        "confidence": 0.86,
+        "provenance": "consensus",
+        "evidence": {
+          "rule": "consensus_part_number",
+          "part_number": "425438",
+          "agreeing_sellers": 6,
+          "disagreeing_sellers": 0,
+          "matched_hint": "پژو 206",
+          "granularity": "model",
+          "note": "عنوان آگهی فقط «۲۰۶» دارد؛ تیپ ذکر نشده و حدس زده نمی‌شود"
+        }
+      },
+      {
+        "vehicle_slug": "peugeot-206-type-2",
+        "status": "unknown",
+        "confidence": 0.0,
+        "provenance": "rule",
+        "evidence": {
+          "rule": "model_level_only",
+          "resolved_to": "peugeot-206",
+          "note": "فروشنده در سطح مدل صحبت کرده؛ این سکوت درباره تیپ است، نه تلاش ناموفق برای تصمیم",
+          "excluded_from_coverage_denominator": true
+        }
+      },
+      {
+        "vehicle_slug": "peugeot-206-type-3",
+        "status": "unknown",
+        "confidence": 0.0,
+        "provenance": "rule",
+        "evidence": {
+          "rule": "model_level_only",
+          "resolved_to": "peugeot-206",
+          "note": "فروشنده در سطح مدل صحبت کرده؛ این سکوت درباره تیپ است، نه تلاش ناموفق برای تصمیم",
+          "excluded_from_coverage_denominator": true
+        }
+      },
+      {
+        "vehicle_slug": "peugeot-206-type-5",
+        "status": "unknown",
+        "confidence": 0.0,
+        "provenance": "rule",
+        "evidence": {
+          "rule": "model_level_only",
+          "resolved_to": "peugeot-206",
+          "note": "فروشنده در سطح مدل صحبت کرده؛ این سکوت درباره تیپ است، نه تلاش ناموفق برای تصمیم",
+          "excluded_from_coverage_denominator": true
+        }
+      },
+      {
+        "vehicle_slug": "peugeot-206-type-6",
+        "status": "unknown",
+        "confidence": 0.0,
+        "provenance": "rule",
+        "evidence": {
+          "rule": "model_level_only",
+          "resolved_to": "peugeot-206",
+          "note": "فروشنده در سطح مدل صحبت کرده؛ این سکوت درباره تیپ است، نه تلاش ناموفق برای تصمیم",
+          "excluded_from_coverage_denominator": true
+        }
+      }
+    ],
+    "crossref_codes": [
+      "425235"
+    ],
+    "risky_family": null,
+    "computed_at": "2026-08-19T07:47:26Z"
+  }
+}

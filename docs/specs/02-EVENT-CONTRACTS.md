@@ -289,14 +289,19 @@ themselves are a cross-service agreement and are fixed here. `ops` emits exactly
 these keys; a consumer that needs another one raises a contract change rather
 than inventing it.
 
-| `kind` | `subject` keys | consumed by |
-|---|---|---|
-| `merge_pair` | `offer_uid_a`, `offer_uid_b`, `cluster_uid` | `matcher` |
-| `split_product` | `cluster_uid`, `successor_uid`, `offer_uids[]` | `matcher` |
-| `fitment_conflict` | `part_number`, `vehicle_slug`, `status` | `fitment` |
-| `synonym_candidate` | `token`, `part_type` | (`search`, once it is a declared consumer) |
-| `price_ambiguous` | `offer_uid`, `source_key`, `external_key` | (advisory; no consumer acts on it) |
-| `adapter_broken` | `source_key`, `adapter_key` | (advisory; `crawler` reads its own health) |
+**`subject` on a decision is not a verbatim copy of the request's.** `ops` carries
+the identifying keys through unchanged, drops request-only context that played no
+part in the decision, and adds keys that exist only once a human has decided.
+Both shapes are listed so neither side has to guess:
+
+| `kind` | `subject` on `review.requested` | `subject` on `review.decided` | consumed by |
+|---|---|---|---|
+| `merge_pair` | `offer_uid_a`, `offer_uid_b`, `cluster_uid` | same | `matcher` |
+| `split_product` | `cluster_uid`, `offer_uids[]` | + `successor_uid` | `matcher` |
+| `fitment_conflict` | `part_number`, `vehicle_slug`, `part_type` | `part_number`, `vehicle_slug`, **+ `status`**, − `part_type` | `fitment` |
+| `synonym_candidate` | `token`, `part_type` | same | (`search`, once it is a declared consumer) |
+| `price_ambiguous` | `offer_uid`, `source_key`, `external_key` | same | (advisory; no consumer acts on it) |
+| `adapter_broken` | `source_key`, `adapter_key` | same | (advisory; `crawler` reads its own health) |
 
 **`fitment_conflict` — the verdict rides in `subject.status`, not in `decision`.**
 `decision` has five values across every kind and cannot express a tri-state

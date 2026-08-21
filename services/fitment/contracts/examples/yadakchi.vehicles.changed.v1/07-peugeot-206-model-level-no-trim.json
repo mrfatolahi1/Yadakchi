@@ -1,0 +1,29 @@
+{
+  "event_id": "7d2b940c-51ae-4f63-8c07-1a9e5b3d6f24",
+  "event_type": "vehicles.changed",
+  "version": 1,
+  "occurred_at": "2026-07-14T10:05:20Z",
+  "producer": "fitment",
+  "trace_id": "24c7f0b93ae15d8c",
+  "payload": {
+    "vehicle_slug": "peugeot-206",
+    "brand": "Peugeot",
+    "model": "206",
+    "trim": null,
+    "year_from": 2001,
+    "year_to": 2015,
+    "engine_code": null,
+    "display_name_fa": "پژو ۲۰۶",
+    "aliases": [
+      "پژو 206",
+      "پژو ۲۰۶",
+      "206",
+      "۲۰۶",
+      "peugeot 206",
+      "پژو206",
+      "206 هاچبک"
+    ],
+    "is_published": true,
+    "updated_at": "2026-07-14T10:05:20Z"
+  }
+}

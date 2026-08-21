@@ -83,7 +83,7 @@
           ]
         },
         "decision": {
-          "description": "The verdict. same_product and different_products answer a merge_pair; approve, reject and skip answer the rest.",
+          "description": "The verdict. same_product and different_products answer a merge_pair; approve, reject and skip answer the rest. For kind 'fitment_conflict' this field says only WHETHER a human settled it — approve means they did and subject.status carries what they settled on, skip means they did not. reject is not used there: it reads as 'incompatible' and would leave no way to record a settled 'unknown'.",
           "type": "string",
           "minLength": 1,
           "examples": [
@@ -95,7 +95,7 @@
           ]
         },
         "subject": {
-          "description": "The identifiers the decision applies to, carried from the request so consumers can apply it without holding the original.",
+          "description": "What the decision applies to. ops builds it from the request's subject and MAY add or replace keys that only exist once a human has decided — it is not a verbatim copy.\n\nTwo parts, and a consumer should read them differently:\n  * IDENTIFYING keys are carried through unchanged from the request, so a consumer can apply the decision without holding the original event.\n  * VERDICT keys are written by ops and appear only here. For kind 'fitment_conflict' that is `status` — compatible | incompatible | unknown — which carries the settled verdict, because `decision` is shared across every kind and cannot express a tri-state. ops also drops request-only context such as `part_type` that played no part in the decision.\n\nThe exact key set per kind is fixed in docs/specs/02-EVENT-CONTRACTS.md. A consumer needing another key raises a contract change rather than inventing it.",
           "type": "object",
           "additionalProperties": true
         },

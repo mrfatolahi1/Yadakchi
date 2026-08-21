@@ -86,8 +86,42 @@ Each row: slug, brand, model, trim, year range, engine code, `display_name_fa`, 
 
 An earlier draft of this spec said "roughly 80–120 rows". That number predates the
 settled granularity decision below it and conflicts with it; **the granularity
-decision wins.** One row per model+trim is **~22 rows** for the four phase-one
-families, and that is correct, not a shortfall.
+decision wins.** For the four phase-one families that is **~29 rows**, and that is
+correct, not a shortfall: ~22 model+trim rows plus the model-level rows below.
+
+**Model-level rows are required, not optional.** Part two says a title saying only
+"206" resolves to the model level and yields trim-level `unknown`, and acceptance
+criterion 3 tests exactly that — which is impossible unless a model-level row
+exists to resolve *to*. Seed one per model, with **`trim: null`**, which the
+contract already allows and documents as "null at model level — a trim is never
+guessed":
+
+| Model-level slug | `display_name_fa` | covers |
+|---|---|---|
+| `peugeot-206` | پژو ۲۰۶ | Type 2, 3, 5, 6 |
+| `peugeot-206-sd` | پژو ۲۰۶ صندوق‌دار | SD V8, V9, V20 |
+| `pride` | پراید | 111, 131, 132, 141, 151 |
+| `tiba` | تیبا | Tiba 1, Tiba 2 |
+| `samand` | سمند | LX, EF7, Soren |
+| `peugeot-pars` | پژو پارس | ELX, TU5 |
+| `peugeot-405` | پژو ۴۰۵ | GLX, SLX, GL |
+
+**The hierarchy needs no new field.** A trim row belongs to the model row sharing
+its `brand` and `model`; the model row is the one with `trim: null`. Do not invent
+a `parent_slug` — `vehicles.changed` is frozen and consumers derive the grouping
+from the fields they already receive.
+
+Set `year_from`/`year_to` on a model row to the union of its trims' ranges, and
+`engine_code: null` — a model spans engines by definition.
+
+**What a model-level resolution produces.** An offer whose only usable hint is
+"۲۰۶" gets a `compatible` verdict against `peugeot-206` and `unknown` against each
+of that model's trims. The trim-level `unknown` is *silence about the trim*, not a
+failed attempt to decide one, and Part five excludes it from the coverage
+denominator on that basis — otherwise a market where most sellers write only "206"
+would keep every trim permanently unpublished. Mark those entries in `evidence`
+with a distinguishable rule key (`model_level_only`) so the exclusion is
+computable rather than inferred.
 
 `year_from`, `year_to` and `engine_code` are **descriptive attributes of a trim,
 not a subdivision axis.** "Peugeot 206 Type 5" is one row with one production
@@ -173,7 +207,57 @@ Normalize pair ordering so each pair is stored once. **A cross-reference is a di
 
 ## Part five: Launch gate
 
-A vehicle publishes only when **≥70% of active offers** whose part type is relevant to it have a non-`unknown` verdict. Compute periodically, expose as a metric, and refuse to publish below threshold. Publishing an under-covered vehicle produces empty search results and users conclude we don't stock the part.
+A vehicle publishes only when **≥70% of the offers in contention for it** have a non-`unknown` verdict. Compute periodically, expose as a metric, and refuse to publish below threshold. Publishing an under-covered vehicle produces empty search results and users conclude we don't stock the part.
+
+### What counts — the denominator, defined
+
+"Whose part type is relevant to it" was never defined, and there is no relevance
+mapping anywhere in the system. **Do not build one.** A hand-maintained
+part-type-to-vehicle table would be a second vehicle tree to keep correct, and it
+would be wrong in exactly the cases that matter. Relevance is already implicit in
+work you have done: an offer is relevant to a vehicle if you *evaluated* it
+against that vehicle.
+
+For a vehicle `V`, over **active** offers only (`is_active: true` on the offer read model):
+
+```
+denominator = offers with a PartFitment row for V
+              MINUS rows whose evidence rule is `model_level_only`
+numerator   = those rows whose status is `compatible` or `incompatible`
+coverage    = numerator / denominator
+```
+
+Three consequences, each deliberate:
+
+- **An offer that never mentioned `V` is not in the denominator.** It has no row
+  for `V`. Silence is not an unresolved verdict, and counting it would make every
+  vehicle's coverage a function of total catalogue size.
+- **`model_level_only` rows are excluded.** A seller writing "۲۰۶" produced a
+  trim-level `unknown` that was never an attempt to decide the trim. Counting it
+  would hold every trim below the gate forever in a market where most titles are
+  model-level — see Part one.
+- **Risky-family `unknown`s stay in the denominator.** A headlight with no year is
+  a real coverage failure that a user will hit, even though Rule 3 produced it by
+  design. It should hold the gate down, and it should show up in the metric.
+
+**A rate needs a floor to mean anything.** Four evaluated offers with three
+resolved is 75% and is noise. Publication also requires
+`denominator ≥ FITMENT_COVERAGE_MIN_OFFERS` (config, default 200). This is an
+addition to the rule as originally written, made because a bare percentage is
+trivially passed at low N; the 70% threshold itself is unchanged.
+
+Export both numbers, not just the ratio — `yadakchi_fitment_coverage_ratio{vehicle}`
+and `yadakchi_fitment_coverage_offers{vehicle}` — so `ops` can show a vehicle that
+is blocked by thin data separately from one blocked by poor resolution. They are
+different problems with different fixes.
+
+**Known limitation, worth a metric rather than a gate:** coverage says nothing
+about *breadth*. A vehicle with a thousand brake-pad offers at 95% resolution
+passes while its catalogue is one part type deep. Export
+`yadakchi_fitment_covered_part_types{vehicle}` (distinct `part_type` with at least
+one `compatible` verdict) and show it beside the gate. Making it a hard gate is a
+product decision, not yours to take unilaterally — raise it if the number looks
+bad at launch.
 
 ---
 
@@ -211,12 +295,12 @@ Compose: this service plus Postgres, Redis, Kafka. No other service.
 
 1. Seeding is idempotent; editing an alias updates the row and emits one `vehicles.changed` event.
 2. `resolve_vehicle` correctly handles 50+ real hint strings, including Persian/Latin digit mixes and ZWNJ variants.
-3. A bare "206" resolves to model level and yields trim-level `unknown` — never a guessed trim.
+3. A bare "206" resolves to the model-level row `peugeot-206` (`trim: null`) and yields trim-level `unknown` marked `model_level_only` — never a guessed trim.
 4. An over-broad claim as sole evidence never yields `compatible`.
 5. Five agreeing sellers yield `compatible` with provenance `consensus`; one seller yields `unknown`.
 6. A headlight offer without year evidence yields `unknown` with `risky_family` attached.
 7. A human correction survives a full recomputation.
-8. Coverage below 70% refuses publication and emits the metric.
+8. Coverage below 70% refuses publication and emits the metric, over the denominator defined in Part five: offers with a fitment row for the vehicle, excluding `model_level_only` rows. A vehicle with fewer than `FITMENT_COVERAGE_MIN_OFFERS` evaluated offers is refused regardless of ratio.
 9. Cross-reference pairs are stored once regardless of input order.
 10. A new consumer reading `vehicles.changed` from the beginning reconstructs the full tree.
 11. Consuming the same offer event twice yields identical fitment rows and one emitted event.
