@@ -24,6 +24,7 @@
     "vehicle_hints": [
       "206 تيپ 5"
     ],
+    "vehicle_hints_excluded": [],
     "overbroad_claim": false,
     "confidences": {
       "brand": 0.95,

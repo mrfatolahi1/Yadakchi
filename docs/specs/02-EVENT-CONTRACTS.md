@@ -118,7 +118,10 @@ pack_quantity          integer
 price_toman            integer|null
 stock_status           enum
 image_url              string|null
-vehicle_hints          string[]         raw, unresolved
+vehicle_hints          string[]         raw, unresolved — vehicles the listing claims it DOES fit
+vehicle_hints_excluded string[]         raw, unresolved — vehicles the listing claims it does NOT fit.
+                                        OPTIONAL: absent or empty means "no negative claim extracted",
+                                        never "fits everything". Added additively after v1 shipped
 overbroad_claim        boolean          "fits all Peugeots" was present
 confidences            object           field name → 0..1
 extraction_provenance  object           field name → provenance
@@ -127,6 +130,14 @@ first_seen_at          timestamp
 last_seen_at           timestamp
 is_active              boolean
 ```
+
+**Claim polarity is carried, never inferred.** `vehicle_hints` and
+`vehicle_hints_excluded` are two separate lists because `fitment`'s Rule 5 has to
+tell a genuine seller disagreement from a vehicle nobody mentioned. A vehicle
+missing from `vehicle_hints` means only that nobody claimed it fits; it is not
+evidence that it does not. Only an entry in `vehicle_hints_excluded` is evidence
+of incompatibility. Deriving a negative from silence, or from the presence of a
+different vehicle, is guessing — and confidently wrong fitment is worse than none.
 
 ### `yadakchi.offers.fitted.v1`
 **fitment → matcher, catalog.** Key: `offer_uid`
@@ -270,6 +281,38 @@ decided_at   timestamp
 ```
 
 **This topic is never deleted.** Human decisions are sticky: after any full reprocess, consumers replay this topic last and human decisions override everything computed.
+
+#### `subject` per `kind` — the shapes `ops` writes and consumers read
+
+`subject` is a free-form object because it differs per `kind`, but the shapes
+themselves are a cross-service agreement and are fixed here. `ops` emits exactly
+these keys; a consumer that needs another one raises a contract change rather
+than inventing it.
+
+| `kind` | `subject` keys | consumed by |
+|---|---|---|
+| `merge_pair` | `offer_uid_a`, `offer_uid_b`, `cluster_uid` | `matcher` |
+| `split_product` | `cluster_uid`, `successor_uid`, `offer_uids[]` | `matcher` |
+| `fitment_conflict` | `part_number`, `vehicle_slug`, `status` | `fitment` |
+| `synonym_candidate` | `token`, `part_type` | (`search`, once it is a declared consumer) |
+| `price_ambiguous` | `offer_uid`, `source_key`, `external_key` | (advisory; no consumer acts on it) |
+| `adapter_broken` | `source_key`, `adapter_key` | (advisory; `crawler` reads its own health) |
+
+**`fitment_conflict` — the verdict rides in `subject.status`, not in `decision`.**
+`decision` has five values across every kind and cannot express a tri-state
+fitment verdict, so it never tries to. Read them as two separate answers:
+
+- `decision: approve` — a human settled it. `subject.status` carries the verdict,
+  one of `compatible | incompatible | unknown`, and `fitment` applies it under
+  Rule 4 where it overrides anything computed and survives recomputation.
+- `decision: skip` — the human did not settle it. `fitment` leaves the computed
+  verdict alone and the item may be re-queued.
+
+A human-settled `unknown` is **not** the same as a computed `unknown`: it is
+sticky, it means "a person looked and the evidence genuinely does not decide it",
+and it must stop the pair being queued again. `reject` and the two merge verdicts
+are not used for `fitment_conflict`; treating `reject` as "incompatible" would be
+inference, and it leaves no way to say `unknown` at all.
 
 ---
 

@@ -280,15 +280,37 @@ def test_payload_accepts_unknown_fields(topic: Topic) -> None:
     assert schema_of(topic)["additionalProperties"] is True
 
 
+# Fields that are deliberately NOT in required despite being non-nullable,
+# because they were added additively after their topic had shipped. Spec 02
+# permits that — "producers add optional fields without breaking consumers" —
+# and making one required afterwards would be the breaking change that forces a
+# .v2. Listed explicitly so each is a decision on the record, not a slip.
+ADDITIVE_OPTIONAL_FIELDS: dict[str, set[str]] = {
+    "yadakchi.offers.enriched.v1": {"vehicle_hints_excluded"},
+}
+
+
 @pytest.mark.parametrize("topic", TOPICS, ids=TOPIC_IDS)
 def test_non_nullable_fields_are_required(topic: Topic) -> None:
-    for sub in object_schemas(payload_schema(topic)):
+    exempt = ADDITIVE_OPTIONAL_FIELDS.get(topic.name, set())
+    payload = payload_schema(topic)
+    for sub in object_schemas(payload):
         required = set(sub.get("required", []))
         for name, prop in sub["properties"].items():
-            if not is_nullable(prop):
-                assert name in required, (
-                    f"{topic.name}: '{name}' is not nullable but is not in required"
-                )
+            if name in exempt or is_nullable(prop):
+                continue
+            assert name in required, (
+                f"{topic.name}: '{name}' is not nullable but is not in required. "
+                "If it is an additive optional field, add it to "
+                "ADDITIVE_OPTIONAL_FIELDS with the reason."
+            )
+    # An exemption must name a field that really exists and really is optional,
+    # so the list cannot rot into a blanket excuse.
+    for name in exempt:
+        assert name in payload["properties"], f"{topic.name}: stale exemption {name!r}"
+        assert name not in payload["required"], (
+            f"{topic.name}: {name!r} is exempt but is now required — drop the exemption"
+        )
 
 
 @pytest.mark.parametrize("topic", TOPICS, ids=TOPIC_IDS)
@@ -523,6 +545,82 @@ def test_the_archive_path_is_not_named_by_the_fragment_hash() -> None:
             f"{path.name}: archive_uri is named by the fragment hash, "
             "but the archive holds the whole page"
         )
+
+
+# Spec 02, "subject per kind". A free-form object still needs one agreed shape
+# per kind, or ops writes keys fitment never reads.
+SUBJECT_KEYS: dict[str, set[str]] = {
+    "merge_pair": {"offer_uid_a", "offer_uid_b", "cluster_uid"},
+    "split_product": {"cluster_uid", "successor_uid", "offer_uids"},
+    "fitment_conflict": {"part_number", "vehicle_slug", "status"},
+    "synonym_candidate": {"token", "part_type"},
+    "price_ambiguous": {"offer_uid", "source_key", "external_key"},
+    "adapter_broken": {"source_key", "adapter_key"},
+}
+
+
+def test_review_decided_subjects_match_the_documented_shapes() -> None:
+    topic = REGISTRY.by_name("yadakchi.review.decided.v1")
+    assert topic is not None
+    seen: set[str] = set()
+    for path in example_files(topic):
+        payload = load_json(path)["payload"]
+        kind = payload["kind"]
+        assert kind in SUBJECT_KEYS, f"{path.name}: undocumented kind {kind!r}"
+        assert set(payload["subject"]) == SUBJECT_KEYS[kind], (
+            f"{path.name}: subject keys {sorted(payload['subject'])} do not match "
+            f"the shape spec 02 documents for {kind}"
+        )
+        seen.add(kind)
+    assert "fitment_conflict" in seen
+
+
+def test_fitment_verdicts_ride_in_subject_status_not_in_decision() -> None:
+    """decision has five values across all kinds and cannot express a tri-state,
+    so a fitment_conflict carries its verdict in subject.status. approve means
+    the human settled it; skip means they did not. reject would be ambiguous —
+    it reads as "not compatible" and leaves no way to say unknown at all."""
+    topic = REGISTRY.by_name("yadakchi.review.decided.v1")
+    assert topic is not None
+    statuses: set[str] = set()
+    for path in example_files(topic):
+        payload = load_json(path)["payload"]
+        if payload["kind"] != "fitment_conflict":
+            continue
+        assert payload["decision"] in {"approve", "skip"}, (
+            f"{path.name}: {payload['decision']!r} on a fitment_conflict is ambiguous"
+        )
+        if payload["decision"] == "approve":
+            status = payload["subject"]["status"]
+            assert status in {"compatible", "incompatible", "unknown"}, path.name
+            statuses.add(status)
+    # A human-settled unknown is sticky and is not the same as a computed one.
+    assert "unknown" in statuses, "no fixture for a human-settled unknown"
+    assert "incompatible" in statuses
+
+
+def test_negative_vehicle_claims_are_carried_never_inferred() -> None:
+    """fitment Rule 5 needs claim polarity. It exists only in
+    vehicle_hints_excluded, which is optional on the wire and must never be
+    confused with a vehicle simply missing from vehicle_hints."""
+    topic = REGISTRY.by_name("yadakchi.offers.enriched.v1")
+    assert topic is not None
+    payload = payload_schema(topic)
+    assert "vehicle_hints_excluded" in payload["properties"]
+    assert "vehicle_hints_excluded" not in payload["required"], (
+        "the field was added after v1 shipped; making it required would be a "
+        "breaking change and would need .v2"
+    )
+
+    excluded_seen = False
+    for path in example_files(topic):
+        body = load_json(path)["payload"]
+        hints = set(body["vehicle_hints"])
+        excluded = set(body.get("vehicle_hints_excluded", []))
+        assert not (hints & excluded), f"{path.name}: a hint is both claimed and excluded"
+        if excluded:
+            excluded_seen = True
+    assert excluded_seen, "no fixture exercises a negative vehicle claim"
 
 
 def test_the_examples_are_one_connected_dataset() -> None:

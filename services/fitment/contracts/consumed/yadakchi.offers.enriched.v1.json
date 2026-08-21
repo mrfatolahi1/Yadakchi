@@ -175,7 +175,14 @@
           "format": "uri"
         },
         "vehicle_hints": {
-          "description": "Raw vehicle-looking strings lifted from the title, unresolved. Resolving them is fitment's job.",
+          "description": "Raw vehicle-looking strings the listing claims the part DOES fit, unresolved. Resolving them is fitment's job. Positive claims only — a string here is never evidence against any other vehicle.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "vehicle_hints_excluded": {
+          "description": "Raw vehicle-looking strings the listing explicitly claims the part does NOT fit — \"مناسب صندوق‌دار نیست\", \"برای تیپ ۲ نیست\". Unresolved, like vehicle_hints, and carrying the seller's own words.\n\nOPTIONAL and additive: a producer that extracts no negative claims may omit it entirely, which is why it is not in required. An ABSENT or EMPTY array means 'no negative claim was extracted' — it never means 'fits everything'. Absence of a vehicle from vehicle_hints likewise means nothing: only an entry here is evidence of incompatibility. fitment's Rule 5 needs claim polarity to tell a genuine seller disagreement from a vehicle nobody mentioned, and inferring a negative from silence would be guessing.",
           "type": "array",
           "items": {
             "type": "string"

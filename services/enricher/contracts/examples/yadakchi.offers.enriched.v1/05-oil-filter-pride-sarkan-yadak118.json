@@ -24,6 +24,7 @@
     "vehicle_hints": [
       "پراید ۱۳۱"
     ],
+    "vehicle_hints_excluded": [],
     "overbroad_claim": false,
     "confidences": {
       "brand": 0.99,

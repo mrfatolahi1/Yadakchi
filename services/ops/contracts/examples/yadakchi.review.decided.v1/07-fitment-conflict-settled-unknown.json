@@ -1,0 +1,21 @@
+{
+  "event_id": "5c1e7a02-9d34-4b8f-a6e1-27fb04c9d853",
+  "event_type": "review.decided",
+  "version": 1,
+  "occurred_at": "2026-08-20T06:24:37Z",
+  "producer": "ops",
+  "trace_id": "b52d7c04e19af836",
+  "payload": {
+    "request_uid": "8f3d21c6-4e70-4a19-b52c-9d0e6af71b34",
+    "kind": "fitment_conflict",
+    "decision": "approve",
+    "subject": {
+      "part_number": "425438",
+      "vehicle_slug": "peugeot-206-type-6",
+      "status": "unknown"
+    },
+    "actor": "narges.k",
+    "reason": "مدارک دو طرف هم‌وزن است و بدون کاتالوگ سازنده قابل تصمیم نیست؛ عمداً unknown ثبت شد تا دوباره در صف نیفتد.",
+    "decided_at": "2026-08-20T06:24:37Z"
+  }
+}

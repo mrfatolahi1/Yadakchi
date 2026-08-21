@@ -25,6 +25,7 @@
       "پژو 206",
       "تمام پژوها"
     ],
+    "vehicle_hints_excluded": [],
     "overbroad_claim": true,
     "confidences": {
       "part_type": 0.72,

@@ -11,8 +11,8 @@
     "external_key": "p-482913",
     "seller_key": "yadakyar",
     "url": "https://yadakmarket.com/p-482913",
-    "raw_title": "لنت ترمز جلو پژو ۲۰۶ تیپ ۵ عظام اصلی ⭐ ارسال رایگان ⭐ گارانتی ۶ ماهه",
-    "title_normalized": "لنت ترمز جلو پژو 206 تیپ 5 عظام",
+    "raw_title": "لنت ترمز جلو پژو ۲۰۶ تیپ ۵ عظام اصلی (مناسب صندوق‌دار نیست) ⭐ ارسال رایگان ⭐ گارانتی ۶ ماهه",
+    "title_normalized": "لنت ترمز جلو پژو 206 تیپ 5 عظام مناسب صندوق‌دار نیست",
     "brand": "ezam",
     "part_number": "425438",
     "part_type": "brake_pad_front",
@@ -25,6 +25,9 @@
       "پژو ۲۰۶ تیپ ۵",
       "206"
     ],
+    "vehicle_hints_excluded": [
+      "صندوق‌دار"
+    ],
     "overbroad_claim": false,
     "confidences": {
       "brand": 0.97,
@@ -33,7 +36,8 @@
       "authenticity_claim": 0.9,
       "pack_quantity": 0.82,
       "price_toman": 0.98,
-      "stock_status": 0.95
+      "stock_status": 0.95,
+      "vehicle_hints_excluded": 0.88
     },
     "extraction_provenance": {
       "brand": "rule",
@@ -42,7 +46,8 @@
       "authenticity_claim": "rule",
       "pack_quantity": "rule",
       "price_toman": "rule",
-      "stock_status": "rule"
+      "stock_status": "rule",
+      "vehicle_hints_excluded": "rule"
     },
     "normalizer_version": "2026.08.1",
     "first_seen_at": "2026-06-02T05:41:09Z",

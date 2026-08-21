@@ -1,17 +1,17 @@
 {
-  "event_id": "9169a567-c51f-4682-acd4-fc3dbc367a12",
+  "event_id": "a1c4e07b-6f52-4d38-91ba-3e0d75c2f846",
   "event_type": "review.requested",
   "version": 1,
-  "occurred_at": "2026-08-19T07:21:48Z",
+  "occurred_at": "2026-08-19T07:23:11Z",
   "producer": "fitment",
   "trace_id": "5e2ab8c1d70f3496",
   "payload": {
-    "request_uid": "11beeb4a-badf-46c7-af82-af74f38463fd",
+    "request_uid": "8f3d21c6-4e70-4a19-b52c-9d0e6af71b34",
     "kind": "fitment_conflict",
-    "priority": 410,
+    "priority": 305,
     "subject": {
       "part_number": "425438",
-      "vehicle_slug": "peugeot-206-sd-v8",
+      "vehicle_slug": "peugeot-206-type-6",
       "part_type": "brake_pad_front"
     },
     "evidence": {
@@ -34,20 +34,20 @@
       ],
       "incompatible_claims": [
         {
-          "offer_uid": "ad1e2af57f36691329247db654602a4e",
-          "seller_key": "yadakyar",
-          "title_normalized": "لنت ترمز جلو پژو 206 تیپ 5 عظام",
+          "offer_uid": "77c1eef0f4f43683ec120aa9e5453143",
+          "seller_key": "otoyar",
+          "title_normalized": "لنت جلو 206 تیپ 5 عظام دست چهار عددی مناسب تیپ 6 نیست",
           "claim": "incompatible",
-          "note_fa": "فروشنده نوشته «مناسب صندوق‌دار نیست»",
           "source_field": "vehicle_hints_excluded",
-          "excluded_hint": "صندوق‌دار"
+          "excluded_hint": "تیپ 6"
         }
       ],
-      "vehicle_display_name_fa": "پژو ۲۰۶ صندوق‌دار V8",
+      "vehicle_display_name_fa": "پژو ۲۰۶ تیپ ۶",
       "verdict_without_human": "unknown",
       "polarity_note": "قطبیت ادعا فقط از vehicle_hints_excluded خوانده می‌شود؛ نبودن یک خودرو در vehicle_hints سکوت است، نه مخالفت.",
-      "silent_sellers": 2
+      "silent_sellers": 2,
+      "note_fa": "دو فروشنده تیپ ۶ را سازگار می‌دانند و یکی صراحتاً آن را استثنا کرده است."
     },
-    "requested_at": "2026-08-19T07:21:48Z"
+    "requested_at": "2026-08-19T07:23:11Z"
   }
 }

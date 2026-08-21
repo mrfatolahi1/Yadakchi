@@ -44,7 +44,7 @@ offer_uid, source_key, external_key, seller_key, url,
 raw_title, title_normalized,
 brand, part_number, part_type, authenticity_claim, pack_quantity,
 price_toman, stock_status, image_url,
-vehicle_hints[], overbroad_claim,
+vehicle_hints[], vehicle_hints_excluded[], overbroad_claim,
 confidences{}, extraction_provenance{}, normalizer_version,
 first_seen_at, last_seen_at, is_active
 ```
@@ -107,6 +107,12 @@ Expose `normalize_text`, `normalize_part_number`, and `strip_promotional` separa
 **Stock status** — map source phrases to the enum. Absence is `unknown`, never `in_stock`.
 
 **Vehicle hints** — extract raw vehicle-looking strings into an array **without resolving them**; resolution is `fitment`'s job. Set `overbroad_claim: true` when patterns like `مناسب تمام پژوها` or `همه مدل‌ها` appear — `fitment` rejects these and needs to know they were present.
+
+**Negative claims go in `vehicle_hints_excluded`, and they are not optional to extract.** Sellers routinely exclude a variant in the same breath as including one: `مناسب صندوق‌دار نیست`, `برای تیپ ۲ نیست`, `به درد ۴۰۵ نمی‌خورد`. Put the excluded vehicle string in `vehicle_hints_excluded`, never in `vehicle_hints`. Maintain the negation patterns in config beside the over-broad ones.
+
+This is the only channel for claim polarity in the system. `fitment`'s Rule 5 detects a genuine seller disagreement by comparing the two lists across sellers, and it is forbidden from inferring a negative any other way — so a negation you drop does not degrade gracefully into `unknown`, it silently becomes a *positive* consensus. Do not put the negated vehicle in both lists, and do not let the negation phrase survive into `title_normalized` as if it were a positive mention.
+
+The field is **additive and optional on the wire** — it was added after `.v1` shipped, so a consumer must treat an absent or empty array as "nothing was extracted". Emit it whenever you find a negation; emit `[]` when you looked and found none.
 
 ## Part three: Synonym mining
 

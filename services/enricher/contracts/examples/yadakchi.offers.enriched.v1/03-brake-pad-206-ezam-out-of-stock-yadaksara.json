@@ -25,6 +25,7 @@
       "پژو 206 تیپ 5",
       "تیپ 6"
     ],
+    "vehicle_hints_excluded": [],
     "overbroad_claim": false,
     "confidences": {
       "brand": 0.96,
