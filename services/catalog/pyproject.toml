@@ -1,0 +1,86 @@
+# ===========================================================================
+# catalog — service-local tooling.
+#
+# The root pyproject configures the PLATFORM only and explicitly excludes
+# services/. This file is the whole tool configuration for this service.
+# ===========================================================================
+[project]
+name = "yadakchi-catalog"
+version = "1.0.0"
+description = "Canonical products, sellers, trust and price history for yadakchi"
+requires-python = ">=3.12"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM", "PTH", "S", "RUF"]
+ignore = [
+    "E501",   # line length is the formatter's job
+    "RUF001", # ambiguous unicode: Persian text and ZWNJ are the point here
+    "RUF002",
+    "RUF003",
+    "RUF012", # Django class attrs are legitimately mutable
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]                      # assert is the point of a test
+"src/catalog/settings.py" = ["S105"]       # env-var names are not passwords
+"src/catalog/migrations/**" = ["E501", "N806"]
+
+[tool.ruff.lint.isort]
+# Pinned, not inferred. `tests` is importable at test time (pythonpath puts
+# the service root on sys.path) but is not under `src`, so ruff's own
+# first-party detection classifies it differently depending on where it is
+# invoked from — and the import order then flips back and forth between runs.
+known-first-party = ["catalog", "tests"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unused_configs = true
+files = ["src", "tests"]
+mypy_path = "src"
+plugins = ["mypy_django_plugin.main"]
+
+[[tool.mypy.overrides]]
+# Third parties without bundled stubs.
+module = ["confluent_kafka.*", "celery.*", "ninja.*", "prometheus_client.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# Celery's shared_task is untyped, so every task it wraps looks untyped to
+# mypy. The task bodies themselves are annotated and checked.
+module = ["catalog.tasks"]
+disallow_untyped_decorators = false
+
+[[tool.mypy.overrides]]
+# Generated migrations are not hand-written code.
+module = ["catalog.migrations.*"]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+# Django's admin classes are generic to django-stubs but not subscriptable at
+# runtime, so parameterising them would break the import. Admin is glue code;
+# this is the one place the strict generics rule buys nothing.
+module = ["catalog.admin"]
+disallow_any_generics = false
+
+[tool.django-stubs]
+django_settings_module = "catalog.settings"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "catalog.settings"
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q --strict-markers"
+timeout = 300
+markers = [
+    "kafka: needs a live broker; skipped unless KAFKA_BOOTSTRAP_SERVERS is set",
+]

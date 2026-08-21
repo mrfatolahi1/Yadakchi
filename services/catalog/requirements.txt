@@ -1,0 +1,23 @@
+# catalog — runtime dependencies.
+# Pinned exactly; pip + requirements.txt only (no Poetry, no uv).
+
+Django==5.1.6
+django-ninja==1.3.0
+psycopg[binary]==3.2.9
+pydantic==2.10.6
+
+# Kafka client, same version the platform's acceptance tests use.
+confluent-kafka==2.10.0
+
+# Celery for scheduled recomputation; Redis is broker and result backend.
+celery==5.4.0
+redis==5.2.1
+
+# WSGI server for the read API.
+gunicorn==23.0.0
+
+# GET /metrics
+prometheus-client==0.21.1
+
+# Errors. Disabled when SENTRY_DSN is empty.
+sentry-sdk==2.20.0

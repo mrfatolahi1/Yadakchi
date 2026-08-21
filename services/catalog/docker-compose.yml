@@ -1,0 +1,182 @@
+# ===========================================================================
+# catalog — this service alone, on the shared infrastructure.
+#
+#   make up      # api + celery + all six consumers
+#   make test    # the test suite, against a throwaway Postgres
+#
+# The shared substrate (Postgres, Kafka, Redis) comes from
+# platform/docker-compose.infra.yml, included below. No other service is
+# started, and none is needed: everything this service consumes arrives on
+# Kafka topics that may simply be empty.
+#
+# NOTE: platform/.env sets COMPOSE_PROJECT_NAME=yadakchi, so every service in
+# the monorepo shares one compose project. Never run `down --remove-orphans`
+# from here — the "orphans" are other teams' containers.
+# ===========================================================================
+
+name: yadakchi-catalog
+
+include:
+  - path: ../../platform/docker-compose.infra.yml
+
+x-catalog: &catalog
+  build:
+    context: .
+    target: base
+  image: yadakchi-catalog:local
+  restart: unless-stopped
+  networks: [yadakchi]
+  environment: &catalog-env
+    TZ: UTC
+    LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    LOG_FORMAT: ${LOG_FORMAT:-json}
+    SENTRY_DSN: ${SENTRY_DSN:-}
+    SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-local}
+    KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    DATABASE_URL: ${CATALOG_DATABASE_URL}
+    REDIS_URL: ${CATALOG_REDIS_URL}
+  logging:
+    driver: json-file
+    options: { max-size: "20m", max-file: "5" }
+
+# A consumer, a worker and a beat have no HTTP port, so the image's
+# healthcheck — which curls the API — could never pass for them. Left in
+# place they would sit "unhealthy" for ever and block anything waiting on
+# them. Docker restarting the process on exit is the real liveness signal
+# for a long-running consumer.
+x-catalog-daemon: &catalog-daemon
+  <<: *catalog
+  healthcheck:
+    disable: true
+  depends_on:
+    postgres:
+      condition: service_healthy
+    kafka:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+    # The API container runs the migrations, so everything else waits for it.
+    catalog:
+      condition: service_healthy
+
+services:
+  # ------------------------------------------------------------------- api
+  # Also the migration runner: one process owns the schema, and the rest of
+  # the fleet waits for it to be healthy before starting.
+  catalog:
+    <<: *catalog
+    container_name: yadakchi-catalog
+    mem_limit: 3g
+    command:
+      - sh
+      - -c
+      - >-
+        python manage.py migrate --noinput &&
+        python manage.py make_partitions &&
+        gunicorn catalog.wsgi:application --bind 0.0.0.0:8000
+        --workers 4 --timeout 60 --access-logfile - --error-logfile -
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${CATALOG_PORT:-8008}:8000"
+
+  # -------------------------------------------------------------- consumers
+  # One process per topic. A Kafka consumer is a long-running management
+  # command, never a Celery task: the offsets belong to the process that
+  # does the work.
+  catalog-clusters:
+    <<: *catalog-daemon
+    command: ["python", "manage.py", "consume_clusters"]
+    mem_limit: 1g
+
+  catalog-offers:
+    <<: *catalog-daemon
+    command: ["python", "manage.py", "consume_offers"]
+    mem_limit: 1g
+
+  catalog-fitments:
+    <<: *catalog-daemon
+    command: ["python", "manage.py", "consume_fitments"]
+    mem_limit: 1g
+
+  catalog-vehicles:
+    <<: *catalog-daemon
+    command: ["python", "manage.py", "consume_vehicles"]
+    mem_limit: 512m
+
+  catalog-crossrefs:
+    <<: *catalog-daemon
+    command: ["python", "manage.py", "consume_crossrefs"]
+    mem_limit: 512m
+
+  catalog-clicks:
+    <<: *catalog-daemon
+    command: ["python", "manage.py", "consume_clicks"]
+    mem_limit: 512m
+
+  # ----------------------------------------------------------------- celery
+  # Scheduled recomputation only: the debounce flush, trust, partitions.
+  catalog-worker:
+    <<: *catalog-daemon
+    command: ["celery", "-A", "catalog", "worker", "--loglevel=INFO", "--concurrency=2"]
+    mem_limit: 1g
+
+  catalog-beat:
+    <<: *catalog-daemon
+    command: ["celery", "-A", "catalog", "beat", "--loglevel=INFO"]
+    mem_limit: 512m
+
+  # ------------------------------------------------------------------ tests
+  # A throwaway Postgres of its own, because the platform's `catalog` role is
+  # NOCREATEDB by design and Django's test runner has to create a database.
+  # `--profile test` keeps it out of the way of a normal `up`.
+  catalog-test-db:
+    image: pgvector/pgvector:pg16
+    profiles: ["test"]
+    networks: [yadakchi]
+    mem_limit: 2g
+    tmpfs:
+      - /var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: catalog
+      POSTGRES_PASSWORD: catalog
+      POSTGRES_DB: yadakchi_catalog
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+    ports:
+      # Published so `make test-local` can reach it from the host too.
+      - "127.0.0.1:${CATALOG_TEST_DB_PORT:-15433}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U catalog -d yadakchi_catalog"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  catalog-tests:
+    build:
+      context: .
+      target: test
+    image: yadakchi-catalog-tests:local
+    profiles: ["test"]
+    networks: [yadakchi]
+    mem_limit: 3g
+    environment:
+      <<: *catalog-env
+      DATABASE_URL: postgres://catalog:catalog@catalog-test-db:5432/yadakchi_catalog
+      REDIS_URL: redis://localhost:6379/4
+      CATALOG_EVENT_TRANSPORT: memory
+      LOG_FORMAT: plain
+      LOG_LEVEL: WARNING
+    depends_on:
+      catalog-test-db:
+        condition: service_healthy
+    command: ["pytest"]
+
+networks:
+  yadakchi:
+    name: yadakchi
+    external: true
