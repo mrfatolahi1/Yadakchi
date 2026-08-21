@@ -1,0 +1,14 @@
+# ---------------------------------------------------------------------------
+# Optional: the locally loaded 384-dimension multilingual embedder.
+#
+#   pip install -r requirements-embed.txt
+#   docker build --build-arg WITH_LOCAL_EMBEDDINGS=1 .
+#
+# Needed only when AI_EMBED_BACKEND=local, which is the default for the
+# `local`, `domestic` and `external` backends — i.e. production. It is NOT
+# needed for AI_BACKEND=stub, so CI and the offline test suite never pull it.
+# The weights are downloaded once, at image build time, into
+# /opt/models so the container needs no network at boot.
+# ---------------------------------------------------------------------------
+-r requirements.txt
+sentence-transformers==4.1.0

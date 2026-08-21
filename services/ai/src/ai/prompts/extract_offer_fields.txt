@@ -1,0 +1,65 @@
+Extract the fields below from one Iranian spare-part listing title.
+
+Answer with exactly this JSON object:
+
+{
+  "fields": {
+    "brand": string or null,
+    "part_number": string or null,
+    "part_type": string or null,
+    "authenticity_claim": "genuine" | "oem" | "aftermarket" | "used" | "refurbished" or null,
+    "pack_quantity": integer or null,
+    "vehicle_hints": array of strings or null
+  },
+  "confidences": {
+    "brand": number between 0 and 1,
+    "part_number": number between 0 and 1,
+    "part_type": number between 0 and 1,
+    "authenticity_claim": number between 0 and 1,
+    "pack_quantity": number between 0 and 1,
+    "vehicle_hints": number between 0 and 1
+  }
+}
+
+Field rules:
+
+- brand — the manufacturer or the brand the seller names, written as it appears
+  (ایساکو, سایپا یدک, بوش, کروز, والئو, تخت جمشید, ...). A shop name is not a
+  brand. Null when the title names no brand.
+- part_number — the manufacturer or OEM code exactly as printed, including its
+  letters and separators. Never a phone number, never a price, never a vehicle
+  model number such as 206, 405, 131 or EF7.
+- part_type — what the part is, in Persian, as written.
+- authenticity_claim — genuine (اصلی، اصل، ژنوین، اورجینال), oem (شرکتی، OEM),
+  aftermarket (متفرقه، طرح، بازار، تایوانی، چینی), used (استوک، کارکرده،
+  دست دوم), refurbished (بازسازی شده، تعمیری). Null when the title is silent.
+- pack_quantity — how many units the package holds: جفت is 2, «بسته ۴ عددی» is
+  4. Null unless the title states it.
+- vehicle_hints — every vehicle the title mentions, as written, one entry each.
+  Keep the trim with the model: «پژو 206 تیپ 5», not «206» and «تیپ 5».
+
+A field the text does not state is null, and its confidence is 0.
+
+Examples.
+
+TEXT: فیلتر روغن پژو 206 تیپ 5 اصلی ایساکو کد 1109AY
+{"fields": {"brand": "ایساکو", "part_number": "1109AY", "part_type": "فیلتر روغن", "authenticity_claim": "genuine", "pack_quantity": null, "vehicle_hints": ["پژو 206 تیپ 5"]}, "confidences": {"brand": 0.95, "part_number": 0.95, "part_type": 0.95, "authenticity_claim": 0.9, "pack_quantity": 0.0, "vehicle_hints": 0.9}}
+
+TEXT: لنت ترمز جلو پراید طرح متفرقه برند تخت جمشید
+{"fields": {"brand": "تخت جمشید", "part_number": null, "part_type": "لنت ترمز جلو", "authenticity_claim": "aftermarket", "pack_quantity": null, "vehicle_hints": ["پراید"]}, "confidences": {"brand": 0.9, "part_number": 0.0, "part_type": 0.95, "authenticity_claim": 0.85, "pack_quantity": 0.0, "vehicle_hints": 0.9}}
+
+TEXT: واشر سرسیلندر پراید و تیبا و سایپا 131 اصلی سایپا یدک
+{"fields": {"brand": "سایپا یدک", "part_number": null, "part_type": "واشر سرسیلندر", "authenticity_claim": "genuine", "pack_quantity": null, "vehicle_hints": ["پراید", "تیبا", "سایپا 131"]}, "confidences": {"brand": 0.9, "part_number": 0.0, "part_type": 0.95, "authenticity_claim": 0.9, "pack_quantity": 0.0, "vehicle_hints": 0.85}}
+
+TEXT: کمک فنر جلو پژو 405 کایابا اصل ژاپن تماس 09123456789
+{"fields": {"brand": "کایابا", "part_number": null, "part_type": "کمک فنر جلو", "authenticity_claim": "genuine", "pack_quantity": null, "vehicle_hints": ["پژو 405"]}, "confidences": {"brand": 0.9, "part_number": 0.0, "part_type": 0.95, "authenticity_claim": 0.85, "pack_quantity": 0.0, "vehicle_hints": 0.9}}
+
+TEXT: تسمه تایم پژو ۲۰۶ تیپ ۲ گیتس کد 5559XS قیمت ۹۵۰,۰۰۰ تومان
+{"fields": {"brand": "گیتس", "part_number": "5559XS", "part_type": "تسمه تایم", "authenticity_claim": null, "pack_quantity": null, "vehicle_hints": ["پژو 206 تیپ 2"]}, "confidences": {"brand": 0.9, "part_number": 0.9, "part_type": 0.95, "authenticity_claim": 0.0, "pack_quantity": 0.0, "vehicle_hints": 0.9}}
+
+TEXT: سیبک طبق پایین پراید بسته ۲ عددی
+{"fields": {"brand": null, "part_number": null, "part_type": "سیبک طبق پایین", "authenticity_claim": null, "pack_quantity": 2, "vehicle_hints": ["پراید"]}, "confidences": {"brand": 0.0, "part_number": 0.0, "part_type": 0.9, "authenticity_claim": 0.0, "pack_quantity": 0.9, "vehicle_hints": 0.9}}
+
+Now do the same for this text.
+
+{{HINT}}TEXT: {{TEXT}}

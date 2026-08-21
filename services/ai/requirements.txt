@@ -1,0 +1,20 @@
+# ---------------------------------------------------------------------------
+# ai — runtime dependencies.
+#
+# Deliberately small. The default backend is `stub`, which needs no network
+# and no model weights, so a clone of this repo installs in seconds and the
+# whole test suite runs offline.
+#
+# The locally loaded sentence-transformer embedder (AI_EMBED_BACKEND=local,
+# the production default for the non-stub backends) lives in
+# requirements-embed.txt because torch is ~2 GB and nothing else here needs
+# it. See README.md → "Embeddings".
+# ---------------------------------------------------------------------------
+fastapi==0.115.12
+uvicorn[standard]==0.34.2
+pydantic==2.11.4
+pydantic-settings==2.9.1
+httpx==0.28.1
+redis==6.1.0
+prometheus-client==0.21.1
+sentry-sdk==2.29.1

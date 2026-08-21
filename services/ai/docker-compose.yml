@@ -1,0 +1,90 @@
+# ===========================================================================
+# ai — this service, alone.
+#
+#   make up          # redis + ai, nothing else
+#   make docker-test # the suite, inside the image
+#   make down
+#
+# The shared infrastructure is included, not copied: `platform/` owns it and
+# this file must never fork it. Only Redis is actually started, because this
+# service has no database, no Kafka topics and no object storage — bringing up
+# Postgres to run an inference service would be a lie about its dependencies.
+#
+# The project name is `yadakchi`, the same as the root compose file, so a Redis
+# already started by `make infra-up` at the root is reused rather than fought
+# over.
+#
+# Every command needs the platform environment file:
+#   docker compose --env-file ../../platform/.env -f docker-compose.yml up -d ai
+# ===========================================================================
+
+name: yadakchi
+
+include:
+  - path: ../../platform/docker-compose.infra.yml
+
+services:
+  ai:
+    build:
+      context: .
+      # Explicit: the image we ship is the runtime stage, never the test one.
+      target: runtime
+      args:
+        # 1 installs sentence-transformers and bakes the 384-dimension model
+        # into the image. 0 (the default) keeps the image small and the
+        # embeddings stubbed — see README.md → Embeddings.
+        WITH_LOCAL_EMBEDDINGS: ${AI_WITH_LOCAL_EMBEDDINGS:-0}
+    container_name: yadakchi-ai
+    restart: unless-stopped
+    mem_limit: 8g
+    environment:
+      TZ: UTC
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      LOG_FORMAT: ${LOG_FORMAT:-json}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-local}
+      # Redis db 8 — cache and the shared daily budget counter. Nothing else
+      # from the platform reaches this container: no database URL, no MinIO
+      # credentials, no Typesense key.
+      REDIS_URL: ${AI_REDIS_URL}
+      # stub is the default on purpose: the system must run offline.
+      AI_BACKEND: ${AI_BACKEND:-stub}
+      AI_BASE_URL: ${AI_BASE_URL_PROVIDER:-}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_MODEL: ${AI_MODEL:-qwen2.5:7b-instruct}
+      AI_EMBED_BACKEND: ${AI_EMBED_BACKEND:-}
+      AI_EMBED_MODEL: ${AI_EMBED_MODEL:-sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2}
+      AI_DAILY_BUDGET: ${AI_DAILY_BUDGET:-3600}
+      AI_MAX_CONCURRENCY: ${AI_MAX_CONCURRENCY:-8}
+      AI_TIMEOUT_SECONDS: ${AI_TIMEOUT_SECONDS:-60}
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      # Loopback only. Inside the network the peers reach it as http://ai:8000,
+      # which is what platform/.env's AI_BASE_URL already says.
+      - "127.0.0.1:${AI_PORT:-8003}:8000"
+    networks: [yadakchi]
+    logging:
+      driver: json-file
+      options: { max-size: "20m", max-file: "5" }
+
+  # The suite, in the image, with no network and no Redis. Behind a profile so
+  # `up` never starts it.
+  ai-tests:
+    profiles: [test]
+    build:
+      context: .
+      target: test
+    container_name: yadakchi-ai-tests
+    environment:
+      TZ: UTC
+      LOG_FORMAT: text
+      LOG_LEVEL: WARNING
+      AI_BACKEND: stub
+    networks: [yadakchi]
+
+networks:
+  yadakchi:
+    name: yadakchi
+    external: true

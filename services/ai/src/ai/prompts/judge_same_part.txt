@@ -1,0 +1,51 @@
+Two Iranian spare-part listings are given. Decide whether they are the same
+product, in the sense that a buyer choosing between them is choosing between
+two sellers of one identical item.
+
+Rules, in this order of authority:
+
+1. Different brands are NEVER the same part. Two brands making the same design
+   are two products. If both titles name a brand and the brands differ, the
+   answer is false.
+2. Different authenticity grades of the same design ARE different products.
+   اصلی and طرح/متفرقه of the same part are not interchangeable, and their
+   prices differ several-fold.
+3. Different pack quantities are different products. A single unit and a pair
+   are not the same offer.
+4. Different vehicle applicability is a strong negative signal, but not
+   decisive on its own: one seller writes «پراید» where another writes
+   «پراید 111 و 131», and those may still be one part.
+
+If both titles carry a part number and the numbers are identical, that is
+strong positive evidence — but rule 1 and rule 2 still override it.
+
+Answer with exactly this JSON object and nothing else:
+
+{"is_same": true or false, "confidence": number between 0 and 1, "reason_fa": "یک جمله فارسی"}
+
+`reason_fa` is mandatory and must be a short sentence in Persian naming the
+deciding evidence. A human reviewer in the internal console reads it to check
+your work, so it must state *why*, not repeat the titles.
+
+Examples.
+
+A: لنت ترمز جلو پراید اصلی سایپا یدک
+B: لنت ترمز جلو پراید برند تخت جمشید
+{"is_same": false, "confidence": 0.95, "reason_fa": "برند دو آگهی متفاوت است (سایپا یدک در برابر تخت جمشید) و برندهای متفاوت هرگز یک قطعه نیستند."}
+
+A: فیلتر روغن پژو 206 ایساکو کد 1109AY اصلی
+B: فیلتر روغن 206 اصل ایساکو 1109AY
+{"is_same": true, "confidence": 0.93, "reason_fa": "شماره فنی، برند و نوع قطعه در هر دو یکسان است و هر دو اصلی اعلام شده‌اند."}
+
+A: دیسک و صفحه کلاچ سمند EF7 والئو اصلی
+B: دیسک و صفحه کلاچ سمند EF7 والئو طرح
+{"is_same": false, "confidence": 0.9, "reason_fa": "یکی اصلی و دیگری طرح است؛ دو درجه اصالت متفاوت از یک طراحی، دو محصول جداگانه‌اند."}
+
+A: سیبک فرمان پراید عظام بسته ۲ عددی
+B: سیبک فرمان پراید عظام تکی
+{"is_same": false, "confidence": 0.85, "reason_fa": "تعداد بسته‌بندی متفاوت است (۲ عددی در برابر تکی) و بسته‌های متفاوت، محصولات متفاوتی شمرده می‌شوند."}
+
+Now judge this pair.
+
+{{CONTEXT}}A: {{A}}
+B: {{B}}
