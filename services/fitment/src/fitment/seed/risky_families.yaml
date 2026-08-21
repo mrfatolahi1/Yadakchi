@@ -1,0 +1,18 @@
+risky_families:
+  - {part_type: headlight_left, required_granularity: year, note_fa: "چراغ جلو بین سال‌های تولید و نسخه‌های فیس‌لیفت متفاوت است؛ سال ساخت را بررسی کنید."}
+  - {part_type: headlight_right, required_granularity: year, note_fa: "چراغ جلو بین سال‌های تولید و نسخه‌های فیس‌لیفت متفاوت است؛ سال ساخت را بررسی کنید."}
+  - {part_type: taillight_left, required_granularity: year, note_fa: "چراغ عقب ممکن است با سال ساخت خودرو تغییر کند؛ پیش از خرید تطبیق دهید."}
+  - {part_type: taillight_right, required_granularity: year, note_fa: "چراغ عقب ممکن است با سال ساخت خودرو تغییر کند؛ پیش از خرید تطبیق دهید."}
+  - {part_type: mirror_left, required_granularity: year, note_fa: "آینه در نسخه‌های مختلف بدنه و سال ساخت تفاوت دارد."}
+  - {part_type: mirror_right, required_granularity: year, note_fa: "آینه در نسخه‌های مختلف بدنه و سال ساخت تفاوت دارد."}
+  - {part_type: head_gasket, required_granularity: engine, note_fa: "واشر سرسیلندر باید با کد موتور خودرو تطبیق داده شود."}
+  - {part_type: piston, required_granularity: engine, note_fa: "پیستون به کد و مشخصات موتور وابسته است."}
+  - {part_type: engine_valve, required_granularity: engine, note_fa: "سوپاپ باید با کد موتور تطبیق داده شود."}
+  - {part_type: timing_belt, required_granularity: engine, note_fa: "تسمه تایم باید با کد موتور خودرو تطبیق داده شود."}
+  - {part_type: crank_sensor, required_granularity: engine_or_year, note_fa: "سنسور دور موتور ممکن است با موتور یا سال ساخت تغییر کند."}
+  - {part_type: cam_sensor, required_granularity: engine_or_year, note_fa: "سنسور میل‌سوپاپ ممکن است با موتور یا سال ساخت تغییر کند."}
+  - {part_type: oxygen_sensor, required_granularity: engine_or_year, note_fa: "سنسور اکسیژن را با موتور و سال ساخت تطبیق دهید."}
+  - {part_type: abs_sensor, required_granularity: engine_or_year, note_fa: "سنسور ABS ممکن است در میانه تولید تغییر کرده باشد."}
+  - {part_type: ecu, required_granularity: year_and_engine, note_fa: "ECU باید هم با سال ساخت و هم با کد موتور تطبیق داده شود."}
+  - {part_type: wiring_harness, required_granularity: year_and_engine, note_fa: "دسته‌سیم باید هم با سال ساخت و هم با کد موتور تطبیق داده شود."}
+  - {part_type: windshield, required_granularity: year, note_fa: "شیشه جلو ممکن است با سال ساخت و نسخه بدنه تفاوت داشته باشد."}

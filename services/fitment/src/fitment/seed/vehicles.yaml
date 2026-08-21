@@ -1,0 +1,264 @@
+# Production ranges are broad Gregorian-year assumptions for the Iranian market.
+# Uncertain end years and multi-engine model rows are intentionally null.
+vehicles:
+  - slug: peugeot-206
+    brand: Peugeot
+    model: "206"
+    trim: null
+    year_from: 2001
+    year_to: null
+    engine_code: null
+    display_name_fa: "پژو ۲۰۶"
+    aliases: ["پژو 206", "پژو۲۰۶", "پژو ۲۰۶", "206", "۲۰۶", "peugeot 206", "pejo 206", "پجو 206", "206 هاچبک", "۲۰۶ هاچ بک"]
+  - slug: peugeot-206-sd
+    brand: Peugeot
+    model: "206 SD"
+    trim: null
+    year_from: 2007
+    year_to: null
+    engine_code: null
+    display_name_fa: "پژو ۲۰۶ صندوق‌دار"
+    aliases: ["پژو 206 صندوق دار", "پژو ۲۰۶ صندوق‌دار", "پژو۲۰۶ صندوق دار", "206 sd", "۲۰۶ sd", "peugeot 206 sd", "206 sedan", "۲۰۶ صندوقدار", "206 صندوقدار"]
+  - slug: peugeot-206-type-2
+    brand: Peugeot
+    model: "206"
+    trim: "Type 2"
+    year_from: 2001
+    year_to: null
+    engine_code: TU3A
+    display_name_fa: "پژو ۲۰۶ تیپ ۲"
+    aliases: ["پژو 206 تیپ 2", "پژو۲۰۶ تیپ۲", "پژو ۲۰۶ تیپ ۲", "206 type 2", "206 type2", "peugeot 206 type 2", "206 تیپ 2", "۲۰۶ تیپ۲", "تیپ 2 206", "تیپ۲ ۲۰۶"]
+  - slug: peugeot-206-type-3
+    brand: Peugeot
+    model: "206"
+    trim: "Type 3"
+    year_from: 2002
+    year_to: 2013
+    engine_code: TU3A
+    display_name_fa: "پژو ۲۰۶ تیپ ۳"
+    aliases: ["پژو 206 تیپ 3", "پژو۲۰۶ تیپ۳", "پژو ۲۰۶ تیپ ۳", "206 type 3", "206 type3", "peugeot 206 type 3", "206 تیپ 3", "۲۰۶ تیپ۳", "تیپ 3 206", "تیپ۳ ۲۰۶"]
+  - slug: peugeot-206-type-5
+    brand: Peugeot
+    model: "206"
+    trim: "Type 5"
+    year_from: 2002
+    year_to: null
+    engine_code: TU5JP4
+    display_name_fa: "پژو ۲۰۶ تیپ ۵"
+    aliases: ["پژو 206 تیپ 5", "پژو۲۰۶ تیپ۵", "پژو ۲۰۶ تیپ ۵", "206 type 5", "206 type5", "peugeot 206 type 5", "206 تیپ 5", "۲۰۶ تیپ۵", "تیپ 5 206", "تیپ۵ ۲۰۶", "پجو 206 تیپ 5"]
+  - slug: peugeot-206-type-6
+    brand: Peugeot
+    model: "206"
+    trim: "Type 6"
+    year_from: 2005
+    year_to: 2012
+    engine_code: TU5JP4
+    display_name_fa: "پژو ۲۰۶ تیپ ۶"
+    aliases: ["پژو 206 تیپ 6", "پژو۲۰۶ تیپ۶", "پژو ۲۰۶ تیپ ۶", "206 type 6", "206 type6", "peugeot 206 type 6", "206 تیپ 6", "۲۰۶ تیپ۶", "تیپ 6 206", "تیپ۶ ۲۰۶", "206 اتومات تیپ 6"]
+  - slug: peugeot-206-sd-v8
+    brand: Peugeot
+    model: "206 SD"
+    trim: V8
+    year_from: 2007
+    year_to: null
+    engine_code: TU5JP4
+    display_name_fa: "پژو ۲۰۶ صندوق‌دار V8"
+    aliases: ["پژو 206 صندوق دار v8", "پژو ۲۰۶ صندوق‌دار وی ۸", "206 sd v8", "206 v8", "۲۰۶ v8", "206 صندوقدار v8", "۲۰۶ صندوق دار وی8", "peugeot 206 sedan v8"]
+  - slug: peugeot-206-sd-v9
+    brand: Peugeot
+    model: "206 SD"
+    trim: V9
+    year_from: 2007
+    year_to: 2012
+    engine_code: TU5JP4
+    display_name_fa: "پژو ۲۰۶ صندوق‌دار V9"
+    aliases: ["پژو 206 صندوق دار v9", "پژو ۲۰۶ صندوق‌دار وی ۹", "206 sd v9", "206 v9", "۲۰۶ v9", "206 صندوقدار v9", "۲۰۶ صندوق دار وی9", "peugeot 206 sedan v9"]
+  - slug: peugeot-206-sd-v20
+    brand: Peugeot
+    model: "206 SD"
+    trim: V20
+    year_from: 2007
+    year_to: 2012
+    engine_code: TU3A
+    display_name_fa: "پژو ۲۰۶ صندوق‌دار V20"
+    aliases: ["پژو 206 صندوق دار v20", "پژو ۲۰۶ صندوق‌دار وی ۲۰", "206 sd v20", "206 v20", "۲۰۶ v20", "206 صندوقدار v20", "۲۰۶ صندوق دار وی20", "peugeot 206 sedan v20"]
+  - slug: pride
+    brand: Saipa
+    model: Pride
+    trim: null
+    year_from: 1993
+    year_to: 2020
+    engine_code: null
+    display_name_fa: "پراید"
+    aliases: ["پراید", "پرايد", "pride", "پراید سایپا", "saipa pride"]
+  - slug: pride-111
+    brand: Saipa
+    model: Pride
+    trim: "111"
+    year_from: 2010
+    year_to: 2020
+    engine_code: M13
+    display_name_fa: "پراید ۱۱۱"
+    aliases: ["پراید 111", "پراید۱۱۱", "پراید ۱۱۱", "pride 111", "saipa 111", "سایپا 111", "پراید هاچبک 111", "111 پراید"]
+  - slug: pride-131
+    brand: Saipa
+    model: Pride
+    trim: "131"
+    year_from: 2007
+    year_to: 2020
+    engine_code: M13
+    display_name_fa: "پراید ۱۳۱"
+    aliases: ["پراید 131", "پراید۱۳۱", "پراید ۱۳۱", "pride 131", "saipa 131", "سایپا 131", "پراید صبا 131", "131 پراید"]
+  - slug: pride-132
+    brand: Saipa
+    model: Pride
+    trim: "132"
+    year_from: 2007
+    year_to: 2019
+    engine_code: M13
+    display_name_fa: "پراید ۱۳۲"
+    aliases: ["پراید 132", "پراید۱۳۲", "پراید ۱۳۲", "pride 132", "saipa 132", "سایپا 132", "132 پراید"]
+  - slug: pride-141
+    brand: Saipa
+    model: Pride
+    trim: "141"
+    year_from: 2003
+    year_to: 2014
+    engine_code: M13
+    display_name_fa: "پراید ۱۴۱"
+    aliases: ["پراید 141", "پراید۱۴۱", "پراید ۱۴۱", "pride 141", "saipa 141", "سایپا 141", "141 پراید"]
+  - slug: pride-151
+    brand: Saipa
+    model: Pride
+    trim: "151"
+    year_from: 2014
+    year_to: null
+    engine_code: M13
+    display_name_fa: "پراید ۱۵۱"
+    aliases: ["پراید 151", "پراید۱۵۱", "پراید ۱۵۱", "pride 151", "saipa 151", "سایپا 151", "پراید وانت", "وانت پراید", "151 پراید"]
+  - slug: tiba
+    brand: Saipa
+    model: Tiba
+    trim: null
+    year_from: 2009
+    year_to: 2022
+    engine_code: M15
+    display_name_fa: "تیبا"
+    aliases: ["تیبا", "tiba", "تیبا سایپا", "saipa tiba", "طيبا"]
+  - slug: tiba-1
+    brand: Saipa
+    model: Tiba
+    trim: "1"
+    year_from: 2009
+    year_to: 2022
+    engine_code: M15
+    display_name_fa: "تیبا ۱"
+    aliases: ["تیبا 1", "تیبا۱", "تیبا ۱", "tiba 1", "tiba sedan", "تیبا صندوق دار", "تیبا صندوق‌دار", "تیبا صندوقدار", "تیبا یک"]
+  - slug: tiba-2
+    brand: Saipa
+    model: Tiba
+    trim: "2"
+    year_from: 2013
+    year_to: 2022
+    engine_code: M15
+    display_name_fa: "تیبا ۲"
+    aliases: ["تیبا 2", "تیبا۲", "تیبا ۲", "tiba 2", "tiba2", "تیبا هاچبک", "تیبا هاچ بک", "تیبا دو", "tiba hatchback"]
+  - slug: samand
+    brand: Iran Khodro
+    model: Samand
+    trim: null
+    year_from: 2002
+    year_to: null
+    engine_code: null
+    display_name_fa: "سمند"
+    aliases: ["سمند", "samand", "سمند ایران خودرو", "iran khodro samand", "سمند ملی"]
+  - slug: samand-lx
+    brand: Iran Khodro
+    model: Samand
+    trim: LX
+    year_from: 2004
+    year_to: null
+    engine_code: null
+    display_name_fa: "سمند LX"
+    aliases: ["سمند lx", "سمند ال ایکس", "سمند ال‌ایکس", "samand lx", "samand elx", "ال ایکس سمند", "سمند معمولی lx"]
+  - slug: samand-ef7
+    brand: Iran Khodro
+    model: Samand
+    trim: EF7
+    year_from: 2009
+    year_to: null
+    engine_code: EF7
+    display_name_fa: "سمند EF7"
+    aliases: ["سمند ef7", "سمند ef 7", "سمند ای اف 7", "سمند ای‌اف۷", "samand ef7", "ef7 سمند", "سمند موتور ملی"]
+  - slug: samand-soren
+    brand: Iran Khodro
+    model: Samand
+    trim: Soren
+    year_from: 2007
+    year_to: null
+    engine_code: null
+    display_name_fa: "سمند سورن"
+    aliases: ["سمند سورن", "سورن", "soren", "samand soren", "سورن ef7", "سورن ای اف سون", "سورن پلاس"]
+  - slug: peugeot-pars
+    brand: Peugeot
+    model: Pars
+    trim: null
+    year_from: 2000
+    year_to: null
+    engine_code: null
+    display_name_fa: "پژو پارس"
+    aliases: ["پژو پارس", "پژوپارس", "پارس", "peugeot pars", "pejo pars", "پرشیا", "پژو پرشیا", "pars"]
+  - slug: peugeot-pars-elx
+    brand: Peugeot
+    model: Pars
+    trim: ELX
+    year_from: 2002
+    year_to: null
+    engine_code: null
+    display_name_fa: "پژو پارس ELX"
+    aliases: ["پژو پارس elx", "پژوپارس elx", "پارس elx", "پارس ای ال ایکس", "پارس ای‌ال‌ایکس", "peugeot pars elx", "پرشیا elx"]
+  - slug: peugeot-pars-tu5
+    brand: Peugeot
+    model: Pars
+    trim: TU5
+    year_from: 2011
+    year_to: null
+    engine_code: TU5JP4
+    display_name_fa: "پژو پارس TU5"
+    aliases: ["پژو پارس tu5", "پژوپارس tu5", "پژوپارس تی یو 5", "پژوپارس تی‌یو۵", "پارس tu5", "پارس تی یو 5", "پارس تی‌یو۵", "peugeot pars tu5", "پرشیا tu5", "پارس ال ایکس tu5"]
+  - slug: peugeot-405
+    brand: Peugeot
+    model: "405"
+    trim: null
+    year_from: 1990
+    year_to: null
+    engine_code: null
+    display_name_fa: "پژو ۴۰۵"
+    aliases: ["پژو 405", "پژو۴۰۵", "پژو ۴۰۵", "405", "۴۰۵", "peugeot 405", "pejo 405", "پجو 405"]
+  - slug: peugeot-405-glx
+    brand: Peugeot
+    model: "405"
+    trim: GLX
+    year_from: 1990
+    year_to: null
+    engine_code: XU7
+    display_name_fa: "پژو ۴۰۵ GLX"
+    aliases: ["پژو 405 glx", "پژو۴۰۵ glx", "پژو ۴۰۵ جی ال ایکس", "405 glx", "۴۰۵ glx", "peugeot 405 glx", "جی ال ایکس 405"]
+  - slug: peugeot-405-slx
+    brand: Peugeot
+    model: "405"
+    trim: SLX
+    year_from: 2009
+    year_to: null
+    engine_code: TU5JP4
+    display_name_fa: "پژو ۴۰۵ SLX"
+    aliases: ["پژو 405 slx", "پژو۴۰۵ slx", "پژو ۴۰۵ اس ال ایکس", "405 اس ال ایکس", "۴۰۵ اس‌ال‌ایکس", "405 slx", "۴۰۵ slx", "peugeot 405 slx", "اس ال ایکس 405", "405 tu5"]
+  - slug: peugeot-405-gl
+    brand: Peugeot
+    model: "405"
+    trim: GL
+    year_from: 1990
+    year_to: 2002
+    engine_code: XU7
+    display_name_fa: "پژو ۴۰۵ GL"
+    aliases: ["پژو 405 gl", "پژو۴۰۵ gl", "پژو ۴۰۵ جی ال", "405 gl", "۴۰۵ gl", "peugeot 405 gl", "جی ال 405"]

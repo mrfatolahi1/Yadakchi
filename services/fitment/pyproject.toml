@@ -1,0 +1,28 @@
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "DJ"]
+ignore = ["DJ001"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/fitment/migrations/*.py" = ["E501"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "fitment.settings"
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.mypy]
+python_version = "3.12"
+mypy_path = "src"
+plugins = ["mypy_django_plugin.main"]
+strict = true
+warn_unused_ignores = true
+exclude = ["src/fitment/migrations/"]
+
+[tool.django-stubs]
+django_settings_module = "fitment.settings"

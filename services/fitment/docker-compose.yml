@@ -1,0 +1,62 @@
+x-fitment-build: &fitment-build ${FITMENT_BUILD_CONTEXT:-.}
+
+networks:
+  default:
+    name: ${YADAKCHI_NETWORK:-yadakchi}
+    external: true
+
+services:
+  fitment-init:
+    build: *fitment-build
+    environment: &fitment-environment
+      DATABASE_URL: postgresql://fitment:${FITMENT_DB_PASSWORD:?FITMENT_DB_PASSWORD is required}@postgres:5432/yadakchi_fitment
+      REDIS_URL: redis://:${REDIS_PASSWORD:?REDIS_PASSWORD is required}@redis:6379/3
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-false}
+      FITMENT_COVERAGE_MIN_OFFERS: ${FITMENT_COVERAGE_MIN_OFFERS:-200}
+    command: sh -c "python manage.py migrate --noinput && python manage.py seed_vehicles"
+    restart: on-failure
+
+  fitment:
+    build: *fitment-build
+    environment: *fitment-environment
+    command: gunicorn fitment.wsgi:application --bind 0.0.0.0:8000 --workers 2
+    depends_on:
+      fitment-init:
+        condition: service_completed_successfully
+    ports:
+      - "8060:8000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/metrics')"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+
+  fitment-offers-consumer:
+    build: *fitment-build
+    environment: *fitment-environment
+    command: python manage.py consume_offers
+    depends_on:
+      fitment-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  fitment-decisions-consumer:
+    build: *fitment-build
+    environment: *fitment-environment
+    command: python manage.py consume_decisions
+    depends_on:
+      fitment-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  fitment-outbox:
+    build: *fitment-build
+    environment: *fitment-environment
+    command: python manage.py publish_outbox --follow
+    depends_on:
+      fitment-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
