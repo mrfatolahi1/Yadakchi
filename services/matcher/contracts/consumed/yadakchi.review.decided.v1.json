@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://yadakchi.ir/schemas/yadakchi.review.decided.v1.json",
   "title": "yadakchi.review.decided.v1",
-  "description": "A human decision. The permanent record of human judgment.\n\nProducers: ops. Consumers: matcher, fitment.\nKafka message key: request_uid — it must be set; compaction and partition ordering depend on it.\nCleanup: compact, retention infinite — human decisions are permanent.\n\nThis file validates a whole Kafka message body: the shared envelope from docs/specs/02-EVENT-CONTRACTS.md plus this topic's payload. Unknown fields are ignored, never rejected, at both levels — that is what lets a producer add an optional field without breaking a consumer.",
+  "description": "A human decision. The permanent record of human judgment.\n\nProducers: ops. Consumers: matcher, fitment, search.\nKafka message key: request_uid — it must be set; compaction and partition ordering depend on it.\nCleanup: compact, retention infinite — human decisions are permanent.\n\nThis file validates a whole Kafka message body: the shared envelope from docs/specs/02-EVENT-CONTRACTS.md plus this topic's payload. Unknown fields are ignored, never rejected, at both levels — that is what lets a producer add an optional field without breaking a consumer.",
   "type": "object",
   "additionalProperties": true,
   "required": [

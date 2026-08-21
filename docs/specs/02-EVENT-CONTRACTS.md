@@ -100,7 +100,7 @@ The full page lives in MinIO, not in Kafka. The fragment is inline because `enri
 **`fragment_hash` hashes the fragment, not the page.** `crawler` keeps a second hash, `page_hash`, over the full fetched page bytes; that one names the archive object and drives archive deduplication, and it **stays inside `crawler`** — it is not on the wire. The two values are different, and conflating them silently breaks change detection: a page whose surrounding markup changed but whose listing did not must not look like a changed listing. Downstream, `fragment_hash` is the only hash that means "this listing changed".
 
 ### `yadakchi.offers.enriched.v1`
-**enricher → fitment, matcher.** Key: `offer_uid`
+**enricher → fitment, matcher, catalog.** Key: `offer_uid`
 
 ```
 offer_uid              string
@@ -168,7 +168,7 @@ updated_at       timestamp
 ```
 
 ### `yadakchi.crossrefs.changed.v1`  *(compacted)*
-**fitment → catalog, search.** Key: `{code_a}|{code_b}` with `code_a < code_b`
+**fitment → catalog, search, matcher.** Key: `{code_a}|{code_b}` with `code_a < code_b`
 
 ```
 code_a, code_b     string
@@ -268,7 +268,7 @@ requested_at  timestamp
 `evidence` must be **self-sufficient**. `ops` must never need to query another service to render the review screen.
 
 ### `yadakchi.review.decided.v1`  *(compacted, infinite retention)*
-**ops → matcher, fitment.** Key: `request_uid`
+**ops → matcher, fitment, search.** Key: `request_uid`
 
 ```
 request_uid  string

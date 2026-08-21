@@ -57,7 +57,11 @@ topics:
     key: offer_uid
     schema_owner: enricher
     producers: [enricher]
-    consumers: [fitment, matcher]
+    # catalog reads this too, and cannot exist without it: clusters.changed and
+    # offers.fitted carry only offer_uids, so this is the sole source of the
+    # title, price, stock, seller and url that products.changed must publish.
+    # 08-CATALOG.md declares the edge; the registry had omitted it.
+    consumers: [fitment, matcher, catalog]
     dlq: true
 
   - name: yadakchi.offers.fitted.v1
@@ -87,7 +91,10 @@ topics:
     key: "{code_a}|{code_b}"
     schema_owner: fitment
     producers: [fitment]
-    consumers: [catalog, search]
+    # matcher reads these too: it keeps a cross-reference read model, blocks on
+    # crossref'd part numbers within a brand, and scores on crossref match.
+    # 07-MATCHER.md declares the edge; the registry had omitted it.
+    consumers: [catalog, search, matcher]
     dlq: false
 
   - name: yadakchi.clusters.changed.v1
@@ -156,5 +163,7 @@ topics:
     key: request_uid
     schema_owner: ops
     producers: [ops]
-    consumers: [matcher, fitment]
+    # search reads approved synonym decisions from here — 09-SEARCH.md and
+    # 11-OPS.md both declare the edge; the registry had omitted it.
+    consumers: [matcher, fitment, search]
     dlq: false

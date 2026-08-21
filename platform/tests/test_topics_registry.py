@@ -22,7 +22,14 @@ CREATE_TOPICS_SH = REPO_ROOT / "platform" / "kafka" / "create_topics.sh"
 # name -> (partitions, cleanup, retention_ms, producers, consumers)
 EXPECTED: dict[str, tuple[int, str, int, set[str], set[str]]] = {
     "yadakchi.listings.observed.v2": (6, "delete", 90 * DAY_MS, {"crawler"}, {"enricher"}),
-    "yadakchi.offers.enriched.v1": (6, "delete", 90 * DAY_MS, {"enricher"}, {"fitment", "matcher"}),
+    # catalog too: this is its only source of title, price, stock, seller and url.
+    "yadakchi.offers.enriched.v1": (
+        6,
+        "delete",
+        90 * DAY_MS,
+        {"enricher"},
+        {"fitment", "matcher", "catalog"},
+    ),
     "yadakchi.offers.fitted.v1": (6, "delete", 90 * DAY_MS, {"fitment"}, {"matcher", "catalog"}),
     "yadakchi.vehicles.changed.v1": (
         1,
@@ -31,7 +38,14 @@ EXPECTED: dict[str, tuple[int, str, int, set[str], set[str]]] = {
         {"fitment"},
         {"matcher", "catalog", "search", "web"},
     ),
-    "yadakchi.crossrefs.changed.v1": (3, "compact", -1, {"fitment"}, {"catalog", "search"}),
+    # matcher too: crossrefs are a blocking channel and a scoring feature.
+    "yadakchi.crossrefs.changed.v1": (
+        3,
+        "compact",
+        -1,
+        {"fitment"},
+        {"catalog", "search", "matcher"},
+    ),
     "yadakchi.clusters.changed.v1": (6, "delete", 90 * DAY_MS, {"matcher"}, {"catalog"}),
     "yadakchi.products.changed.v1": (6, "compact", -1, {"catalog"}, {"search", "ops", "web"}),
     "yadakchi.sellers.changed.v1": (1, "compact", -1, {"catalog"}, {"billing", "ops"}),
@@ -54,7 +68,8 @@ EXPECTED: dict[str, tuple[int, str, int, set[str], set[str]]] = {
         {"matcher", "crawler", "fitment", "enricher", "billing"},
         {"ops"},
     ),
-    "yadakchi.review.decided.v1": (1, "compact", -1, {"ops"}, {"matcher", "fitment"}),
+    # search too: approved synonyms reach query expansion only through here.
+    "yadakchi.review.decided.v1": (1, "compact", -1, {"ops"}, {"matcher", "fitment", "search"}),
 }
 
 
@@ -166,3 +181,72 @@ def test_shell_plan_carries_the_declared_settings(registry: _registry.Registry) 
             dlq_line = lines[topic.dlq_name]
             assert f"partitions={topic.partitions}" in dlq_line
             assert "cleanup.policy=delete" in dlq_line
+
+
+# ---------------------------------------------------------------------------
+# The registry against the service specs.
+#
+# topics.yml and each service's "How it connects" table are two independent
+# statements of the same routing, and nothing compared them. Three services
+# were blocked by the gap in turn: crawler (missing clicks.recorded), catalog
+# (missing offers.enriched — which left it with no source for any product
+# field at all) and search (missing review.decided). Each cost an agent a full
+# stop-and-report cycle before anyone noticed the registry was wrong.
+#
+# A service spec is the authority on that service's own edges. If these two
+# disagree, one of them is a bug — fail here rather than in an agent's inbox.
+# ---------------------------------------------------------------------------
+
+TOPIC_IN_TEXT = re.compile(r"yadakchi\.[a-z.]+\.v[1-9][0-9]*")
+EDGE_ROW = re.compile(r"^\|\s*\*\*(consumes|produces)\*\*\s*\|")
+
+# web is listed in topics.yml as a consumer of vehicles.changed and
+# products.changed, but 12-WEB.md says it owns "nothing. No database, no
+# Kafka" and takes everything over HTTP from catalog and search. Unlike the
+# three above, this one blocks nobody: web holds two consumed/ copies it will
+# never read. Removing a declared consumer deletes files and is a call for the
+# spec owner, so it is exempted loudly here rather than fixed quietly.
+SPEC_REGISTRY_EXEMPT: dict[str, str] = {
+    "web": "12-WEB.md declares no Kafka; topics.yml lists it on two topics. Unresolved.",
+}
+
+
+def _edges_declared_in_spec(service: str) -> dict[str, set[str]]:
+    """The Kafka topics a service's own spec says it consumes and produces."""
+    path = _registry.SPECS_DIR / _registry.SPEC_MAP[service]
+    edges: dict[str, set[str]] = {"consumes": set(), "produces": set()}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        row = EDGE_ROW.match(line)
+        if row is None or "Kafka" not in line:
+            continue
+        edges[row.group(1)].update(TOPIC_IN_TEXT.findall(line))
+    return edges
+
+
+@pytest.mark.parametrize("service", _registry.SERVICES)
+def test_spec_edges_match_the_registry(service: str, registry: _registry.Registry) -> None:
+    if service in SPEC_REGISTRY_EXEMPT:
+        pytest.skip(f"{service}: {SPEC_REGISTRY_EXEMPT[service]}")
+
+    declared = _edges_declared_in_spec(service)
+    actual = {
+        "consumes": {t.name for t in registry.topics if service in t.consumers},
+        "produces": {t.name for t in registry.topics if service in t.producers},
+    }
+    for direction in ("consumes", "produces"):
+        missing = declared[direction] - actual[direction]
+        extra = actual[direction] - declared[direction]
+        assert not missing, (
+            f"{_registry.SPEC_MAP[service]} says {service} {direction} "
+            f"{sorted(missing)}, but topics.yml does not — the service cannot get a "
+            "consumed/ copy until the registry agrees"
+        )
+        assert not extra, (
+            f"topics.yml has {service} {direction} {sorted(extra)}, but "
+            f"{_registry.SPEC_MAP[service]} never declares it"
+        )
+
+
+def test_the_exemption_list_does_not_quietly_grow(registry: _registry.Registry) -> None:
+    """One known disagreement, named above. A second one is a regression."""
+    assert set(SPEC_REGISTRY_EXEMPT) == {"web"}

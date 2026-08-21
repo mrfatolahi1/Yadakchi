@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://yadakchi.ir/schemas/yadakchi.offers.enriched.v1.json",
   "title": "yadakchi.offers.enriched.v1",
-  "description": "A structured Offer: one seller's listing after Persian normalization and field extraction.\n\nProducers: enricher. Consumers: fitment, matcher.\nKafka message key: offer_uid — it must be set; compaction and partition ordering depend on it.\nCleanup: delete, retention 90 days.\n\nThis file validates a whole Kafka message body: the shared envelope from docs/specs/02-EVENT-CONTRACTS.md plus this topic's payload. Unknown fields are ignored, never rejected, at both levels — that is what lets a producer add an optional field without breaking a consumer.",
+  "description": "A structured Offer: one seller's listing after Persian normalization and field extraction.\n\nProducers: enricher. Consumers: fitment, matcher, catalog.\nKafka message key: offer_uid — it must be set; compaction and partition ordering depend on it.\nCleanup: delete, retention 90 days.\n\nThis file validates a whole Kafka message body: the shared envelope from docs/specs/02-EVENT-CONTRACTS.md plus this topic's payload. Unknown fields are ignored, never rejected, at both levels — that is what lets a producer add an optional field without breaking a consumer.",
   "type": "object",
   "additionalProperties": true,
   "required": [

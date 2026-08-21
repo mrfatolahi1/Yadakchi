@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://yadakchi.ir/schemas/yadakchi.crossrefs.changed.v1.json",
   "title": "yadakchi.crossrefs.changed.v1",
-  "description": "Two part numbers that are equivalent across brands.\n\nProducers: fitment. Consumers: catalog, search.\nKafka message key: {code_a}|{code_b} — it must be set; compaction and partition ordering depend on it.\nCleanup: compact, retention infinite.\n\nThis file validates a whole Kafka message body: the shared envelope from docs/specs/02-EVENT-CONTRACTS.md plus this topic's payload. Unknown fields are ignored, never rejected, at both levels — that is what lets a producer add an optional field without breaking a consumer.",
+  "description": "Two part numbers that are equivalent across brands.\n\nProducers: fitment. Consumers: catalog, search, matcher.\nKafka message key: {code_a}|{code_b} — it must be set; compaction and partition ordering depend on it.\nCleanup: compact, retention infinite.\n\nThis file validates a whole Kafka message body: the shared envelope from docs/specs/02-EVENT-CONTRACTS.md plus this topic's payload. Unknown fields are ignored, never rejected, at both levels — that is what lets a producer add an optional field without breaking a consumer.",
   "type": "object",
   "additionalProperties": true,
   "required": [
