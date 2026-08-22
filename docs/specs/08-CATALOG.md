@@ -28,7 +28,7 @@ This is where SEO and user trust are actually manufactured.
 | **produces** | `search`, `ops`, `web` | Kafka `yadakchi.products.changed.v1` *(compacted)* |
 | **produces** | `billing`, `ops` | Kafka `yadakchi.sellers.changed.v1` *(compacted)* |
 | **serves** | `web`, `ops` | HTTP read API |
-| owns | Postgres `yadakchi_catalog`, Redis db 5 | |
+| owns | Postgres `yadakchi_catalog`, Redis db 4 (from `CATALOG_REDIS_URL`) | |
 
 ### Produced — `products.changed.v1` (compacted, key: `product_uid`)
 

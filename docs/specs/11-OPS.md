@@ -33,7 +33,7 @@ Four jobs: **merge review queue**, **data health dashboards**, **dictionary appr
 | **produces** | `matcher`, `fitment`, `search` | Kafka `yadakchi.review.decided.v1` *(compacted, infinite retention)* |
 | **calls** | `catalog` | HTTP — product detail for context |
 | **calls** | `billing` | HTTP — seller stats, wallet, top-up |
-| owns | Postgres `yadakchi_ops`, Redis db 8 | |
+| owns | Postgres `yadakchi_ops`, Redis db 7 (from `OPS_REDIS_URL`) | |
 
 ### Consumed — `review.requested.v1`
 

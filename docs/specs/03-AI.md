@@ -26,7 +26,7 @@ It is the **only** place in `yadakchi` that talks to a language model. No other 
 | inbound | `matcher` | HTTP — `POST /v1/judge`, `POST /v1/embed` |
 | inbound | `search` | HTTP — `POST /v1/embed` |
 | outbound | model provider | HTTP, OpenAI-compatible |
-| outbound | Redis (db 0) | cache |
+| outbound | Redis db 8 (from `AI_REDIS_URL`) | cache |
 
 You must publish an **OpenAPI document** at `/openapi.json` and commit a copy to `services/ai/contracts/published/openapi.json`. Consumers vendor it.
 

@@ -26,7 +26,7 @@ This is the product's competitive moat. Generic price comparison engines don't h
 | **produces** | `matcher`, `catalog`, `search`, `web` | Kafka `yadakchi.vehicles.changed.v1` *(compacted)* |
 | **produces** | `catalog`, `search`, `matcher` | Kafka `yadakchi.crossrefs.changed.v1` *(compacted)* |
 | **produces** | `ops` | Kafka `yadakchi.review.requested.v1` — `kind: fitment_conflict` |
-| owns | Postgres `yadakchi_fitment`, Redis db 3 | |
+| owns | Postgres `yadakchi_fitment`, Redis db 2 (from `FITMENT_REDIS_URL`) | |
 
 **On `review.requested.v1`:** you produce to this topic but do not own its schema — `matcher` does. Hold a byte-identical `consumed/` copy; never place this file in `published/`. `make sync-contracts` puts it there for you, and `make check-contracts` fails the build if two services publish the same topic.
 

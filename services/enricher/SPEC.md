@@ -24,7 +24,7 @@ Everything downstream depends on this. A field you fail to extract is a match ca
 | **produces** | `fitment`, `matcher`, `catalog` | Kafka `yadakchi.offers.enriched.v1` |
 | **produces** | `ops` | Kafka `yadakchi.review.requested.v1` — `kind: price_ambiguous \| synonym_candidate` |
 | **calls** | `ai` | HTTP `POST /v1/extract` — cascade stage two only |
-| owns | Postgres `yadakchi_enricher`, Redis db 2 | |
+| owns | Postgres `yadakchi_enricher`, Redis db 1 (from `ENRICHER_REDIS_URL`) | |
 
 **On `review.requested.v1`:** you produce to this topic but do not own its schema — `matcher` does. Hold a byte-identical `consumed/` copy; never place this file in `published/`. `make sync-contracts` puts it there for you, and `make check-contracts` fails the build if two services publish the same topic.
 

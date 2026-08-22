@@ -27,7 +27,7 @@ If this works, the product works. If it doesn't, no amount of frontend polish sa
 | **produces** | `catalog` | Kafka `yadakchi.clusters.changed.v1` |
 | **produces** | `ops` | Kafka `yadakchi.review.requested.v1` — `kind: merge_pair` |
 | **calls** | `ai` | HTTP `POST /v1/judge`, `POST /v1/embed` |
-| owns | Postgres `yadakchi_matcher` (pgvector), Redis db 4 | |
+| owns | Postgres `yadakchi_matcher` (pgvector), Redis db 3 (from `MATCHER_REDIS_URL`) | |
 
 You maintain **local read models** of offers, fitments, vehicles, cross-references, human decisions, and click counts. You never call another service to fetch them.
 

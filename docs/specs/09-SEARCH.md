@@ -25,7 +25,7 @@ Two distinct ranking problems exist in this system and must not be conflated: **
 | **consumes** | `ops` | Kafka `yadakchi.review.decided.v1` — approved synonyms |
 | **serves** | `web` | HTTP search API |
 | **calls** | `ai` | HTTP `POST /v1/embed` for query and document embeddings |
-| owns | Typesense, Postgres `yadakchi_search`, Redis db 6 | |
+| owns | Typesense, Postgres `yadakchi_search`, Redis db 5 (from `SEARCH_REDIS_URL`) | |
 
 **You never call `catalog`.** Everything needed to render a result is inside `products.changed`. That is why the payload is large.
 

@@ -31,7 +31,7 @@ Sends the user to the seller's site, counts the click, charges the seller's wall
 | **produces** | `ops` | Kafka `yadakchi.review.requested.v1` — per-seller click-velocity anomalies |
 | **serves** | end users | `GET /go/{token}` — public, never cached |
 | **serves** | `ops` | internal API for the seller dashboard |
-| owns | Postgres `yadakchi_billing`, Redis db 7 | |
+| owns | Postgres `yadakchi_billing`, Redis db 6 (from `BILLING_REDIS_URL`) | |
 
 **On `review.requested.v1`:** you produce to this topic but do not own its schema — `matcher` does. Hold a byte-identical `consumed/` copy; never place this file in `published/`. `make sync-contracts` puts it there for you, and `make check-contracts` fails the build if two services publish the same topic.
 
