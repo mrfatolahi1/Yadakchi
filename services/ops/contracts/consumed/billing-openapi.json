@@ -1,0 +1,428 @@
+{
+  "components": {
+    "schemas": {
+      "DailyStatsSchema": {
+        "properties": {
+          "charged_clicks": {
+            "title": "Charged Clicks",
+            "type": "integer"
+          },
+          "clicks": {
+            "title": "Clicks",
+            "type": "integer"
+          },
+          "day": {
+            "format": "date",
+            "title": "Day",
+            "type": "string"
+          },
+          "spend_toman": {
+            "title": "Spend Toman",
+            "type": "integer"
+          },
+          "suspicious_clicks": {
+            "title": "Suspicious Clicks",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "day",
+          "clicks",
+          "suspicious_clicks",
+          "charged_clicks",
+          "spend_toman"
+        ],
+        "title": "DailyStatsSchema",
+        "type": "object"
+      },
+      "RateSchema": {
+        "properties": {
+          "cost_toman": {
+            "title": "Cost Toman",
+            "type": "integer"
+          },
+          "effective_from": {
+            "format": "date-time",
+            "title": "Effective From",
+            "type": "string"
+          },
+          "effective_to": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effective To"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "max_price_toman": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Price Toman"
+          },
+          "min_price_toman": {
+            "title": "Min Price Toman",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "min_price_toman",
+          "max_price_toman",
+          "cost_toman",
+          "effective_from",
+          "effective_to"
+        ],
+        "title": "RateSchema",
+        "type": "object"
+      },
+      "SellerStatsSchema": {
+        "properties": {
+          "charged_clicks": {
+            "title": "Charged Clicks",
+            "type": "integer"
+          },
+          "daily": {
+            "items": {
+              "$ref": "#/components/schemas/DailyStatsSchema"
+            },
+            "title": "Daily",
+            "type": "array"
+          },
+          "seller_key": {
+            "title": "Seller Key",
+            "type": "string"
+          },
+          "spend_toman": {
+            "title": "Spend Toman",
+            "type": "integer"
+          },
+          "suspicious_clicks": {
+            "title": "Suspicious Clicks",
+            "type": "integer"
+          },
+          "total_clicks": {
+            "title": "Total Clicks",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "seller_key",
+          "total_clicks",
+          "suspicious_clicks",
+          "charged_clicks",
+          "spend_toman",
+          "daily"
+        ],
+        "title": "SellerStatsSchema",
+        "type": "object"
+      },
+      "TopupIn": {
+        "properties": {
+          "amount_toman": {
+            "exclusiveMinimum": 0,
+            "title": "Amount Toman",
+            "type": "integer"
+          },
+          "gateway_reference": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Gateway Reference",
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount_toman",
+          "gateway_reference"
+        ],
+        "title": "TopupIn",
+        "type": "object"
+      },
+      "WalletSchema": {
+        "properties": {
+          "balance_toman": {
+            "title": "Balance Toman",
+            "type": "integer"
+          },
+          "panel_offers_active": {
+            "title": "Panel Offers Active",
+            "type": "boolean"
+          },
+          "seller_key": {
+            "title": "Seller Key",
+            "type": "string"
+          },
+          "transactions": {
+            "items": {
+              "$ref": "#/components/schemas/WalletTransactionSchema"
+            },
+            "title": "Transactions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "seller_key",
+          "balance_toman",
+          "panel_offers_active",
+          "transactions"
+        ],
+        "title": "WalletSchema",
+        "type": "object"
+      },
+      "WalletTransactionSchema": {
+        "properties": {
+          "amount_toman": {
+            "title": "Amount Toman",
+            "type": "integer"
+          },
+          "balance_after_toman": {
+            "title": "Balance After Toman",
+            "type": "integer"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "transaction_id": {
+            "format": "uuid",
+            "title": "Transaction Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "transaction_id",
+          "kind",
+          "amount_toman",
+          "balance_after_toman",
+          "reference",
+          "occurred_at"
+        ],
+        "title": "WalletTransactionSchema",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "InternalBearer": {
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "Internal seller billing and reporting API. Ranking is never influenced here.",
+    "title": "Yadakchi Billing API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/v1/rates": {
+      "get": {
+        "operationId": "billing_api_rates_endpoint",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RateSchema"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "InternalBearer": []
+          }
+        ],
+        "summary": "Rates Endpoint"
+      }
+    },
+    "/v1/sellers/{seller_key}/stats": {
+      "get": {
+        "operationId": "billing_api_stats_endpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "seller_key",
+            "required": true,
+            "schema": {
+              "title": "Seller Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "start",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "in": "query",
+            "name": "end",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SellerStatsSchema"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "InternalBearer": []
+          }
+        ],
+        "summary": "Stats Endpoint"
+      }
+    },
+    "/v1/sellers/{seller_key}/topup": {
+      "post": {
+        "operationId": "billing_api_topup_endpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "seller_key",
+            "required": true,
+            "schema": {
+              "title": "Seller Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TopupIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletTransactionSchema"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "InternalBearer": []
+          }
+        ],
+        "summary": "Topup Endpoint"
+      }
+    },
+    "/v1/sellers/{seller_key}/wallet": {
+      "get": {
+        "operationId": "billing_api_wallet_endpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "seller_key",
+            "required": true,
+            "schema": {
+              "title": "Seller Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletSchema"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "InternalBearer": []
+          }
+        ],
+        "summary": "Wallet Endpoint"
+      }
+    }
+  },
+  "servers": []
+}

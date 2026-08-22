@@ -165,17 +165,16 @@ def test_unknown_topic_fails(fake_repo: Path, capsys: pytest.CaptureFixture[str]
 
 
 def test_openapi_documents_are_not_mistaken_for_topics(fake_repo: Path) -> None:
-    """Five service specs put an OpenAPI document in a contracts/ folder:
-    `openapi.json` for ai, catalog, search and billing, and web's vendored
-    `catalog-openapi.json` / `search-openapi.json` in consumed/. Spec 02 puts
-    HTTP API schemas out of scope for the event contracts, so the stray check
-    must let them through instead of demanding a topic named 'openapi'."""
+    """An OpenAPI document in a contracts/ folder must not be read as an
+    invented topic. It is not merely ignored any more — it is checked against
+    platform/http/apis.yml — so publishing one and syncing must come out clean."""
     publish_and_sync(fake_repo)
     write_schema(fake_repo, "ai", "published", "openapi", {"openapi": "3.1.0"})
     write_schema(fake_repo, "catalog", "published", "openapi", {"openapi": "3.1.0"})
-    write_schema(fake_repo, "web", "consumed", "catalog-openapi", {"openapi": "3.1.0"})
-    write_schema(fake_repo, "web", "consumed", "search-openapi", {"openapi": "3.1.0"})
+    assert sync_contracts.main([]) == 0
     assert check_contracts.main([]) == 0
+    assert (_registry.consumed_dir("web") / "catalog-openapi.json").is_file()
+    assert (_registry.consumed_dir("ops") / "catalog-openapi.json").is_file()
 
 
 def test_an_invented_topic_is_still_caught_next_to_an_openapi_document(
@@ -212,3 +211,67 @@ def test_multi_producer_topic_requires_copies(fake_repo: Path) -> None:
 def test_real_repository_is_clean() -> None:
     """The committed repository itself must pass, always."""
     assert check_contracts.main([]) == 0
+
+
+# ---------------------------------------------------------------------------
+# HTTP API documents. Kafka schemas had a distribution mechanism from day one;
+# OpenAPI documents did not, so a service told to "vendor the publisher's
+# openapi.json" had no legal way to obtain it. search hit this first. They now
+# ride the same sync-and-verify path, declared in platform/http/apis.yml.
+# ---------------------------------------------------------------------------
+
+OPENAPI = {"openapi": "3.1.0", "info": {"title": "ai", "version": "1"}, "paths": {}}
+
+
+def publish_openapi(repo: Path, service: str, payload: object = OPENAPI) -> Path:
+    return write_schema(repo, service, "published", "openapi", payload)
+
+
+def test_openapi_is_distributed_to_every_declared_caller(fake_repo: Path) -> None:
+    publish_openapi(fake_repo, "ai")
+    assert check_contracts.main([]) == 1  # callers have no copy yet
+    assert sync_contracts.main([]) == 0
+    for caller in ("enricher", "matcher", "search"):
+        copy = _registry.consumed_dir(caller) / "ai-openapi.json"
+        assert copy.is_file(), caller
+    assert check_contracts.main([]) == 0
+
+
+def test_a_drifted_openapi_copy_fails(fake_repo: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    publish_openapi(fake_repo, "ai")
+    assert sync_contracts.main([]) == 0
+    copy = _registry.consumed_dir("search") / "ai-openapi.json"
+    copy.write_text(json.dumps({"openapi": "3.1.0", "paths": {"/v1/embed": {}}}), encoding="utf-8")
+
+    assert check_contracts.main([]) == 1
+    stderr = capsys.readouterr().err
+    assert "search" in stderr
+    assert "OpenAPI" in stderr
+
+
+def test_an_unpublished_openapi_is_a_valid_state(fake_repo: Path) -> None:
+    """search has not shipped its document yet; web is not in breach for that."""
+    assert check_contracts.main([]) == 0
+
+
+def test_vendoring_an_undeclared_openapi_fails(
+    fake_repo: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The HTTP version of quietly reading someone else's topic."""
+    write_schema(fake_repo, "crawler", "consumed", "catalog-openapi", OPENAPI)
+    assert check_contracts.main([]) == 1
+    stderr = capsys.readouterr().err
+    assert "crawler" in stderr
+    assert "not declared as a caller" in stderr
+
+
+def test_openapi_pairs_match_the_brief(fake_repo: Path) -> None:
+    """apis.yml transcribes 00-PROJECT-BRIEF.md's allowed synchronous pairs.
+    Adding one here does not make it allowed — the brief changes first."""
+    declared = {api.publisher: set(api.consumers) for api in _registry.load_apis()}
+    assert declared == {
+        "ai": {"enricher", "matcher", "search"},
+        "catalog": {"web", "ops"},
+        "search": {"web"},
+        "billing": {"ops"},
+    }

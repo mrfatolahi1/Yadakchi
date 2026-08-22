@@ -14,6 +14,13 @@ It checks, against platform/kafka/topics.yml:
      consumed/ copy of a topic it was never declared to read.
   4. No stray schema files for topics that do not exist in the registry.
 
+And the same three things for HTTP, against platform/http/apis.yml: every
+caller of an API holds a byte-identical <publisher>-openapi.json, no declared
+caller is missing one, and nobody vendors a document they never declared. A
+caller cannot fetch the document itself — reading another service's directory
+is forbidden — so `make sync-contracts` puts it there and this proves it is
+still current.
+
 Exit code is non-zero on any mismatch, and every message names the exact
 service and topic so the fix is obvious: change the source, run
 `make sync-contracts`, commit.
@@ -37,10 +44,12 @@ from _registry import (
     Registry,
     Topic,
     consumed_dir,
+    load_apis,
     load_topics,
     published_dir,
     rel,
     service_dirs,
+    vendored_openapi_names,
 )
 
 
@@ -160,13 +169,84 @@ def _check_copies(
 def _is_openapi_document(path: Path) -> bool:
     """OpenAPI documents share the contracts/ folders but are not event schemas.
 
-    Five service specs put one here — `openapi.json` for ai, catalog, search and
-    billing, and `catalog-openapi.json` / `search-openapi.json` in web's
-    consumed/. Spec 02 puts HTTP API schemas explicitly out of scope for the
-    event contracts, so this guard must not mistake them for an invented topic.
-    They are versioned with their service and need no cross-service drift check.
+    They must not be mistaken for an invented topic by the stray check; they are
+    checked against platform/http/apis.yml instead, by _check_http_apis below.
     """
     return path.stem == "openapi" or path.stem.endswith("-openapi")
+
+
+def _check_http_apis(services: list[str], errors: list[str], verbose: bool) -> int:
+    """Every vendored OpenAPI copy is byte-identical to its publisher's.
+
+    Same contract as a Kafka schema, and for the same reason: a caller cannot
+    read the publisher's directory, so it holds a copy, and a copy drifts unless
+    something compares it. A publisher that has not shipped its document yet is
+    a valid state.
+    """
+    apis = load_apis()
+    known = set(services)
+    verified = 0
+
+    for api in apis:
+        if api.publisher not in known:
+            errors.append(f"apis.yml: publisher '{api.publisher}' is not a service folder")
+            continue
+        if api.publisher in api.consumers:
+            errors.append(f"apis.yml: {api.publisher} lists itself as a consumer of its own API")
+        for consumer in api.consumers:
+            if consumer not in known:
+                errors.append(
+                    f"apis.yml: consumer '{consumer}' of {api.publisher} is not a service folder"
+                )
+
+        source = published_dir(api.publisher) / api.published_filename
+        if not source.is_file():
+            if verbose:
+                print(f"skip  {api.publisher} openapi: not published yet")
+            continue
+
+        document = source.read_bytes()
+        for consumer in api.consumers:
+            if consumer not in known:
+                continue
+            copy = consumed_dir(consumer) / api.vendored_filename
+            if not copy.is_file():
+                errors.append(
+                    f"{consumer} calls {api.publisher} over HTTP but has no "
+                    f"{rel(copy)} — run `make sync-contracts`"
+                )
+                continue
+            if copy.read_bytes() != document:
+                errors.append(
+                    f"{consumer} has drifted from {api.publisher} on its OpenAPI document: "
+                    f"{rel(copy)} differs from {rel(source)}. "
+                    "The published file is the source of truth — run `make sync-contracts`."
+                )
+                continue
+            verified += 1
+            if verbose:
+                print(f"ok    {consumer}/consumed/{api.vendored_filename}")
+
+    # A vendored document nobody declared is the HTTP version of an undeclared
+    # topic dependency, and is caught the same way.
+    legal = vendored_openapi_names()
+    allowed_by_consumer = {
+        consumer: {a.vendored_filename for a in apis if consumer in a.consumers}
+        for consumer in services
+    }
+    for service in services:
+        for path in sorted(consumed_dir(service).glob("*-openapi.json")):
+            if path.name not in legal:
+                errors.append(
+                    f"{service} keeps {rel(path)} but no service publishes it — "
+                    "declare the dependency in platform/http/apis.yml"
+                )
+            elif path.name not in allowed_by_consumer[service]:
+                errors.append(
+                    f"{service} keeps {rel(path)} but is not declared as a caller of it "
+                    "in platform/http/apis.yml — declare the dependency or delete the copy"
+                )
+    return verified
 
 
 def _check_strays(registry: Registry, services: list[str], errors: list[str]) -> None:
@@ -211,6 +291,7 @@ def main(argv: list[str] | None = None) -> int:
     _check_registry_sanity(registry, services, errors)
     owned = _check_publishers(registry, services, errors, args.verbose)
     verified = _check_copies(registry, owned, errors, args.verbose)
+    verified += _check_http_apis(services, errors, args.verbose)
     _check_strays(registry, services, errors)
 
     if errors:

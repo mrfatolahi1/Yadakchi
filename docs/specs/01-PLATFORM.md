@@ -203,6 +203,8 @@ Wire it into CI as a **blocking** job. With different AI agents working in diffe
 
 Also provide `make sync-contracts` which copies publisher schemas into consumer folders, so resolving drift is one command after a deliberate change.
 
+The same applies to **HTTP APIs**, declared in `platform/http/apis.yml`. A service that calls another over HTTP vendors the publisher's `openapi.json` as `consumed/<publisher>-openapi.json`; `sync-contracts` puts it there and `check-contracts` verifies it byte-for-byte. Without this a caller has no legal way to obtain the document at all — reading another service's directory is exactly what the architecture forbids.
+
 ## CI
 
 GitHub Actions, **path-filtered**: a change under `services/matcher/` runs only the matcher job.

@@ -18,7 +18,7 @@ import argparse
 import shutil
 import sys
 
-from _registry import consumed_dir, load_topics, published_dir, rel, service_dirs
+from _registry import consumed_dir, load_apis, load_topics, published_dir, rel, service_dirs
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -47,6 +47,34 @@ def main(argv: list[str] | None = None) -> int:
                 continue
             target = consumed_dir(service) / topic.schema_filename
             if target.is_file() and target.read_bytes() == payload:
+                unchanged += 1
+                continue
+            if args.dry_run:
+                print(f"would copy {rel(source)} -> {rel(target)}")
+            else:
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(source, target)
+                print(f"copied {rel(source)} -> {rel(target)}")
+            copied += 1
+
+    # OpenAPI documents ride the same path. A service told to vendor one cannot
+    # fetch it itself — reading another service's directory is forbidden — so
+    # this is the only way it arrives.
+    for api in load_apis():
+        source = published_dir(api.publisher) / api.published_filename
+        if not source.is_file():
+            pending.append(f"{api.publisher} openapi")
+            continue
+        document = source.read_bytes()
+        for service in api.consumers:
+            if service not in services:
+                print(
+                    f"WARN  no services/{service}/ folder for {api.publisher} openapi",
+                    file=sys.stderr,
+                )
+                continue
+            target = consumed_dir(service) / api.vendored_filename
+            if target.is_file() and target.read_bytes() == document:
                 unchanged += 1
                 continue
             if args.dry_run:

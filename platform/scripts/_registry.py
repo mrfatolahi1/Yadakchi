@@ -15,6 +15,7 @@ import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 TOPICS_FILE = REPO_ROOT / "platform" / "kafka" / "topics.yml"
+APIS_FILE = REPO_ROOT / "platform" / "http" / "apis.yml"
 SERVICES_DIR = REPO_ROOT / "services"
 SPECS_DIR = REPO_ROOT / "docs" / "specs"
 
@@ -76,6 +77,29 @@ class Topic:
         return tuple(seen)
 
 
+@dataclass(frozen=True)
+class HttpApi:
+    """One row of platform/http/apis.yml.
+
+    The OpenAPI counterpart to a Topic: one publisher owns the document, and
+    every declared caller vendors a byte-identical copy, because no service may
+    read another service's directory to fetch one.
+    """
+
+    publisher: str
+    consumers: tuple[str, ...]
+    purpose: str
+
+    @property
+    def published_filename(self) -> str:
+        return "openapi.json"
+
+    @property
+    def vendored_filename(self) -> str:
+        """What the copy is called inside a consumer, e.g. ai-openapi.json."""
+        return f"{self.publisher}-openapi.json"
+
+
 @dataclass
 class Registry:
     topics: list[Topic] = field(default_factory=list)
@@ -106,6 +130,23 @@ def load_topics(path: Path = TOPICS_FILE) -> Registry:
             )
         )
     return Registry(topics=topics)
+
+
+def load_apis(path: Path = APIS_FILE) -> list[HttpApi]:
+    raw: dict[str, Any] = yaml.safe_load(path.read_text(encoding="utf-8"))
+    return [
+        HttpApi(
+            publisher=str(entry["publisher"]),
+            consumers=tuple(str(s) for s in entry["consumers"]),
+            purpose=str(entry.get("purpose", "")),
+        )
+        for entry in raw["apis"]
+    ]
+
+
+def vendored_openapi_names() -> set[str]:
+    """Every legal <publisher>-openapi.json filename, for the stray check."""
+    return {api.vendored_filename for api in load_apis()}
 
 
 def service_dirs() -> list[str]:

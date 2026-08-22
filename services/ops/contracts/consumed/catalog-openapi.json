@@ -1,0 +1,789 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "yadakchi catalog",
+    "version": "1.0.0",
+    "description": "Canonical products, sellers and price history. Read-only: everything this service learns arrives over Kafka, and everything it decides leaves over Kafka. `web` and `ops` are the only callers."
+  },
+  "paths": {
+    "/v1/products/batch": {
+      "post": {
+        "operationId": "catalog_api_get_products_batch",
+        "summary": "Many products by identity",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchResponse"
+                }
+              }
+            }
+          }
+        },
+        "description": "Hydration fallback for search results. `search` renders from its own index built off products.changed; this exists for the moment the index is behind, not as a routine dependency.",
+        "tags": [
+          "products"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchRequest"
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/v1/products/{slug}": {
+      "get": {
+        "operationId": "catalog_api_get_product",
+        "summary": "Full product view by slug",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "schema": {
+              "title": "Slug",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductOut"
+                }
+              }
+            }
+          },
+          "301": {
+            "description": "Moved Permanently",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RedirectOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Resolves current slugs, historical slugs and retired products. An old slug or a retired product answers 301 with the target, because a URL that has ranked must never become a 404.",
+        "tags": [
+          "products"
+        ]
+      }
+    },
+    "/v1/products/by-uid/{product_uid}": {
+      "get": {
+        "operationId": "catalog_api_get_product_by_uid",
+        "summary": "Full product view by identity",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "product_uid",
+            "schema": {
+              "title": "Product Uid",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductOut"
+                }
+              }
+            }
+          },
+          "301": {
+            "description": "Moved Permanently",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RedirectOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "products"
+        ]
+      }
+    },
+    "/v1/sellers/{seller_key}": {
+      "get": {
+        "operationId": "catalog_api_get_seller",
+        "summary": "Seller profile and trust breakdown",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "seller_key",
+            "schema": {
+              "title": "Seller Key",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SellerOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "sellers"
+        ]
+      }
+    },
+    "/v1/health": {
+      "get": {
+        "operationId": "catalog_api_health",
+        "summary": "Liveness and DB reachability",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "ops"
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BatchResponse": {
+        "properties": {
+          "products": {
+            "items": {
+              "$ref": "#/components/schemas/ProductOut"
+            },
+            "title": "Products",
+            "type": "array"
+          },
+          "missing": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Missing",
+            "type": "array"
+          }
+        },
+        "title": "BatchResponse",
+        "type": "object"
+      },
+      "OfferOut": {
+        "properties": {
+          "offer_uid": {
+            "title": "Offer Uid",
+            "type": "string"
+          },
+          "seller_key": {
+            "title": "Seller Key",
+            "type": "string"
+          },
+          "seller_name": {
+            "title": "Seller Name",
+            "type": "string"
+          },
+          "price_toman": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Toman"
+          },
+          "stock_status": {
+            "title": "Stock Status",
+            "type": "string"
+          },
+          "authenticity_claim": {
+            "title": "Authenticity Claim",
+            "type": "string"
+          },
+          "trust_score": {
+            "title": "Trust Score",
+            "type": "number"
+          },
+          "rank_position": {
+            "title": "Rank Position",
+            "type": "integer"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          },
+          "is_cheapest": {
+            "title": "Is Cheapest",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "offer_uid",
+          "seller_key",
+          "seller_name",
+          "stock_status",
+          "authenticity_claim",
+          "trust_score",
+          "rank_position",
+          "url",
+          "is_cheapest"
+        ],
+        "title": "OfferOut",
+        "type": "object"
+      },
+      "PricePointOut": {
+        "properties": {
+          "date": {
+            "title": "Date",
+            "type": "string"
+          },
+          "min_toman": {
+            "title": "Min Toman",
+            "type": "integer"
+          },
+          "median_toman": {
+            "title": "Median Toman",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "date",
+          "min_toman",
+          "median_toman"
+        ],
+        "title": "PricePointOut",
+        "type": "object"
+      },
+      "ProductOut": {
+        "description": "The whole renderable product, as `web` gets it.",
+        "properties": {
+          "product_uid": {
+            "title": "Product Uid",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "brand": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brand"
+          },
+          "part_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Part Type"
+          },
+          "authenticity_dominant": {
+            "title": "Authenticity Dominant",
+            "type": "string"
+          },
+          "image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Url"
+          },
+          "part_numbers": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Part Numbers",
+            "type": "array"
+          },
+          "crossref_codes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Crossref Codes",
+            "type": "array"
+          },
+          "vehicles_compatible": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Vehicles Compatible",
+            "type": "array"
+          },
+          "vehicles_incompatible": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Vehicles Incompatible",
+            "type": "array"
+          },
+          "vehicles_unknown": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Vehicles Unknown",
+            "type": "array"
+          },
+          "risky_family_note_fa": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risky Family Note Fa"
+          },
+          "offer_count": {
+            "title": "Offer Count",
+            "type": "integer"
+          },
+          "min_price_toman": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Price Toman"
+          },
+          "max_price_toman": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Price Toman"
+          },
+          "median_price_toman": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median Price Toman"
+          },
+          "offers": {
+            "items": {
+              "$ref": "#/components/schemas/OfferOut"
+            },
+            "title": "Offers",
+            "type": "array"
+          },
+          "price_series": {
+            "items": {
+              "$ref": "#/components/schemas/PricePointOut"
+            },
+            "title": "Price Series",
+            "type": "array"
+          },
+          "is_published": {
+            "title": "Is Published",
+            "type": "boolean"
+          },
+          "successor_product_uid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Successor Product Uid"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "string"
+          },
+          "related_products": {
+            "items": {
+              "$ref": "#/components/schemas/RelatedProductOut"
+            },
+            "title": "Related Products",
+            "type": "array"
+          },
+          "seller_badges": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/SellerBadgeOut"
+            },
+            "title": "Seller Badges",
+            "type": "object"
+          }
+        },
+        "required": [
+          "product_uid",
+          "slug",
+          "title",
+          "authenticity_dominant",
+          "offer_count",
+          "is_published",
+          "updated_at"
+        ],
+        "title": "ProductOut",
+        "type": "object"
+      },
+      "RelatedProductOut": {
+        "properties": {
+          "product_uid": {
+            "title": "Product Uid",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Url"
+          },
+          "min_price_toman": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Price Toman"
+          },
+          "offer_count": {
+            "title": "Offer Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "product_uid",
+          "slug",
+          "title",
+          "offer_count"
+        ],
+        "title": "RelatedProductOut",
+        "type": "object"
+      },
+      "SellerBadgeOut": {
+        "properties": {
+          "tier": {
+            "title": "Tier",
+            "type": "string"
+          },
+          "is_new_seller": {
+            "title": "Is New Seller",
+            "type": "boolean"
+          },
+          "trust_score": {
+            "title": "Trust Score",
+            "type": "number"
+          }
+        },
+        "required": [
+          "tier",
+          "is_new_seller",
+          "trust_score"
+        ],
+        "title": "SellerBadgeOut",
+        "type": "object"
+      },
+      "BatchRequest": {
+        "properties": {
+          "product_uids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 200,
+            "minItems": 1,
+            "title": "Product Uids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "product_uids"
+        ],
+        "title": "BatchRequest",
+        "type": "object"
+      },
+      "RedirectOut": {
+        "description": "A retired product, or an old slug. Both are 301s, and both exist so a\nURL that once ranked keeps its value instead of turning into a 404.",
+        "properties": {
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "product_uid": {
+            "title": "Product Uid",
+            "type": "string"
+          },
+          "redirect_to_slug": {
+            "title": "Redirect To Slug",
+            "type": "string"
+          },
+          "successor_product_uid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Successor Product Uid"
+          }
+        },
+        "required": [
+          "status",
+          "product_uid",
+          "redirect_to_slug"
+        ],
+        "title": "RedirectOut",
+        "type": "object"
+      },
+      "SellerOut": {
+        "description": "Seller profile for the ops console.",
+        "properties": {
+          "seller_key": {
+            "title": "Seller Key",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "domain": {
+            "title": "Domain",
+            "type": "string"
+          },
+          "source_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Key"
+          },
+          "is_panel": {
+            "title": "Is Panel",
+            "type": "boolean"
+          },
+          "tier": {
+            "title": "Tier",
+            "type": "string"
+          },
+          "tier_override": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tier Override"
+          },
+          "trust_score": {
+            "title": "Trust Score",
+            "type": "number"
+          },
+          "price_accuracy": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Accuracy"
+          },
+          "stock_accuracy": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stock Accuracy"
+          },
+          "price_observations": {
+            "title": "Price Observations",
+            "type": "integer"
+          },
+          "price_hits": {
+            "title": "Price Hits",
+            "type": "integer"
+          },
+          "stock_observations": {
+            "title": "Stock Observations",
+            "type": "integer"
+          },
+          "stock_hits": {
+            "title": "Stock Hits",
+            "type": "integer"
+          },
+          "domain_age_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Domain Age Days"
+          },
+          "contact_completeness": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Completeness"
+          },
+          "has_trust_badge": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Has Trust Badge"
+          },
+          "is_new_seller": {
+            "title": "Is New Seller",
+            "type": "boolean"
+          },
+          "product_count": {
+            "title": "Product Count",
+            "type": "integer"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "seller_key",
+          "name",
+          "domain",
+          "is_panel",
+          "tier",
+          "trust_score",
+          "price_observations",
+          "price_hits",
+          "stock_observations",
+          "stock_hits",
+          "is_new_seller",
+          "product_count",
+          "updated_at"
+        ],
+        "title": "SellerOut",
+        "type": "object"
+      },
+      "HealthOut": {
+        "properties": {
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "service": {
+            "title": "Service",
+            "type": "string"
+          },
+          "database": {
+            "title": "Database",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "service",
+          "database"
+        ],
+        "title": "HealthOut",
+        "type": "object"
+      }
+    }
+  },
+  "servers": []
+}

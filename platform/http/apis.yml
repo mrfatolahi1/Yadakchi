@@ -1,0 +1,46 @@
+# ---------------------------------------------------------------------------
+# yadakchi — HTTP API registry
+#
+# The counterpart to kafka/topics.yml, for the other half of the wire format.
+# Kafka schemas had a distribution mechanism from day one; OpenAPI documents did
+# not, so a service told to "vendor the publisher's openapi.json" had no way to
+# get it — reading another service's directory is exactly what the architecture
+# forbids. search hit this first.
+#
+# THIS FILE IS THE SINGLE SOURCE OF TRUTH for who serves an HTTP API and who
+# vendors it. It is read by platform/scripts/sync_contracts.py (via
+# `make sync-contracts`, which copies each published document into every
+# declared consumer) and by check_contracts.py (via `make check-contracts`,
+# which fails if a copy has drifted).
+#
+# The consumer lists come from 00-PROJECT-BRIEF.md, "Synchronous HTTP is allowed
+# only for these pairs". Adding a pair here does not make it allowed — change
+# the brief first, then this file.
+#
+# Per-entry fields:
+#   publisher  the service serving the API; it owns
+#              services/<publisher>/contracts/published/openapi.json
+#   consumers  every service that calls it and therefore vendors a copy at
+#              services/<consumer>/contracts/consumed/<publisher>-openapi.json
+#   purpose    documentation only
+#
+# A publisher that has not shipped its openapi.json yet is a valid state and
+# passes, exactly as an unpublished topic does.
+# ---------------------------------------------------------------------------
+
+apis:
+  - publisher: ai
+    consumers: [enricher, matcher, search]
+    purpose: field extraction, pair adjudication, embeddings
+
+  - publisher: catalog
+    consumers: [web, ops]
+    purpose: product pages for the site, product context for the console
+
+  - publisher: search
+    consumers: [web]
+    purpose: search results and typeahead
+
+  - publisher: billing
+    consumers: [ops]
+    purpose: seller stats, wallet and top-up for the seller dashboard

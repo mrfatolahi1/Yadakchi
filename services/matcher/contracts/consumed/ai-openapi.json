@@ -1,0 +1,717 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "yadakchi ai",
+    "summary": "Field extraction, pair adjudication and embeddings.",
+    "description": "Field extraction, pair adjudication and embeddings for yadakchi.\n\nThis is the only service allowed to talk to a language model; no other service\nmay import a model SDK. It is stateless and has no database.\n\n* `POST /v1/extract` — structured fields from a Persian listing title.\n* `POST /v1/judge` — are these two listings the same product?\n* `POST /v1/embed` — 384-dimension vectors, always exactly 384.\n\nErrors share one body: `{\"code\", \"message\", \"detail\"}`. The code that matters\nmost to callers is **`budget_exhausted`** (HTTP 429): today's model budget is\nspent, and the caller should fall back to its own rules until UTC midnight.",
+    "contact": {
+      "name": "yadakchi",
+      "url": "https://github.com/yadakchi"
+    },
+    "license": {
+      "name": "Proprietary"
+    },
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://ai:8000",
+      "description": "inside the yadakchi network"
+    }
+  ],
+  "paths": {
+    "/v1/extract": {
+      "post": {
+        "tags": [
+          "inference"
+        ],
+        "summary": "Extract structured fields from a Persian listing title",
+        "operationId": "extract",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExtractRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtractResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Unknown schema name.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request, or an unusable model answer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Daily model budget exhausted (`budget_exhausted`). Fall back to rules.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The model provider answered unusably.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The model provider is unreachable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/judge": {
+      "post": {
+        "tags": [
+          "inference"
+        ],
+        "summary": "Decide whether two listings are the same product",
+        "operationId": "judge",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JudgeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JudgeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Unknown schema name.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request, or an unusable model answer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Daily model budget exhausted (`budget_exhausted`). Fall back to rules.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The model provider answered unusably.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The model provider is unreachable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/embed": {
+      "post": {
+        "tags": [
+          "inference"
+        ],
+        "summary": "Embed up to 256 texts as 384-dimension vectors",
+        "operationId": "embed",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmbedRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmbedResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Unknown schema name.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request, or an unusable model answer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Daily model budget exhausted (`budget_exhausted`). Fall back to rules.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The model provider answered unusably.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The model provider is unreachable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "operations"
+        ],
+        "summary": "Backend, model, reachability and today's budget",
+        "operationId": "health",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/metrics": {
+      "get": {
+        "tags": [
+          "operations"
+        ],
+        "summary": "Prometheus metrics",
+        "operationId": "metrics",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "text/plain; version=0.0.4; charset=utf-8": {}
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BudgetStatus": {
+        "properties": {
+          "day": {
+            "type": "string",
+            "title": "Day",
+            "description": "UTC day the counter belongs to."
+          },
+          "used": {
+            "type": "number",
+            "title": "Used"
+          },
+          "limit": {
+            "type": "number",
+            "title": "Limit"
+          },
+          "ratio": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Ratio",
+            "description": "Clamped; 1.0 means calls are refused."
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "seconds",
+              "currency"
+            ],
+            "title": "Unit"
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          },
+          "exhausted": {
+            "type": "boolean",
+            "title": "Exhausted"
+          }
+        },
+        "type": "object",
+        "required": [
+          "day",
+          "used",
+          "limit",
+          "ratio",
+          "unit",
+          "enabled",
+          "exhausted"
+        ],
+        "title": "BudgetStatus"
+      },
+      "CacheStatus": {
+        "properties": {
+          "redis": {
+            "type": "string",
+            "enum": [
+              "up",
+              "down",
+              "disabled"
+            ],
+            "title": "Redis"
+          },
+          "entries": {
+            "type": "integer",
+            "title": "Entries",
+            "description": "Entries currently held by the in-process LRU."
+          },
+          "ttl_seconds": {
+            "type": "integer",
+            "title": "Ttl Seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "redis",
+          "entries",
+          "ttl_seconds"
+        ],
+        "title": "CacheStatus"
+      },
+      "EmbedRequest": {
+        "properties": {
+          "texts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 256,
+            "minItems": 1,
+            "title": "Texts",
+            "description": "Up to 256 texts per call."
+          }
+        },
+        "type": "object",
+        "required": [
+          "texts"
+        ],
+        "title": "EmbedRequest"
+      },
+      "EmbedResponse": {
+        "properties": {
+          "vectors": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Vectors",
+            "description": "One vector per input text, in order."
+          },
+          "dim": {
+            "type": "integer",
+            "const": 384,
+            "title": "Dim",
+            "description": "Always 384. Vectors are never padded or truncated.",
+            "default": 384
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          }
+        },
+        "type": "object",
+        "required": [
+          "vectors",
+          "model"
+        ],
+        "title": "EmbedResponse"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "Stable machine-readable code. Callers switch on this."
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorResponse",
+        "description": "Every error this service returns, including 429 `budget_exhausted`.",
+        "example": {
+          "code": "budget_exhausted",
+          "detail": {
+            "limit": 3600.0,
+            "unit": "seconds",
+            "used": 3600.0
+          },
+          "message": "today's AI budget of 3600 seconds is spent"
+        }
+      },
+      "ExtractRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Text",
+            "description": "Listing title or description."
+          },
+          "schema_name": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Schema Name",
+            "description": "A registered output schema. Callers may not pass a prompt or a schema.",
+            "examples": [
+              "offer_fields"
+            ]
+          },
+          "hint": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hint",
+            "description": "Optional extra context, e.g. the seller's category breadcrumb."
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "schema_name"
+        ],
+        "title": "ExtractRequest",
+        "description": "One listing title, plus the name of the shape to extract from it.",
+        "example": {
+          "schema_name": "offer_fields",
+          "text": "فیلتر روغن پژو 206 تیپ 5 اصلی ایساکو کد 1109AY"
+        }
+      },
+      "ExtractResponse": {
+        "properties": {
+          "fields": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Fields",
+            "description": "The registered schema, fully populated."
+          },
+          "confidences": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Confidences",
+            "description": "Per-field confidence in [0, 1]."
+          },
+          "model": {
+            "type": "string",
+            "title": "Model",
+            "description": "Model that produced this answer."
+          },
+          "cached": {
+            "type": "boolean",
+            "title": "Cached",
+            "description": "True when served from cache without reaching the model."
+          }
+        },
+        "type": "object",
+        "required": [
+          "fields",
+          "confidences",
+          "model",
+          "cached"
+        ],
+        "title": "ExtractResponse",
+        "description": "Every registered field is present; the ones the model did not produce\nare null with confidence 0.0."
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "degraded"
+            ],
+            "title": "Status"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "backend": {
+            "type": "string",
+            "title": "Backend"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "reachable": {
+            "type": "boolean",
+            "title": "Reachable",
+            "description": "Whether the model provider answered a probe."
+          },
+          "embed_backend": {
+            "type": "string",
+            "title": "Embed Backend"
+          },
+          "embed_model": {
+            "type": "string",
+            "title": "Embed Model"
+          },
+          "dim": {
+            "type": "integer",
+            "title": "Dim"
+          },
+          "prompt_version": {
+            "type": "string",
+            "title": "Prompt Version"
+          },
+          "schemas": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Schemas"
+          },
+          "cache": {
+            "$ref": "#/components/schemas/CacheStatus"
+          },
+          "budget": {
+            "$ref": "#/components/schemas/BudgetStatus"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "version",
+          "backend",
+          "model",
+          "reachable",
+          "embed_backend",
+          "embed_model",
+          "dim",
+          "prompt_version",
+          "schemas",
+          "cache",
+          "budget"
+        ],
+        "title": "HealthResponse"
+      },
+      "JudgeRequest": {
+        "properties": {
+          "a": {
+            "type": "string",
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "A"
+          },
+          "b": {
+            "type": "string",
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "B"
+          },
+          "context": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Context",
+            "description": "Optional structured context; it is part of the cache key."
+          }
+        },
+        "type": "object",
+        "required": [
+          "a",
+          "b"
+        ],
+        "title": "JudgeRequest",
+        "description": "Two listing titles to adjudicate.",
+        "example": {
+          "a": "لنت ترمز جلو پراید اصلی سایپا یدک",
+          "b": "لنت ترمز جلو پراید برند تخت جمشید",
+          "context": {
+            "cluster_uid": "0f6a2f1e-6f7b-4a5e-9a6d-2b0e2f7c1a11"
+          }
+        }
+      },
+      "JudgeResponse": {
+        "properties": {
+          "is_same": {
+            "type": "boolean",
+            "title": "Is Same"
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence"
+          },
+          "reason_fa": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Reason Fa",
+            "description": "Short Persian explanation, shown to human reviewers in `ops`."
+          },
+          "cached": {
+            "type": "boolean",
+            "title": "Cached"
+          }
+        },
+        "type": "object",
+        "required": [
+          "is_same",
+          "confidence",
+          "reason_fa",
+          "cached"
+        ],
+        "title": "JudgeResponse"
+      }
+    }
+  }
+}
