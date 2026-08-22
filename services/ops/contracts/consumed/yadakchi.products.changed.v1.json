@@ -233,6 +233,11 @@
                 "type": "string",
                 "minLength": 1
               },
+              "title_normalized": {
+                "description": "This member's own cleaned title. The product's `title` comes from one representative member; this is what each of the others called the same part.\n\nsearch builds its `title_variants[]` index field from these, deduped, which is how a colloquial phrasing on a non-representative offer stays findable. Without it a product is searchable only under the one name the representative happened to use.\n\nAlways the normalized form, never raw_title — promotional junk in an index field surfaces in search results exactly as it would in a page title.\n\nOPTIONAL and additive: added after v1 shipped. Absent means the variant is unavailable for this offer, not that it equals the product title.",
+                "type": "string",
+                "minLength": 1
+              },
               "is_panel_offer": {
                 "description": "true when this offer is supplied by the seller through the panel rather than crawled. Chargeability and suspension are per OFFER, not per seller: a panel member can also have crawled listings, so is_panel on sellers.changed cannot answer 'is this offer chargeable'. Only a panel offer is ever charged, and only panel offers are hidden on zero balance — crawled offers are free and never removed.\n\nweb signs this into the click token so billing, which may not call catalog, can price a click without a lookup.\n\nOPTIONAL and additive: added after v1 shipped. ABSENT MEANS false — not a panel offer, therefore not chargeable. The default is the safe direction: a missing flag must never cause a seller to be billed.",
                 "type": "boolean"
@@ -244,6 +249,12 @@
                   "null"
                 ],
                 "minimum": 0
+              },
+              "price_observed_at": {
+                "description": "When this offer's price was last confirmed at the source — the offer's last_seen_at, not when catalog rebuilt the product.\n\nPrice freshness is a ranking signal for both catalog's seller order and search's product order, and neither can compute it from the product-level updated_at: that moves whenever ANY member changes, so a stale offer inside a busy product looks perpetually fresh.\n\nOPTIONAL and additive: added after v1 shipped. Absent means unknown freshness — rank it as stale rather than fresh, so a missing timestamp can never promote an offer.",
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$"
               },
               "stock_status": {
                 "description": "Stock state of this offer.",

@@ -213,11 +213,16 @@ offer_count             integer
 min_price_toman         integer|null   in-stock offers only
 max_price_toman         integer|null   in-stock offers only
 median_price_toman      integer|null
-offers                  [ { offer_uid, seller_key, seller_name, is_panel_offer,
-                            price_toman, stock_status, authenticity_claim,
-                            trust_score, rank_position, url, is_cheapest } ]
-                        is_panel_offer is OPTIONAL and additive; absent means false,
-                        i.e. not a panel offer and therefore never charged
+offers                  [ { offer_uid, seller_key, seller_name, title_normalized,
+                            is_panel_offer, price_toman, price_observed_at,
+                            stock_status, authenticity_claim, trust_score,
+                            rank_position, url, is_cheapest } ]
+                        Three are OPTIONAL and additive, added after v1 shipped:
+                          is_panel_offer    absent means false — never charged
+                          title_normalized  this member's own title; search's
+                                            title_variants[] is built from these
+                          price_observed_at when the price was last confirmed at
+                                            source; absent means rank as stale
 price_series            [ { date, min_toman, median_toman } ]   downsampled
 is_published            boolean
 successor_product_uid   string|null    set on split; drives 301 redirects

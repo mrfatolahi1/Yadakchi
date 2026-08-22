@@ -24,7 +24,7 @@ Two distinct ranking problems exist in this system and must not be conflated: **
 | **consumes** | `fitment` | Kafka `yadakchi.vehicles.changed.v1`, `yadakchi.crossrefs.changed.v1` *(compacted)* |
 | **consumes** | `ops` | Kafka `yadakchi.review.decided.v1` — approved synonyms |
 | **serves** | `web` | HTTP search API |
-| **calls** | `ai` | HTTP `POST /v1/embed` for query and document embeddings |
+| **calls** | `ai` | HTTP `POST /v1/embed` for query and document embeddings — vendor `services/ai/contracts/published/openapi.json` into your `contracts/consumed/ai-openapi.json` and generate from it. `ai` publishes it exactly so consumers do not guess the shape; never hand-write the request or response |
 | owns | Typesense, Postgres `yadakchi_search`, Redis db 5 (from `SEARCH_REDIS_URL`) | |
 
 **You never call `catalog`.** Everything needed to render a result is inside `products.changed`. That is why the payload is large.
@@ -35,6 +35,7 @@ Two distinct ranking problems exist in this system and must not be conflated: **
 |---|---|
 | `GET /v1/search` | `q`, `vehicle_slug`, filters, page → ranked hits with enough data to render, plus facets |
 | `GET /v1/suggest` | typeahead |
+| `POST /v1/events/click` | `{query_id, product_uid, position}` — `web` reports which result was opened. This is the only way `clicked_position` reaches your query log: an outbound click goes to `billing`, which is a different event about a different thing (a seller click, not a result click), and nothing else observes the result list. Return the `query_id` from `GET /v1/search` so `web` can quote it back. Fire-and-forget: never let it fail a page |
 | `GET /v1/health`, `GET /metrics` | |
 
 Response carries a `fallback_applied: bool` flag (see below) and facet counts. Publish `openapi.json` to `contracts/published/`.
@@ -57,6 +58,11 @@ Response carries a `fallback_applied: bool` flag (see below) and facet counts. P
 One Typesense collection, `products`. Fields:
 
 `product_uid`, `title` (searchable), `title_variants[]` (member offer titles, deduped — improves recall on colloquial phrasing), `brand`, `part_type`, `part_type_synonyms[]`, `part_numbers[]` (including cross-referenced equivalents), `vehicle_compatible[]`, **`vehicle_incompatible[]`**, `authenticity_dominant`, `min_price_toman`, `offer_count`, `has_image`, `embedding` (float[384]), `updated_at`, plus the display fields needed to render a hit without a second call.
+
+**Where the two derived fields come from.** Neither arrives ready-made, and both were previously unsourced:
+
+- **`title_variants[]`** — the `title_normalized` of each member offer in `products.changed.offers[]`, deduped, minus the product `title` itself. It is what makes a product findable under a phrasing the representative offer never used. The field is optional on the wire: skip an offer that omits it rather than falling back to `raw_title`, which would put promotional junk into the index.
+- **`part_type_synonyms[]`** — **yours, built locally**, not published by anyone. Keep a `part_type -> [token]` map fed by `review.decided` with `kind: synonym_candidate` and `decision: approve`, whose `subject` is `{token, part_type}`, and denormalize the matching tokens into each document at index time. Re-denormalize affected documents when a new approval arrives. The map starts empty and that is correct — at launch the field is `[]` on every document, and the vector channel is what carries colloquial phrasing until approvals accumulate. **A rejected or skipped candidate never enters it.**
 
 **Store `vehicle_incompatible` explicitly.** The hard filter excludes only confirmed-incompatible. If you only store the compatible list and filter on membership, everything unmapped disappears — that is the exact compound risk this design exists to avoid.
 
@@ -103,7 +109,7 @@ Consume `products.changed`, build the document, upsert into Typesense. Unpublish
 
 ## Query logging — do not skip
 
-Log every query: normalized text, vehicle, filters, result count, clicked position.
+Log every query: normalized text, vehicle, filters, result count, clicked position. `clicked_position` arrives via `POST /v1/events/click` and is therefore **best-effort** — a user who never clicks, or whose beacon is lost, leaves it null. Treat a null as "no click", never as position zero.
 
 **Query logs are the second most valuable dataset in the project after the golden matching set.** They drive the catalog roadmap, the synonym dictionary, and part-type vocabulary expansion. Provide a **weekly zero-result report** — it is a product work queue, not a metrics curiosity.
 
@@ -117,6 +123,7 @@ services/search/
 ├── manage.py
 ├── contracts/
 │   ├── consumed/{products.changed,vehicles.changed,crossrefs.changed,review.decided}.json
+│   ├── consumed/ai-openapi.json      # vendored from services/ai/contracts/published/
 │   └── published/openapi.json
 ├── src/search/
 │   ├── settings.py  models.py  api.py

@@ -294,7 +294,13 @@ ADDITIVE_OPTIONAL_FIELDS: dict[str, set[str]] = {
     # offers[].is_panel_offer — chargeability is per offer, not per seller, and
     # web signs it into the click token. Absent means false, which is the safe
     # direction: a missing flag must never cause a seller to be billed.
-    "yadakchi.products.changed.v1": {"is_panel_offer"},
+    "yadakchi.products.changed.v1": {
+        "is_panel_offer",
+        # offers[].title_normalized and price_observed_at — search cannot get
+        # either anywhere else and must never call catalog back.
+        "title_normalized",
+        "price_observed_at",
+    },
 }
 
 

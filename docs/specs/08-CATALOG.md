@@ -83,6 +83,8 @@ Rebuild whenever a cluster or any member offer changes. For each active member d
 
 **Ranking = trust score first**, then price, then stock, then price freshness. Weighted formula, weights in config.
 
+Also carry **`title_normalized`** and **`price_observed_at`** on each row. Neither is for you — both exist because `search` cannot get them anywhere else and must never call you back. `title_normalized` is that member's own cleaned title, which becomes `search`'s `title_variants[]`; `price_observed_at` is the offer's `last_seen_at` from `offers.enriched`, which is the only thing that makes price freshness computable, since the product-level `updated_at` moves whenever any member changes and would make a stale offer inside a busy product look perpetually fresh. Use `title_normalized`, never `raw_title` — promotional junk in a search index surfaces exactly as it does in a page title.
+
 Also set **`is_panel_offer`** on each row. Chargeability is per offer, not per seller: a panel member can also have crawled listings, so `is_panel` on the seller cannot answer it. `web` signs this flag into the click token and `billing` charges on it, because `billing` may not call you.
 
 The precise rule for classifying an offer belongs with the unresolved panel-versus-crawled business question in `10-BILLING.md`, so until that is settled: **emit `false` unless you positively know the offer came through the seller's panel feed.** Absent and `false` both mean "not chargeable". The default must fall this way — a wrongly-`true` flag bills a seller for a listing they never paid to place, which is the one error here that costs money and trust.

@@ -21,7 +21,7 @@ The public website: Persian, RTL, server-rendered, SEO-first.
 | Direction | Peer | Channel |
 |---|---|---|
 | **calls** | `catalog` | HTTP `GET /v1/products/{slug}`, `POST /v1/products/batch` |
-| **calls** | `search` | HTTP `GET /v1/search`, `GET /v1/suggest` |
+| **calls** | `search` | HTTP `GET /v1/search`, `GET /v1/suggest`, `POST /v1/events/click` |
 | **links to** | `billing` | `GET /go/{token}` — outbound clicks leave your app |
 | **receives** | `catalog` | HTTP webhook → on-demand ISR revalidation |
 | owns | nothing. **No database, no Kafka** | |
