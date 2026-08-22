@@ -14,3 +14,28 @@ inventing it.
 Both files are copies, distributed from `docs/specs/` by `make sync-specs`.
 **Do not edit them here** — CI compares them byte-for-byte against the source and
 will fail the build. Spec changes happen in `docs/specs/`, reviewed by a human.
+
+## Local development
+
+Create a Python 3.12 virtual environment, install `requirements.txt`, then run
+`make migrate` and `make check`. The following command includes the shared
+platform infrastructure and starts only the search API, its two Kafka consumers,
+and a deterministic stub of the synchronous AI embedding endpoint:
+
+```sh
+docker compose --env-file ../../platform/.env up --build
+```
+
+The API is available on `http://localhost:8090` by default.
+
+The Typesense index is derived state. Start or resume a full compacted-topic
+replay with `python manage.py reindex_all --new`; rerun without `--new` to resume
+an interrupted consumer group.
+
+Useful endpoints:
+
+- `GET /v1/search`
+- `GET /v1/suggest`
+- `POST /v1/events/click`
+- `GET /v1/health`
+- `GET /metrics`

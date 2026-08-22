@@ -1,0 +1,775 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "yadakchi search",
+    "version": "1.0.0",
+    "description": ""
+  },
+  "paths": {
+    "/v1/search": {
+      "get": {
+        "operationId": "search_api_search",
+        "summary": "Search",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "title": "Q",
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "vehicle_slug",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Vehicle Slug"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "brand",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Brand"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "part_type",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Part Type"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "authenticity",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authenticity"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "min_price_toman",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Min Price Toman"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "max_price_toman",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Max Price Toman"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "has_image",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Has Image"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "title": "Page",
+              "type": "integer"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "schema": {
+              "default": 20,
+              "title": "Page Size",
+              "type": "integer"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "search"
+        ]
+      }
+    },
+    "/v1/suggest": {
+      "get": {
+        "operationId": "search_api_suggest",
+        "summary": "Suggest",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "title": "Q",
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 10,
+              "title": "Limit",
+              "type": "integer"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuggestResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "search"
+        ]
+      }
+    },
+    "/v1/events/click": {
+      "post": {
+        "operationId": "search_api_click",
+        "summary": "Click",
+        "parameters": [],
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcceptedResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "events"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClickEventIn"
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/v1/health": {
+      "get": {
+        "operationId": "search_api_health",
+        "summary": "Health",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "operations"
+        ]
+      }
+    },
+    "/metrics": {
+      "get": {
+        "operationId": "search_api_metrics_view",
+        "summary": "Metrics View",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "operations"
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "FacetBucket": {
+        "properties": {
+          "value": {
+            "title": "Value",
+            "type": "string"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "value",
+          "count"
+        ],
+        "title": "FacetBucket",
+        "type": "object"
+      },
+      "FacetsOut": {
+        "properties": {
+          "vehicles": {
+            "items": {
+              "$ref": "#/components/schemas/FacetBucket"
+            },
+            "title": "Vehicles",
+            "type": "array"
+          },
+          "brands": {
+            "items": {
+              "$ref": "#/components/schemas/FacetBucket"
+            },
+            "title": "Brands",
+            "type": "array"
+          },
+          "part_types": {
+            "items": {
+              "$ref": "#/components/schemas/FacetBucket"
+            },
+            "title": "Part Types",
+            "type": "array"
+          },
+          "authenticity": {
+            "items": {
+              "$ref": "#/components/schemas/FacetBucket"
+            },
+            "title": "Authenticity",
+            "type": "array"
+          },
+          "price_ranges": {
+            "items": {
+              "$ref": "#/components/schemas/FacetBucket"
+            },
+            "title": "Price Ranges",
+            "type": "array"
+          }
+        },
+        "required": [
+          "vehicles",
+          "brands",
+          "part_types",
+          "authenticity",
+          "price_ranges"
+        ],
+        "title": "FacetsOut",
+        "type": "object"
+      },
+      "OfferOut": {
+        "properties": {
+          "offer_uid": {
+            "title": "Offer Uid",
+            "type": "string"
+          },
+          "seller_key": {
+            "title": "Seller Key",
+            "type": "string"
+          },
+          "seller_name": {
+            "title": "Seller Name",
+            "type": "string"
+          },
+          "is_panel_offer": {
+            "default": false,
+            "title": "Is Panel Offer",
+            "type": "boolean"
+          },
+          "price_toman": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Toman"
+          },
+          "stock_status": {
+            "title": "Stock Status",
+            "type": "string"
+          },
+          "authenticity_claim": {
+            "title": "Authenticity Claim",
+            "type": "string"
+          },
+          "trust_score": {
+            "title": "Trust Score",
+            "type": "number"
+          },
+          "rank_position": {
+            "title": "Rank Position",
+            "type": "integer"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          },
+          "is_cheapest": {
+            "title": "Is Cheapest",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "offer_uid",
+          "seller_key",
+          "seller_name",
+          "price_toman",
+          "stock_status",
+          "authenticity_claim",
+          "trust_score",
+          "rank_position",
+          "url",
+          "is_cheapest"
+        ],
+        "title": "OfferOut",
+        "type": "object"
+      },
+      "ProductHitOut": {
+        "properties": {
+          "product_uid": {
+            "format": "uuid",
+            "title": "Product Uid",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "brand": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Brand"
+          },
+          "part_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Part Type"
+          },
+          "authenticity_dominant": {
+            "title": "Authenticity Dominant",
+            "type": "string"
+          },
+          "image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Url"
+          },
+          "min_price_toman": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Price Toman"
+          },
+          "max_price_toman": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Price Toman"
+          },
+          "median_price_toman": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median Price Toman"
+          },
+          "offer_count": {
+            "title": "Offer Count",
+            "type": "integer"
+          },
+          "offers": {
+            "items": {
+              "$ref": "#/components/schemas/OfferOut"
+            },
+            "title": "Offers",
+            "type": "array"
+          },
+          "risky_family_note_fa": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Risky Family Note Fa"
+          },
+          "fitment_status": {
+            "enum": [
+              "fits",
+              "unverified",
+              "incompatible",
+              "not_requested"
+            ],
+            "title": "Fitment Status",
+            "type": "string"
+          },
+          "exact_part_number_match": {
+            "default": false,
+            "title": "Exact Part Number Match",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "product_uid",
+          "slug",
+          "title",
+          "authenticity_dominant",
+          "offer_count",
+          "offers",
+          "fitment_status"
+        ],
+        "title": "ProductHitOut",
+        "type": "object"
+      },
+      "SearchResponse": {
+        "properties": {
+          "query_id": {
+            "format": "uuid",
+            "title": "Query Id",
+            "type": "string"
+          },
+          "normalized_query": {
+            "title": "Normalized Query",
+            "type": "string"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "page_size": {
+            "title": "Page Size",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "fallback_applied": {
+            "title": "Fallback Applied",
+            "type": "boolean"
+          },
+          "hits": {
+            "items": {
+              "$ref": "#/components/schemas/ProductHitOut"
+            },
+            "title": "Hits",
+            "type": "array"
+          },
+          "facets": {
+            "$ref": "#/components/schemas/FacetsOut"
+          }
+        },
+        "required": [
+          "query_id",
+          "normalized_query",
+          "page",
+          "page_size",
+          "total",
+          "fallback_applied",
+          "hits",
+          "facets"
+        ],
+        "title": "SearchResponse",
+        "type": "object"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorResponse",
+        "type": "object"
+      },
+      "SuggestResponse": {
+        "properties": {
+          "normalized_query": {
+            "title": "Normalized Query",
+            "type": "string"
+          },
+          "suggestions": {
+            "items": {
+              "$ref": "#/components/schemas/SuggestionOut"
+            },
+            "title": "Suggestions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "normalized_query",
+          "suggestions"
+        ],
+        "title": "SuggestResponse",
+        "type": "object"
+      },
+      "SuggestionOut": {
+        "properties": {
+          "product_uid": {
+            "format": "uuid",
+            "title": "Product Uid",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "part_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Part Number"
+          }
+        },
+        "required": [
+          "product_uid",
+          "text"
+        ],
+        "title": "SuggestionOut",
+        "type": "object"
+      },
+      "AcceptedResponse": {
+        "properties": {
+          "accepted": {
+            "default": true,
+            "title": "Accepted",
+            "type": "boolean"
+          }
+        },
+        "title": "AcceptedResponse",
+        "type": "object"
+      },
+      "ClickEventIn": {
+        "properties": {
+          "query_id": {
+            "format": "uuid",
+            "title": "Query Id",
+            "type": "string"
+          },
+          "product_uid": {
+            "format": "uuid",
+            "title": "Product Uid",
+            "type": "string"
+          },
+          "position": {
+            "minimum": 1,
+            "title": "Position",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "query_id",
+          "product_uid",
+          "position"
+        ],
+        "title": "ClickEventIn",
+        "type": "object"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "enum": [
+              "ok",
+              "degraded"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "components": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Components",
+            "type": "object"
+          }
+        },
+        "required": [
+          "status",
+          "components"
+        ],
+        "title": "HealthResponse",
+        "type": "object"
+      }
+    }
+  },
+  "servers": []
+}

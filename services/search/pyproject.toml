@@ -1,0 +1,32 @@
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/search/migrations/*.py" = ["E501", "I001", "RUF012"]
+"src/search/text.py" = ["RUF001"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "search.settings"
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.mypy]
+python_version = "3.12"
+plugins = ["mypy_django_plugin.main"]
+mypy_path = "src"
+strict = true
+warn_unused_ignores = true
+exclude = ["src/search/migrations/"]
+
+[[tool.mypy.overrides]]
+module = ["confluent_kafka.*"]
+ignore_missing_imports = true
+
+[tool.django-stubs]
+django_settings_module = "search.settings"

@@ -1,0 +1,104 @@
+include:
+  - path: ../../platform/docker-compose.infra.yml
+
+x-search-environment: &search-environment
+  DATABASE_URL: ${SEARCH_DATABASE_URL:-}
+  SEARCH_DB_NAME: yadakchi_search
+  SEARCH_DB_USER: yadakchi_search
+  SEARCH_DB_PASSWORD: ${SEARCH_DB_PASSWORD:?set SEARCH_DB_PASSWORD in platform/.env}
+  SEARCH_DB_HOST: postgres
+  SEARCH_DB_PORT: 5432
+  SEARCH_REDIS_URL: ${SEARCH_REDIS_URL:-redis://redis:6379/5}
+  TYPESENSE_URL: ${TYPESENSE_URL:-http://typesense:8108}
+  TYPESENSE_API_KEY: ${TYPESENSE_API_KEY:?set TYPESENSE_API_KEY in platform/.env}
+  KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
+  AI_BASE_URL: http://ai-stub:8000
+  DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-local-compose-search-secret}
+
+x-search-service: &search-service
+  build:
+    context: .
+  environment: *search-environment
+  networks:
+    - yadakchi
+  restart: unless-stopped
+
+services:
+  ai-stub:
+    image: python:3.12-slim
+    working_dir: /stub
+    command: ["python", "/stub/ai_stub.py"]
+    volumes:
+      - ./docker/ai_stub.py:/stub/ai_stub.py:ro
+    networks:
+      - yadakchi
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')",
+        ]
+      interval: 3s
+      timeout: 2s
+      retries: 20
+
+  search-migrate:
+    <<: *search-service
+    restart: "no"
+    command: ["python", "manage.py", "migrate", "--noinput"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  search-api:
+    <<: *search-service
+    command:
+      [
+        "gunicorn",
+        "search.wsgi:application",
+        "--config",
+        "gunicorn.conf.py",
+        "--bind",
+        "0.0.0.0:8000",
+        "--workers",
+        "2",
+      ]
+    ports:
+      - "${SEARCH_PORT:-8090}:8000"
+    depends_on:
+      ai-stub:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      search-migrate:
+        condition: service_completed_successfully
+      typesense:
+        condition: service_healthy
+
+  search-products-consumer:
+    <<: *search-service
+    command: ["python", "manage.py", "consume_products"]
+    depends_on:
+      ai-stub:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      search-migrate:
+        condition: service_completed_successfully
+      typesense:
+        condition: service_healthy
+
+  search-reference-consumer:
+    <<: *search-service
+    command: ["python", "manage.py", "consume_reference"]
+    depends_on:
+      ai-stub:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      search-migrate:
+        condition: service_completed_successfully
+      typesense:
+        condition: service_healthy
