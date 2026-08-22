@@ -1,0 +1,28 @@
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "DJ", "SIM"]
+ignore = ["DJ001"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/billing/migrations/*.py" = ["E501"]
+"tests/*.py" = ["B017"]
+
+[tool.mypy]
+python_version = "3.12"
+plugins = ["mypy_django_plugin.main"]
+strict = true
+mypy_path = "src"
+exclude = ["src/billing/migrations/"]
+
+[tool.django-stubs]
+django_settings_module = "billing.settings"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "billing.settings"
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-q"

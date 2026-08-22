@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://yadakchi.ir/schemas/yadakchi.seller_billing.changed.v1.json",
   "title": "yadakchi.seller_billing.changed.v1",
-  "description": "Whether a seller's panel offers should still be displayed.\n\nEmitted when a wallet runs dry and again when it is topped up. It carries the DISPLAY CONSEQUENCE only — never a balance, a spend figure or a transaction. Financial truth stays inside billing and no other service computes money from it; catalog needs one boolean to decide whether to rebuild affected products.\n\nCrawled non-panel offers are never suspended and are never affected by this event. They are free, they keep catalogue coverage alive, and removing them would punish a seller for not paying while destroying the very coverage the free listing exists to protect.\n\nProducers: billing. Consumers: catalog.\nKafka message key: seller_key — it must be set; compaction and partition ordering depend on it.\nCleanup: compact, retention infinite.\n\nThis file validates a whole Kafka message body: the shared envelope from docs/specs/02-EVENT-CONTRACTS.md plus this topic's payload. Unknown fields are ignored, never rejected, at both levels — that is what lets a producer add an optional field without breaking a consumer.",
+  "description": "Whether a seller's panel offers should still be displayed.\n\nEmitted when a wallet reaches zero or cannot cover the full CPC, and again when it is topped up. It carries the DISPLAY CONSEQUENCE only — never a balance, a spend figure or a transaction. Financial truth stays inside billing and no other service computes money from it; catalog needs one boolean to decide whether to rebuild affected products.\n\nCrawled non-panel offers are never suspended and are never affected by this event. They are free, they keep catalogue coverage alive, and removing them would punish a seller for not paying while destroying the very coverage the free listing exists to protect.\n\nProducers: billing. Consumers: catalog.\nKafka message key: seller_key — it must be set; compaction and partition ordering depend on it.\nCleanup: compact, retention infinite.\n\nThis file validates a whole Kafka message body: the shared envelope from docs/specs/02-EVENT-CONTRACTS.md plus this topic's payload. Unknown fields are ignored, never rejected, at both levels — that is what lets a producer add an optional field without breaking a consumer.",
   "type": "object",
   "additionalProperties": true,
   "required": [
@@ -68,11 +68,11 @@
           "pattern": "^[a-z0-9]+(?:[-_][a-z0-9]+)*$"
         },
         "panel_offers_active": {
-          "description": "false when this seller's PANEL offers must stop being displayed — currently only because the prepaid wallet hit zero. true when they may be shown again. Crawled offers from the same seller are unaffected either way.",
+          "description": "false when this seller's PANEL offers must stop being displayed because the prepaid wallet hit zero or cannot cover the full CPC. true when they may be shown again. Crawled offers from the same seller are unaffected either way.",
           "type": "boolean"
         },
         "suspension_reason": {
-          "description": "Why, for the seller-facing panel and for ops — e.g. \"zero_balance\". null whenever panel_offers_active is true.",
+          "description": "Why, for the seller-facing panel and for ops — \"zero_balance\" or \"insufficient_balance\". null whenever panel_offers_active is true.",
           "type": [
             "string",
             "null"

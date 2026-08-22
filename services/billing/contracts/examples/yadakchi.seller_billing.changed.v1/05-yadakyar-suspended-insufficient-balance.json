@@ -1,0 +1,14 @@
+{
+  "event_id": "5e942444-4ac4-41fe-954b-8f7a5bf2c20c",
+  "event_type": "seller_billing.changed",
+  "version": 1,
+  "occurred_at": "2026-08-21T12:10:00Z",
+  "producer": "billing",
+  "trace_id": "3cfa10363f1245da8db9ee9f6c97b13d",
+  "payload": {
+    "seller_key": "yadakyar",
+    "panel_offers_active": false,
+    "suspension_reason": "insufficient_balance",
+    "updated_at": "2026-08-21T12:10:00Z"
+  }
+}

@@ -1,0 +1,57 @@
+include:
+  - path: ../../platform/docker-compose.infra.yml
+    env_file: ../../platform/.env
+
+x-billing-environment: &billing-environment
+  DATABASE_URL: ${BILLING_DATABASE_URL:?set BILLING_DATABASE_URL from platform/.env}
+  BILLING_REDIS_URL: ${BILLING_REDIS_URL:?set BILLING_REDIS_URL from platform/.env}
+  KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?set DJANGO_SECRET_KEY}
+  CLICK_SIGNING_KEY: ${CLICK_SIGNING_KEY:?set CLICK_SIGNING_KEY}
+  PRIVACY_HASH_KEY: ${PRIVACY_HASH_KEY:?set PRIVACY_HASH_KEY}
+  INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:?set INTERNAL_API_TOKEN}
+  PUBLIC_REFERER_HOSTS: ${PUBLIC_REFERER_HOSTS:-yadakchi.ir,www.yadakchi.ir}
+
+services:
+  billing:
+    build: .
+    environment: *billing-environment
+    command: uvicorn billing.asgi:application --host 0.0.0.0 --port 8000 --workers 2
+    ports:
+      - "${BILLING_HOST_PORT:-8010}:8000"
+    networks: [yadakchi]
+
+  billing-migrate:
+    build: .
+    environment: *billing-environment
+    command: python manage.py migrate --noinput
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [yadakchi]
+
+  billing-drain:
+    build: .
+    environment: *billing-environment
+    command: python manage.py drain_clicks
+    restart: unless-stopped
+    depends_on:
+      billing-migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    networks: [yadakchi]
+
+  billing-seller-consumer:
+    build: .
+    environment: *billing-environment
+    command: python manage.py consume_sellers
+    restart: unless-stopped
+    depends_on:
+      billing-migrate:
+        condition: service_completed_successfully
+      kafka-init:
+        condition: service_completed_successfully
+    networks: [yadakchi]
