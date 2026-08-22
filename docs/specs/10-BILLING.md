@@ -87,7 +87,7 @@ Consequences to implement deliberately:
 
 - **The price you charge on is the price the user saw.** It can be at most one token lifetime stale (default 30 minutes). That is the correct behaviour, not a tolerated flaw — billing a band the user was never shown would be indefensible to the seller.
 - **`price_toman` may be `null`** when the offer had no usable price. Fall back to the lowest band rather than refusing the redirect; never block a user over a rate lookup.
-- **`is_panel_offer` is per offer, not per seller.** A panel seller can also have crawled listings, so `is_panel` on `sellers.changed` cannot answer "is *this* offer chargeable". Only a panel offer is ever charged, and only panel offers are suspended on zero balance; crawled offers are free and stay visible. Trust the token's flag, not the seller read model.
+- **`is_panel_offer` is per offer, not per seller.** A panel seller can also have crawled listings, so `is_panel` on `sellers.changed` cannot answer "is *this* offer chargeable". Only a panel offer is ever charged, and only panel offers are suspended when the wallet cannot pay; crawled offers are free and stay visible. Trust the token's flag, not the seller read model.
 - Both fields are **inside the signature**. Reject the token if either is absent — an unsigned or missing price is a pricing decision made by the caller.
 
 - Reject tokens older than a short window (default 30 minutes).
@@ -120,7 +120,9 @@ Resolve the rate at click time and **freeze `cost_toman` onto the click record**
 Prepaid. Every charge writes a transaction with `balance_after_toman` for auditability.
 
 - **Charging must be atomic and idempotent**, keyed on `click_id`. A retried drain task must never double-charge.
-- On zero balance: the seller's **panel** offers stop being displayed. Emit `yadakchi.seller_billing.changed.v1` with `panel_offers_active: false` and `suspension_reason: "zero_balance"` so `catalog` can rebuild affected products, and notify the seller. Emit it again with `true` and a null reason on top-up. It carries the display consequence only — **never** a balance, a spend figure or a transaction; financial truth does not leave this service.
+- When the wallet can no longer pay for a click: the seller's **panel** offers stop being displayed. Emit `yadakchi.seller_billing.changed.v1` with `panel_offers_active: false` so `catalog` can rebuild affected products, and notify the seller. Emit it again with `true` and a null reason on top-up.
+
+  Two reasons, because the balance does not have to reach exactly zero to stop working: `"zero_balance"` when it is empty, and `"insufficient_balance"` when what remains cannot cover the CPC for this seller's price band. A wallet holding 500 toman against a 4,200-toman click is already unable to pay, and leaving those offers up would mean serving clicks nobody can be charged for. It carries the display consequence only — **never** a balance, a spend figure or a transaction; financial truth does not leave this service.
 - **Crawled non-panel offers are never charged and never suspended.** Free listing keeps catalog coverage alive.
 - Top-up through the domestic gateway; record the reference. The gateway integration may be stubbed initially.
 
