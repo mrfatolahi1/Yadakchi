@@ -20,12 +20,41 @@ SERVICES = tuple(_registry.SPEC_MAP)
 @pytest.fixture
 def fake_specs(fake_repo: Path) -> Path:
     """A temporary repo with real spec sources copied in."""
-    for name in (_registry.BRIEF_SPEC, *_registry.SPEC_MAP.values()):
-        shutil.copyfile(
-            Path(__file__).resolve().parents[2] / "docs" / "specs" / name,
-            _registry.SPECS_DIR / name,
-        )
+    real = Path(__file__).resolve().parents[2]
+    for name in (
+        _registry.BRIEF_SPEC,
+        sync_specs.NORMALIZATION_SPEC,
+        *_registry.SPEC_MAP.values(),
+    ):
+        shutil.copyfile(real / "docs" / "specs" / name, _registry.SPECS_DIR / name)
+
+    # The normalization vectors are not a spec but are distributed like one.
+    vectors = fake_repo / sync_specs.NORMALIZATION_VECTORS
+    vectors.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(real / sync_specs.NORMALIZATION_VECTORS, vectors)
     return fake_repo
+
+
+def test_normalization_reaches_only_the_services_that_need_it(fake_specs: Path) -> None:
+    """enricher, fitment and search all normalize Persian and must agree
+    exactly. Nobody else needs the rules, and shipping them everywhere would
+    invite a fourth implementation."""
+    assert sync_specs.distribute() == 0
+    for service in _registry.SPEC_MAP:
+        folder = _registry.SERVICES_DIR / service
+        expected = service in sync_specs.NORMALIZES_PERSIAN
+        assert (folder / "NORMALIZATION.md").is_file() is expected, service
+        assert (folder / "normalization-vectors.json").is_file() is expected, service
+
+
+def test_an_edited_vector_copy_fails_check(fake_specs: Path) -> None:
+    """The vectors are the contract between three implementations. A service
+    that finds one inconvenient must not be able to soften it locally."""
+    assert sync_specs.distribute() == 0
+    assert sync_specs.check() == 0
+    copy = _registry.SERVICES_DIR / "search" / "normalization-vectors.json"
+    copy.write_text(copy.read_text(encoding="utf-8").replace("425438", "999999"), encoding="utf-8")
+    assert sync_specs.check() == 1
 
 
 def test_mapping_covers_the_ten_services() -> None:

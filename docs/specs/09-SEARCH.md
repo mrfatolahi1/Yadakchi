@@ -71,7 +71,7 @@ One Typesense collection, `products`. Fields:
 Typesense's Persian analysis is weaker than Elasticsearch's. **Compensate upstream, not inside the engine.**
 
 - Indexed text arrives already normalized from `catalog`. Never index raw titles.
-- **Normalize the query with the same rules.** Copy the normalization functions into your service (services do not share code). Index-side and query-side normalization must be symmetric — asymmetry is the classic silent search bug.
+- **Normalize the query with the same rules.** They are in `NORMALIZATION.md` in your own folder, ordered step by step, with `normalization-vectors.json` beside it — a table of input and expected output that your test suite must reproduce exactly. Copy the functions into your service; services do not share code. Index-side and query-side normalization must be symmetric — asymmetry is the classic silent search bug, and the vectors are what actually proves symmetry, since three agents can read the same prose and implement it three ways.
 - Typo tolerance tuned for Persian word lengths.
 - Synonyms: only **approved** ones, arriving via `review.decided` with `kind: synonym_candidate`, synced into the Typesense synonym API. **Candidate synonyms must never reach query expansion** — automatic extraction conflates synonyms with complements (brake pads and discs co-occur but are not the same thing). Candidates may inform ranking only.
 
@@ -79,7 +79,7 @@ Typesense's Persian analysis is weaker than Elasticsearch's. **Compensate upstre
 
 Part numbers are the highest-intent queries in this vertical, and score fusion will bury an exact match under fuzzy hits.
 
-If the normalized query matches the part-number shape, run an exact lookup against `part_numbers` first. Exact hits return at the top, ahead of hybrid results, never re-ranked below them. **Cover this with an explicit test** — it is easy to lose during a relevance-tuning pass.
+If the normalized query matches the part-number shape — `^(?=.*[0-9])[A-Z0-9]{5,20}$` on the canonical form, defined with its canonicalization rules in `NORMALIZATION.md` — run an exact lookup against `part_numbers` first. For a query the whole string matching the shape is sufficient evidence and corroboration is **not** required: a user who types `425438` and nothing else has said what they mean. That is a deliberately lower bar than `enricher` applies when pulling a code out of a title, where surrounding words can mislead. Exact hits return at the top, ahead of hybrid results, never re-ranked below them. **Cover this with an explicit test** — it is easy to lose during a relevance-tuning pass.
 
 ## Hybrid retrieval
 

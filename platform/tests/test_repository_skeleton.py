@@ -27,7 +27,16 @@ SERVICES = (
 
 # What the platform is allowed to leave inside a service folder. Anything else
 # is the service agent's own work.
-PLATFORM_OWNED = {"README.md", "BRIEF.md", "SPEC.md", "contracts"}
+PLATFORM_OWNED = {
+    "README.md",
+    "BRIEF.md",
+    "SPEC.md",
+    "contracts",
+    # Distributed to enricher, fitment and search only: the shared Persian
+    # normalization rules and the vectors all three must reproduce.
+    "NORMALIZATION.md",
+    "normalization-vectors.json",
+}
 
 
 @pytest.mark.parametrize(

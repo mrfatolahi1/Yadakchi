@@ -71,6 +71,8 @@ If `ai` returns **429 `budget_exhausted`**, fall back to rules-only output with 
 
 The foundation everything stands on. Pure functions in `text.py`.
 
+**The exact ordered rules are in `NORMALIZATION.md` in your folder, and they are shared** — `fitment` and `search` implement the same ones, and `search` normalizes queries against text you produced. `normalization-vectors.json` beside it is the contract: your test suite must reproduce every expected value byte-for-byte. The table below is the summary; where the two differ, `NORMALIZATION.md` wins.
+
 | Transform | Detail |
 |---|---|
 | Character unification | Arabic `ي`→`ی`, `ك`→`ک`; Arabic-Indic and Persian digits → Latin |
@@ -89,7 +91,9 @@ Expose `normalize_text`, `normalize_part_number`, and `strip_promotional` separa
 
 **Brand** — gazetteer with Persian and Latin spellings and common misspellings (عظام/Ezam, کروز/Crouse, والئو/Valeo, بوش/Bosch, ایساکو/ISACO…). Word-boundary aware. Two matches lowers confidence and escalates to the model. Store the canonical key, not the surface form.
 
-**Part number** — regex family for Iranian OEM formats (long numeric, ISACO-style) and international alphanumerics. Validate shape and length before accepting; a stray 6-digit number is usually not a part number. Absence is normal — do not force it.
+**Part number** — canonicalize with `normalize_part_number` from `NORMALIZATION.md`: uppercase, `A-Z0-9` only, every separator removed, which is what the wire pattern `^[A-Z0-9]+$` requires. The shape test is `^(?=.*[0-9])[A-Z0-9]{5,20}$`.
+
+Shape alone is not enough **here**, because a run of digits in a title is more often a year, a price, a quantity or a model number. Accept a pure-digit token only when it is at least 6 characters *and* corroborated by an adjacent code keyword (`کد`, `کد فنی`, `شماره فنی`, `پارت نامبر`, `OE`, `OEM`, `P/N`) or a known brand prefix; a token mixing letters and digits needs no corroboration. That is what "a stray 6-digit number is usually not a part number" means — not that six digits is too short, but that six digits alone is not evidence. `search` applies a lower bar to a whole query, deliberately. Absence is normal — do not force it.
 
 **Part type** — a **controlled vocabulary** YAML mapping canonical keys (`brake_pad_front`) to Persian surface forms including trade synonyms (`لنت جلو`, `لنت ترمز جلو`, `بالشتک جلو`). Seed ~150 highest-volume types across the four vehicles. Longest match wins; record which surface form matched.
 

@@ -1,0 +1,199 @@
+{
+  "$comment": "Conformance vectors for docs/specs/13-TEXT-NORMALIZATION.md. enricher, fitment and search each implement these rules independently and must reproduce every expected value byte-for-byte. Do not edit your distributed copy: CI compares it against platform/text/.",
+  "normalize_text": [
+    {
+      "name": "arabic-yeh-and-kaf",
+      "input": "لنت ترمز جلو پژو ۲۰۶ تيپ ۵ عظام",
+      "expected": "لنت ترمز جلو پژو 206 تیپ 5 عظام"
+    },
+    {
+      "name": "persian-digits",
+      "input": "فیلتر روغن پراید ۱۳۱ سرکان",
+      "expected": "فیلتر روغن پراید 131 سرکان"
+    },
+    {
+      "name": "arabic-indic-digits",
+      "input": "تسمه تایم پژو پارس كد ٠٨١٦F٩",
+      "expected": "تسمه تایم پژو پارس کد 0816F9"
+    },
+    {
+      "name": "emoji-and-stars",
+      "input": "لنت ترمز جلو ⭐ ارسال رایگان ⭐ گارانتی ۶ ماهه ✅",
+      "expected": "لنت ترمز جلو ارسال رایگان گارانتی 6 ماهه"
+    },
+    {
+      "name": "phone-emoji-and-number",
+      "input": "لنت جلو 206 طرح عظام 📞 09121234567",
+      "expected": "لنت جلو 206 طرح عظام 09121234567"
+    },
+    {
+      "name": "zwnj-preserved",
+      "input": "نیم‌فاصله در واژه‌های فارسی",
+      "expected": "نیم‌فاصله در واژه‌های فارسی"
+    },
+    {
+      "name": "zwnj-collapsed-and-trimmed",
+      "input": "‌لنت‌‌ ترمز‌",
+      "expected": "لنت ترمز"
+    },
+    {
+      "name": "nbsp-and-runs",
+      "input": "لنت  ترمز    جلو  ",
+      "expected": "لنت ترمز جلو"
+    },
+    {
+      "name": "tatweel",
+      "input": "لنـــت تـرمز",
+      "expected": "لنت ترمز"
+    },
+    {
+      "name": "harakat",
+      "input": "لَنْتِ تَرْمُز",
+      "expected": "لنت ترمز"
+    },
+    {
+      "name": "teh-marbuta-and-hamza",
+      "input": "قطعة أصلی إیران",
+      "expected": "قطعه اصلی ایران"
+    },
+    {
+      "name": "alef-madda-preserved",
+      "input": "آینه بغل پژو ۴۰۵",
+      "expected": "آینه بغل پژو 405"
+    },
+    {
+      "name": "persian-comma-and-percent",
+      "input": "لنت، دیسک؛ اورجینال ۱۰۰٪ واقعی؟",
+      "expected": "لنت, دیسک; اورجینال 100% واقعی?"
+    },
+    {
+      "name": "thousands-and-decimal-separators",
+      "input": "۲٬۴۵۰٬۰۰۰ تومان و ۱٫۵ لیتر",
+      "expected": "2450000 تومان و 1.5 لیتر"
+    },
+    {
+      "name": "guillemets-and-dashes",
+      "input": "«لنت» جلو – عظام —اصلی",
+      "expected": "\"لنت\" جلو - عظام -اصلی"
+    },
+    {
+      "name": "mixed-latin-and-persian",
+      "input": "Bosch شمع سوزنی FR7DC+ اصلی",
+      "expected": "Bosch شمع سوزنی FR7DC+ اصلی"
+    },
+    {
+      "name": "part-number-with-separators",
+      "input": "کد فنی 0K30E-14-302 پراید",
+      "expected": "کد فنی 0K30E-14-302 پراید"
+    },
+    {
+      "name": "presentation-forms-nfkc",
+      "input": "ﻛﺪ ﻓﻨﻲ",
+      "expected": "کد فنی"
+    },
+    {
+      "name": "promotional-text-is-kept",
+      "input": "لنت اورجینال گارانتی دار",
+      "expected": "لنت اورجینال گارانتی دار"
+    },
+    {
+      "name": "blank-input",
+      "input": "   ",
+      "expected": ""
+    }
+  ],
+  "normalize_part_number": [
+    {
+      "name": "kia-oe-with-hyphens",
+      "input": "0K30E-14-302",
+      "expected": "0K30E14302"
+    },
+    {
+      "name": "lowercase-and-spaces",
+      "input": "0k30e 14 302",
+      "expected": "0K30E14302"
+    },
+    {
+      "name": "persian-digits-in-code",
+      "input": "۰K30E14302",
+      "expected": "0K30E14302"
+    },
+    {
+      "name": "peugeot-six-digit",
+      "input": "425438",
+      "expected": "425438"
+    },
+    {
+      "name": "psa-alphanumeric",
+      "input": "1109.AY",
+      "expected": "1109AY"
+    },
+    {
+      "name": "timing-belt-with-dot",
+      "input": "0816.F9",
+      "expected": "0816F9"
+    },
+    {
+      "name": "sarkan-filter",
+      "input": "SF-7710",
+      "expected": "SF7710"
+    },
+    {
+      "name": "bosch-long-numeric",
+      "input": "0 451 103 318",
+      "expected": "0451103318"
+    },
+    {
+      "name": "already-canonical",
+      "input": "CT1055",
+      "expected": "CT1055"
+    },
+    {
+      "name": "nothing-left",
+      "input": "لنت ترمز",
+      "expected": ""
+    }
+  ],
+  "looks_like_part_number": [
+    {
+      "name": "plain-six-digit",
+      "input": "425438",
+      "expected": true
+    },
+    {
+      "name": "alphanumeric-oe",
+      "input": "0K30E-14-302",
+      "expected": true
+    },
+    {
+      "name": "short-code-rejected",
+      "input": "A12",
+      "expected": false
+    },
+    {
+      "name": "letters-only-rejected",
+      "input": "GENUINE",
+      "expected": false
+    },
+    {
+      "name": "too-long-rejected",
+      "input": "AAAAAAAAAAAAAAAAAAA12345",
+      "expected": false
+    },
+    {
+      "name": "persian-word-rejected",
+      "input": "لنت",
+      "expected": false
+    },
+    {
+      "name": "persian-digits-accepted",
+      "input": "۴۲۵۴۳۸",
+      "expected": true
+    },
+    {
+      "name": "five-chars-with-digit",
+      "input": "AB123",
+      "expected": true
+    }
+  ]
+}

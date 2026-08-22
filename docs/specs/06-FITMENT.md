@@ -156,7 +156,7 @@ as everywhere else in this system.
 
 ## Part two: Vehicle resolution
 
-`resolve_vehicle(text) -> vehicle_slug | None`. Normalize input with the same Persian rules `enricher` uses (copy them into your service — do not import across services). Match `display_name_fa` and `aliases`, longest match wins.
+`resolve_vehicle(text) -> vehicle_slug | None`. Normalize input with the shared Persian rules in `NORMALIZATION.md` in your own folder, and prove your implementation with `normalization-vectors.json` beside it. Copy the functions in — do not import across services. Aliases must be stored already normalized, or a hint that normalizes correctly still fails to match the alias it should. Match `display_name_fa` and `aliases`, longest match wins.
 
 Return the **most specific** match. A title saying only "206" resolves to the model level and produces trim-level `unknown` — **never guess a trim.** Confidently wrong fitment is worse than no fitment.
 

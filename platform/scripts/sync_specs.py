@@ -70,13 +70,29 @@ will fail the build. Spec changes happen in `docs/specs/`, reviewed by a human.
 """
 
 
+# Persian normalization is implemented three times over, by services that may
+# not import each other's code, and all three must agree exactly or a query
+# stops matching text derived from the same words. So the rules and their
+# conformance vectors are distributed like a spec, not referred to across a
+# boundary nobody is allowed to cross.
+NORMALIZATION_SPEC = "13-TEXT-NORMALIZATION.md"
+NORMALIZATION_VECTORS = Path("platform") / "text" / "normalization-vectors.json"
+NORMALIZES_PERSIAN = ("enricher", "fitment", "search")
+
+
 def _targets(service: str) -> list[tuple[Path, Path]]:
-    """(source in docs/specs, destination in the service folder) pairs."""
+    """(source, destination in the service folder) pairs."""
     folder = _registry.SERVICES_DIR / service
-    return [
+    targets = [
         (_registry.SPECS_DIR / BRIEF_SPEC, folder / "BRIEF.md"),
         (_registry.SPECS_DIR / SPEC_MAP[service], folder / "SPEC.md"),
     ]
+    if service in NORMALIZES_PERSIAN:
+        targets += [
+            (_registry.SPECS_DIR / NORMALIZATION_SPEC, folder / "NORMALIZATION.md"),
+            (_registry.REPO_ROOT / NORMALIZATION_VECTORS, folder / "normalization-vectors.json"),
+        ]
+    return targets
 
 
 def distribute() -> int:
